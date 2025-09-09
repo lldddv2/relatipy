@@ -1,0 +1,7 @@
+sympy
+numpy
+scipy
+plotly
+black
+flake8
+isort
