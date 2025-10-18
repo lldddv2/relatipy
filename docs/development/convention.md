@@ -19,13 +19,15 @@ El idioma principal del proyecto es el inglés, se permite el uso del español �
 ## 1.2. Estructura del proyecto
 El proyecto se organiza en módulos separados para facilitar el mantenimiento y la escalabilidad:
 ```
-/docs          → documentación teórica y notas
-/symbolic      → cálculos simbólicos
-/numeric       → cálculos numéricos
-/visualization → visualización y análisis interactivo
+/docs              → documentación teórica y notas
+/src/kerrpy        → código fuente principal  
+    /symbolic      → cálculos simbólicos  
+    /numeric       → cálculos numéricos  
+    /visualization → visualización y análisis interactivo  
+/tests/
+    /symbolic      → pruebas para cálculos simbólicos  
+    /numeric       → pruebas para cálculos numéricos  
 ```
-
-Cada módulo debe contener un archivo `README.md` que describa su propósito y uso, una carpeta `tests/` para pruebas unitarias y de integración, y un archivo `main.py` como punto de entrada.
 
 No se permite la importación cruzada entre módulos, cada módulo debe ser independiente.
 
