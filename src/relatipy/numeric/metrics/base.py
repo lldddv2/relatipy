@@ -1,13 +1,21 @@
 import numpy
 from itertools import product
 
-from ..constants import _c
+from ..constants import _c, _c_SI, _G
+from ..utils.dimensions import Validator
+from ..geodesic.geodesic import Geodesic
+
+validator = Validator()
 
 class BaseMetric:
-    def __init__(self):
-        pass
+    def __init__(self, mass):
+        self.mass = validator.validate_scalar(mass)
 
-    def metric(self, xs):
+        self.R_s = 2 * _G * self.mass / _c**2  # Schwarzschild radius
+
+        self.geodesic = Geodesic(self)
+
+    def metric(self, xs, dimensionless=True):
         """
         Returns the metric tensor components g_{mu nu} as a 2D array.
 
@@ -16,8 +24,50 @@ class BaseMetric:
         xs : list
             List of coordinates [t, x, y, z].
         """
-        return numpy.diag([1, -1, -1, -1])  # Minkowski metric as default
+        xs = validator.validate_vector(xs)
+        metric = self._metric_dimensionless(xs)
+
+        if dimensionless:
+            return metric
+        else:
+            return self._metric_geom_to_si(metric)
     
+    def _metric_dimensionless(self, xs):
+        """
+        Returns the metric tensor components g_{mu nu} as a 2D array.
+
+        Parameters
+        ----------
+        xs : list
+            List of coordinates dimensionless [t, x, y, z].
+        """
+        raise NotImplementedError("This method should be implemented by subclasses.")
+
+    @staticmethod
+    def _metric_geom_to_si(g_geom):
+        """
+        Convert metric from geometric convention (x0 = ct)
+        to SI convention (x0 = t).
+
+        Parameters
+        ----------
+        g_geom : array-like (4x4)
+            Metric tensor in geometric units.
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric tensor in SI convention.
+        """
+        g_geom = numpy.asarray(g_geom, dtype=float)
+        g_si = numpy.zeros_like(g_geom)
+
+        for mu, nu in product(range(4), repeat=2):
+            n_zero = (mu == 0) + (nu == 0)
+            g_si[mu, nu] = (_c_SI ** n_zero) * g_geom[mu, nu]
+
+        return g_si
+
     def get_4velocity(self, coordinate):
         """
         Returns the four-velocity of a test particle in the given metric.
@@ -45,7 +95,7 @@ class BaseMetric:
     def get_dxs_dt_from_4velocity(self, us):
         return _c * us/us[0]
 
-    def get_christoffel_symbols(self, xs):
+    def get_christoffel_symbols(self, xs, dimensionless=True):
         """
         Returns the Christoffel symbols of the metric.
 
@@ -54,4 +104,21 @@ class BaseMetric:
         xs : list
             List of coordinates [x0, x1, x2, x3].
         """
-        raise NotImplementedError("This method should be implemented by subclasses.")
+        xs = validator.validate_vector(xs)
+        christoffel = self._get_christoffel_symbols(xs)
+        if dimensionless:
+            return christoffel
+        else:
+            return self._christoffel_dimensionless_to_si(christoffel)
+
+    @staticmethod
+    def _christoffel_dimensionless_to_si(Gamma_geom):
+        Gamma_geom = numpy.asarray(Gamma_geom, dtype=float)
+        Gamma_si = numpy.zeros_like(Gamma_geom)
+
+        for rho in range(4):
+            for mu, nu in product(range(4), repeat=2):
+                exponent = (mu == 0) + (nu == 0) - (rho == 0)
+                Gamma_si[rho, mu, nu] = (_c_SI ** exponent) * Gamma_geom[rho, mu, nu]
+
+        return Gamma_si

@@ -20,7 +20,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "flake8", "isort"]
+dev = ["black", "flake8", "isort", "pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

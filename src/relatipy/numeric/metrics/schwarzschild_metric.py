@@ -1,20 +1,13 @@
 import numpy
 import itertools
 
-from ..constants import _G, _c
 from .base import BaseMetric
-from ..geodesic.geodesic import Geodesic
-
 
 class Schwarzschild(BaseMetric):
     def __init__(self, mass):
-        self.mass = mass
+        super().__init__(mass)
 
-        self.R_s = 2 * _G * mass / _c**2  # Schwarzschild radius
-
-        self.geodesic = Geodesic(self)
-
-    def metric(self, xs):
+    def _metric_dimensionless(self, xs):
         """
         Returns the Schwarzschild metric tensor in spherical coordinates.
 
@@ -34,7 +27,7 @@ class Schwarzschild(BaseMetric):
 
         return metric
 
-    def get_christoffel_symbols(self, xs):
+    def _get_christoffel_symbols(self, xs):
         """
         Returns the Christoffel symbols of the Kerr metric.
 

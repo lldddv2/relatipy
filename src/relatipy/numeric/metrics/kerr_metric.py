@@ -1,21 +1,14 @@
 import numpy
 from numpy import sin, cos, tan
 
-from ..constants import _c, _G
 from .base import BaseMetric
-from ..geodesic.geodesic import Geodesic
-
 
 class Kerr(BaseMetric):
     def __init__(self, mass, a):
-        self.mass = mass
+        super().__init__(mass)
         self.a = a
 
-        self.R_s = 2 * _G * mass / _c**2  # Schwarzschild radius
-
-        self.geodesic = Geodesic(self)
-
-    def metric(self, xs):
+    def _metric_dimensionless(self, xs):
         """
         Returns the Kerr metric tensor in Boyer-Lindquist coordinates.
 

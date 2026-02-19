@@ -6,3 +6,5 @@ black
 flake8
 isort
 einsteinpy
+pydantic
+pytest
