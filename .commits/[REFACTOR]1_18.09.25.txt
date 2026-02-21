@@ -1,3 +1,0 @@
-[REFACTOR]: The structure of the modules was changed.
-- Folder structure changed.
-- Unnecessary files removed.

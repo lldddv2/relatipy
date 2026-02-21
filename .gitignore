@@ -1,6 +1,7 @@
-# .gitignore
-# notebooks/
-# .*/
+.gitignore
+notebooks/
+.*/
 __pycache__/
 .venv/
-# !.github/
+!.github/
+.DS_Store

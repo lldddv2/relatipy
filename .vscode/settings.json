@@ -1,9 +1,0 @@
-{
-    "cSpell.words": [
-        "kerr"
-    ],
-    "files.exclude": {
-        "**/__pycache__": true,
-    }
-
-}
