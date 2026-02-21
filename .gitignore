@@ -1,0 +1,6 @@
+# .gitignore
+# notebooks/
+# .*/
+__pycache__/
+.venv/
+# !.github/
