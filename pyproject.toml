@@ -17,6 +17,7 @@ dependencies = [
     "scipy",
     "plotly",
     "einsteinpy",
+    "pytest>=9.0.2",
 ]
 
 [project.optional-dependencies]

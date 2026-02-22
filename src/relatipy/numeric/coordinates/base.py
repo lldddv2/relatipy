@@ -1,11 +1,17 @@
 from numpy import array, zeros_like, concatenate
 
+from ..utils.dimensions import Validator
+
+validator = Validator()
 
 class CoordinateBase:
     def __init__(
         self, xs, vels=None, from_dxs_dt=False, system_name="CoordinateBase", **kwargs
     ):
         self.name_metric = system_name
+
+        xs = validator.validate_vector(xs)
+        vels = validator.validate_vector(vels)
 
         self.kwargs = kwargs
         for key, value in kwargs.items():
