@@ -31,10 +31,10 @@ initial_conditions_1_rp = Spherical(xs_1, vs_1)
 x_vec_1 = np.array(initial_conditions_1.position())
 
 # CI 2
-M_2 = 5.972e24 * u.kg
+M_2 = 1.989e30 * u.kg
 
-position_ep_2 = [7000e3, np.pi / 2, 0.0]
-momentum_ep_2 = [0.0, 70, 0.0]
+position_ep_2 = [900e3, np.pi / 3, 0.0]
+momentum_ep_2 = [0.0, 0, 10]
 
 xs_2 = [0.0 * u.s, position_ep_2[0] * u.m, position_ep_2[1] * u.rad, position_ep_2[2] * u.rad]
 vs_2 = [momentum_ep_2[0] * u.m / u.s, momentum_ep_2[1] * u.rad / u.s, momentum_ep_2[2] * u.rad / u.s]
@@ -54,10 +54,10 @@ initial_conditions_2_rp = Spherical(xs_2, vs_2)
 x_vec_2 = np.array(initial_conditions_2.position())
 
 # CI 3
-M_3 = 5.972e24 * u.kg
+M_3 = 2e32 * u.kg
 
-position_ep_3 = [7000e3, np.pi / 2, 0.0]
-momentum_ep_3 = [0.0, 70, 0.0]
+position_ep_3 = [1.5e11, np.pi / 2, 0.0]
+momentum_ep_3 = [10, 0, 0]
 
 xs_3 = [0.0 * u.s, position_ep_3[0] * u.m, position_ep_3[1] * u.rad, position_ep_3[2] * u.rad]
 vs_3 = [momentum_ep_3[0] * u.m / u.s, momentum_ep_3[1] * u.rad / u.s, momentum_ep_3[2] * u.rad / u.s]
