@@ -87,3 +87,5 @@ class Validator:
             new_vector.append(self.validate_scalar(i))
 
         return new_vector
+
+validator = Validator()

@@ -2,10 +2,8 @@ import numpy
 from itertools import product
 
 from ..constants import _c, _c_SI, _G
-from ..utils.dimensions import Validator
+from ..utils.dimensions import validator
 from ..geodesic.geodesic import Geodesic
-
-validator = Validator()
 
 class BaseMetric:
     def __init__(self, mass):

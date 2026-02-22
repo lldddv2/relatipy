@@ -1,8 +1,6 @@
 from numpy import array, zeros_like, concatenate
 
-from ..utils.dimensions import Validator
-
-validator = Validator()
+from ..utils.dimensions import validator
 
 class CoordinateBase:
     def __init__(

@@ -4,9 +4,7 @@ import itertools
 from ..constants import _G, _c
 from .base import BaseMetric
 from ..geodesic.geodesic import Geodesic
-from ..utils.dimensions import Validator
-
-validator = Validator()
+from ..utils.dimensions import validator
 
 class Minkowski(BaseMetric):
     def __init__(self):

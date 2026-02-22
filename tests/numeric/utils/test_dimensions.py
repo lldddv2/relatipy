@@ -1,9 +1,7 @@
 import astropy.units as u
-from relatipy.numeric.utils.dimensions import Validator
+from relatipy.numeric.utils.dimensions import validator
 from relatipy.numeric.constants import _G_SI, _c_SI
 import pytest
-
-validator = Validator()
 
 class TestValidator:
     def test_validate_mass(self):
