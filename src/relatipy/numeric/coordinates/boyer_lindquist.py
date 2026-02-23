@@ -22,6 +22,8 @@ class BoyerLindquist(CoordinateBase):
         xs = self.xs
         vs = self.vs
 
+
+        print(self.a)
         sqrt_cos = sqrt(a**2 * cos(xs[2]) ** 2 + xs[1] ** 2)
         sqrt_a = sqrt(a**2 + xs[1] ** 2)
         sin_x2 = sin(xs[2])
