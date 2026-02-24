@@ -6,13 +6,9 @@ from relatipy.numeric.metrics import Schwarzschild as rp_Schwarzschild
 from relatipy.numeric.coordinates import Spherical
 from einsteinpy.geodesic.geodesic import Geodesic
 from einsteinpy.geodesic import Timelike
+from initial_conditions import position_ep_1, momentum_ep_1, position_ep_2, momentum_ep_2, position_ep_3, momentum_ep_3, M_1, M_2, M_3
 
 # CI 1
-M_1 = 5.972e24 * u.kg
-
-position_ep_1 = [7000e3, np.pi / 2, 0.0]
-momentum_ep_1 = [0.0, 70, 0.0]
-
 xs_1 = [0.0 * u.s, position_ep_1[0] * u.m, position_ep_1[1] * u.rad, position_ep_1[2] * u.rad]
 vs_1 = [momentum_ep_1[0] * u.m / u.s, momentum_ep_1[1] * u.rad / u.s, momentum_ep_1[2] * u.rad / u.s]
 
@@ -31,11 +27,6 @@ initial_conditions_1_rp = Spherical(xs_1, vs_1)
 x_vec_1 = np.array(initial_conditions_1.position())
 
 # CI 2
-M_2 = 1.989e30 * u.kg
-
-position_ep_2 = [900e6, np.pi / 3, 0.0]
-momentum_ep_2 = [0.0, 0, 10]
-
 xs_2 = [0.0 * u.s, position_ep_2[0] * u.m, position_ep_2[1] * u.rad, position_ep_2[2] * u.rad]
 vs_2 = [momentum_ep_2[0] * u.m / u.s, momentum_ep_2[1] * u.rad / u.s, momentum_ep_2[2] * u.rad / u.s]
 
@@ -54,11 +45,6 @@ initial_conditions_2_rp = Spherical(xs_2, vs_2)
 x_vec_2 = np.array(initial_conditions_2.position())
 
 # CI 3
-M_3 = 2e32 * u.kg
-
-position_ep_3 = [1.5e11, np.pi / 2, 0.0]
-momentum_ep_3 = [10, 0, 0]
-
 xs_3 = [0.0 * u.s, position_ep_3[0] * u.m, position_ep_3[1] * u.rad, position_ep_3[2] * u.rad]
 vs_3 = [momentum_ep_3[0] * u.m / u.s, momentum_ep_3[1] * u.rad / u.s, momentum_ep_3[2] * u.rad / u.s]
 
@@ -220,3 +206,25 @@ class TestSchwarzschildMetric:
         path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
         ds_dtau = path._get_ds_dtau(sch)
         assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+    
+    def test_schwarzschild_Lz(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_1)
+        path = sch.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        Lz = path._get_Lz()
+        assert np.allclose(Lz, Lz[0]), "Lz is not constant over the trajectory"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_2)
+        path = sch.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        Lz = path._get_Lz()
+        assert np.allclose(Lz, Lz[0]), "Lz is not constant over the trajectory"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_3)
+        path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        Lz = path._get_Lz()
+        assert np.allclose(Lz, Lz[0]), "Lz is not constant over the trajectory"

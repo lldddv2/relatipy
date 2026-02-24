@@ -1,5 +1,5 @@
 from curses import echo
-from numpy import array, zeros_like, concatenate
+from numpy import array, zeros_like, concatenate, asarray
 from itertools import product
 
 from ..constants import _c
@@ -119,3 +119,10 @@ class CoordinateBase:
         u[1:, :] = self.dxs_dt  # (4, N)
 
         return einsum('ijn,in,jn->n', g, u, u)   # (N,)
+
+    def _get_Lz(self, mass_particle=1.0):
+        "obtener el momento angular azimutal"
+        cylindrical = self.convert_to("Cylindrical")
+        rho = cylindrical.xs[1]
+        v_phi = cylindrical.vs[1]
+        return mass_particle * rho * v_phi

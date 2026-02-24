@@ -7,16 +7,10 @@ from einsteinpy.coordinates import BoyerLindquistDifferential
 from relatipy.numeric.metrics import Kerr as rp_Kerr
 from relatipy.numeric.coordinates import BoyerLindquist
 from einsteinpy.geodesic import Timelike
+from initial_conditions import M_1, M_2, M_3, xs_1, vs_1, xs_2, vs_2, xs_3, vs_3, position_ep_1, position_ep_2, position_ep_3, momentum_ep_1, momentum_ep_2, momentum_ep_3
 
 # CI 1
-M_1 = 5.972e24 * u.kg
 a_1 = 0.5  # dimensionless spin parameter
-
-position_ep_1 = [700e3, np.pi / 2, 0.0]
-momentum_ep_1 = [0.0, 70, 0.0]
-
-xs_1 = [0.0 * u.s, position_ep_1[0] * u.m, position_ep_1[1] * u.rad, position_ep_1[2] * u.rad]
-vs_1 = [momentum_ep_1[0] * u.m / u.s, momentum_ep_1[1] * u.rad / u.s, momentum_ep_1[2] * u.rad / u.s]
 
 initial_conditions_1 = BoyerLindquistDifferential(
     t=xs_1[0],
@@ -32,14 +26,7 @@ initial_conditions_1_rp = BoyerLindquist(xs_1, vs_1, a=a_1)
 x_vec_1 = np.array(initial_conditions_1.position())
 
 # CI 2
-M_2 = 1.989e30 * u.kg
 a_2 = 0.9
-
-position_ep_2 = [900e6, np.pi / 3, 0.0]
-momentum_ep_2 = [0.0, 0, 10]
-
-xs_2 = [0.0 * u.s, position_ep_2[0] * u.m, position_ep_2[1] * u.rad, position_ep_2[2] * u.rad]
-vs_2 = [momentum_ep_2[0] * u.m / u.s, momentum_ep_2[1] * u.rad / u.s, momentum_ep_2[2] * u.rad / u.s]
 
 initial_conditions_2 = BoyerLindquistDifferential(
     t=xs_2[0],
@@ -55,14 +42,7 @@ initial_conditions_2_rp = BoyerLindquist(xs_2, vs_2, a=a_2)
 x_vec_2 = np.array(initial_conditions_2.position())
 
 # CI 3
-M_3 = 2000 * u.kg
 a_3 = 0.7
-
-position_ep_3 = [1.5e11, np.pi / 2, 0.0]
-momentum_ep_3 = [10, 0, 0]
-
-xs_3 = [0.0 * u.s, position_ep_3[0] * u.m, position_ep_3[1] * u.rad, position_ep_3[2] * u.rad]
-vs_3 = [momentum_ep_3[0] * u.m / u.s, momentum_ep_3[1] * u.rad / u.s, momentum_ep_3[2] * u.rad / u.s]
 
 initial_conditions_3 = BoyerLindquistDifferential(
     t=xs_3[0],
