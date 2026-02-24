@@ -112,3 +112,19 @@ class BoyerLindquist(CoordinateBase):
 
         coordinate = BoyerLindquist(xs, vels=vs, from_dxs_dt=False, a=a)
         return coordinate
+
+    def _get_Q(self, metric):
+        "Obtener la constante de Carter Q"
+        a = self.a
+        r, theta = self.xs[1], self.xs[2]
+
+        E = self._get_E(metric)
+        Lz = self._get_Lz()
+        
+        g = metric.metric(self.xs)  # (4, 4, N)
+        
+        # p_theta = g_theta_theta * theta_dot
+        g_thth = g[2, 2, :]
+        p_theta = g_thth * self.dxs_dt[1]
+        
+        return p_theta**2 + numpy.cos(theta) ** 2 * (a**2 * (1 - E**2) + Lz**2 / numpy.sin(theta) ** 2)

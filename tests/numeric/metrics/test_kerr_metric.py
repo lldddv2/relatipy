@@ -225,3 +225,25 @@ class TestKerrMetric:
         path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
         E = path._get_E(kerr)
         assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"
+
+    def test_kerr_Q(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_1, a_1)
+        path = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        Q = path._get_Q(kerr)
+        assert np.isclose(Q, Q[0]).all(), "Q is not constant over the trajectory"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_2, a_2)
+        path = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        Q = path._get_Q(kerr)
+        assert np.isclose(Q, Q[0]).all(), "Q is not constant over the trajectory"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_3, a_3)
+        path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        Q = path._get_Q(kerr)
+        assert np.isclose(Q, Q[0]).all(), "Q is not constant over the trajectory"
