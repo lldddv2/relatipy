@@ -135,8 +135,7 @@ class TestSchwarzschildMetric:
         traj_ep = geod_ep.trajectory[1]  # (100, 8)
 
         sch = rp_Schwarzschild(M_1)
-        ys0 = sch.get_4state_vector(initial_conditions_1_rp)
-        traj_rp = sch.geodesic._get_path_from_4state_vector(ys0, taus_1)  # (8, 100)
+        traj_rp = sch.geodesic.get_path(initial_conditions_1_rp, taus_1)  # (8, 100)
 
         pos_ep = traj_ep[:, :4].T           # (4, 100)
         pos_rp = traj_rp[:4, :]        # (4, 100)
@@ -164,8 +163,7 @@ class TestSchwarzschildMetric:
         traj_ep = geod_ep.trajectory[1]  # (100, 8)
 
         sch = rp_Schwarzschild(M_2)
-        ys0 = sch.get_4state_vector(initial_conditions_2_rp)
-        traj_rp = sch.geodesic._get_path_from_4state_vector(ys0, taus_2)  # (8, 100)
+        traj_rp = sch.geodesic.get_path(initial_conditions_2_rp, taus_2)  # (8, 100)
 
         pos_ep = traj_ep[:, :4].T           # (4, 100)
         pos_rp = traj_rp[:4, :]        # (4, 100)
@@ -192,12 +190,11 @@ class TestSchwarzschildMetric:
         traj_ep = geod_ep.trajectory[1]  # (100, 8)
 
         sch = rp_Schwarzschild(M_3)
-        ys0 = sch.get_4state_vector(initial_conditions_3_rp)
-        traj_rp = sch.geodesic._get_path_from_4state_vector(ys0, taus_3)  # (8, 100)
+        traj_rp = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)  # (8, 100)
 
         pos_ep = traj_ep[:, :4].T           # (4, 100)
         pos_rp = traj_rp[:4, :]        # (4, 100)
 
         assert np.isclose(pos_ep[1], pos_rp[1]).all(), "The second position is not the same" # check if the second position is the same
         assert np.isclose(pos_ep[2], pos_rp[2]).all(), "The third position is not the same" # check if the third position is the same
-        assert np.isclose(pos_ep[3], pos_rp[3]).all(), "The fourth position is not the same" # check if the fourth position is the same
+        assert np.isclose(pos_ep[3], pos_rp[3]).all(), "The fourth position is not the same" # check if the fourth position is the same       

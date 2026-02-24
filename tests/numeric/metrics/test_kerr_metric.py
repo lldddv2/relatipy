@@ -137,8 +137,7 @@ class TestKerrMetric:
         traj_ep = geod_ep.trajectory[1]
 
         kerr = rp_Kerr(M_1, a_1)
-        ys0 = kerr.get_4state_vector(initial_conditions_1_rp)
-        traj_rp = kerr.geodesic._get_path_from_4state_vector(ys0, taus_1)
+        traj_rp = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
 
         pos_ep = traj_ep[:, :4].T
         pos_rp = traj_rp[:4, :]
@@ -166,8 +165,7 @@ class TestKerrMetric:
         traj_ep = geod_ep.trajectory[1]
 
         kerr = rp_Kerr(M_2, a_2)
-        ys0 = kerr.get_4state_vector(initial_conditions_2_rp)
-        traj_rp = kerr.geodesic._get_path_from_4state_vector(ys0, taus_2)
+        traj_rp = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
 
         pos_ep = traj_ep[:, :4].T
         pos_rp = traj_rp[:4, :]
@@ -195,8 +193,7 @@ class TestKerrMetric:
         traj_ep = geod_ep.trajectory[1]
 
         kerr = rp_Kerr(M_3, a_3)
-        ys0 = kerr.get_4state_vector(initial_conditions_3_rp)
-        traj_rp = kerr.geodesic._get_path_from_4state_vector(ys0, taus_3)
+        traj_rp = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
 
         pos_ep = traj_ep[:, :4].T
         pos_rp = traj_rp[:4, :]
