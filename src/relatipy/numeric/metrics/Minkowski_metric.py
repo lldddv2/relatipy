@@ -21,17 +21,31 @@ class Minkowski(BaseMetric):
         mass : float
             Mass of the black hole in kg.
         """
-        metric = numpy.diag([1, -1, -1, -1])
-        return metric
+        xs = numpy.asarray(xs, dtype=float)
+        
+        if xs.ndim == 1:
+            return numpy.diag([1, -1, -1, -1])
+        
+        # Multiple points: shape (N, 4) — métrica constante, se repite N veces
+        N = len(xs)
+        metrics = numpy.zeros((N, 4, 4))
+        metrics[:, 0, 0] =  1
+        metrics[:, 1, 1] = -1
+        metrics[:, 2, 2] = -1
+        metrics[:, 3, 3] = -1
+        return metrics
 
-    def get_christoffel_symbols(self, xs):
+    def _get_christoffel_symbols(self, xs):
         """
-        Returns the Christoffel symbols of the Kerr metric.
+        Returns the Christoffel symbols of the Minkowski metric (all zero).
 
         Parameters
         ----------
-        xs : list
-            List of coordinates [t, r, theta, phi] of boyer-lindquist coordinates.
+        xs : array of shape (4,) or (N, 4)
+            Coordinates [x0, x1, x2, x3].
         """
-        Gamma = numpy.zeros((4, 4, 4))
-        return Gamma
+        xs = numpy.asarray(xs, dtype=float)
+        if xs.ndim == 2:
+            N = len(xs)
+            return numpy.zeros((N, 4, 4, 4))
+        return numpy.zeros((4, 4, 4))

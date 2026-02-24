@@ -20,15 +20,20 @@ class BaseMetric:
         Parameters
         ----------
         xs : list
-            List of coordinates [t, x, y, z].
+            List of coordinates [t, x, y, z] or array of shape (N, 4).
         """
-        xs = validator.validate_vector(xs)
-        metric = self._metric_dimensionless(xs)
+        xs = numpy.asarray(xs, dtype=object)
 
-        if dimensionless:
-            return metric
-        else:
-            return self._metric_geom_to_si(metric)
+        if xs.ndim == 1:
+            xs = validator.validate_vector(xs)
+            metric = self._metric_dimensionless(xs)
+            return metric if dimensionless else self._metric_geom_to_si(metric)
+
+        if xs.ndim == 2:
+            metrics = self._metric_dimensionless(xs)
+            return metrics if dimensionless else numpy.array([self._metric_geom_to_si(g) for g in metrics])
+
+        raise ValueError(f"xs must be 1D (single point) or 2D (N points), got shape {xs.shape}")
     
     def _metric_dimensionless(self, xs):
         """
@@ -99,15 +104,21 @@ class BaseMetric:
 
         Parameters
         ----------
-        xs : list
+        xs : list or array of shape (4,) or (N, 4)
             List of coordinates [x0, x1, x2, x3].
         """
-        xs = validator.validate_vector(xs)
-        christoffel = self._get_christoffel_symbols(xs)
-        if dimensionless:
-            return christoffel
-        else:
-            return self._christoffel_dimensionless_to_si(christoffel)
+        xs = numpy.asarray(xs, dtype=object)
+
+        if xs.ndim == 1:
+            xs = validator.validate_vector(xs)
+            christoffel = self._get_christoffel_symbols(xs)
+            return christoffel if dimensionless else self._christoffel_dimensionless_to_si(christoffel)
+
+        if xs.ndim == 2:
+            christoffels = self._get_christoffel_symbols(xs)
+            return christoffels if dimensionless else numpy.array([self._christoffel_dimensionless_to_si(G) for G in christoffels])
+
+        raise ValueError(f"xs must be 1D (single point) or 2D (N points), got shape {xs.shape}")
 
     @staticmethod
     def _christoffel_dimensionless_to_si(Gamma_geom):

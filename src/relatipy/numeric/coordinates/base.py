@@ -1,5 +1,7 @@
+from curses import echo
 from numpy import array, zeros_like, concatenate
 
+from ..constants import _c
 from ..utils.dimensions import validator
 
 class CoordinateBase:
@@ -93,3 +95,41 @@ class CoordinateBase:
                 "Index out of range. Must be between 0 and 6. [x0,x1,x2,x3,v1,v2,v3]"
             )
         return self.state_vector[index]
+
+    def _get_ds_dtau(self, metric):
+        """
+        Calcula g_{mu nu} u^mu u^nu. Para una geodésica tipo tiempo debe ser -c^2.
+        
+        Parameters
+        ----------
+        metric : callable
+            Función metric(xs, **kwargs) que devuelve g_{mu nu} (4x4).
+        c : float
+            Velocidad de la luz (default=1 en unidades geométricas).
+        
+        Returns
+        -------
+        float
+            g_{mu nu} u^mu u^nu (debería ser -c^2)
+        """
+        from numpy import einsum, array, ones
+
+        g = metric.metric(self.xs, **self.kwargs)
+        # u = array([1.0, *self.dxs_dt])  # dx^mu/dt, sin normalizar en tau
+        # u = concatenate(([1.0]*len(self.dxs_dt), self.dxs_dt))
+        u = ones((4, len(self.dxs_dt[0])))
+        u[1:, :] = self.dxs_dt
+        print(g)
+        exit()
+
+
+        # g_{mu nu} (dx^mu/dt)(dx^nu/dt)
+        g_uu = einsum('i,ij,j->', u, g, u)
+
+        # dt/dtau desde normalización: g_uu * (dt/dtau)^2 = -c^2
+        # Retornamos g_{mu nu} u^mu u^nu con u normalizado en tau
+        from numpy import sqrt, abs as npabs
+        dt_dtau = sqrt(-_c**2 / g_uu) if g_uu < 0 else sqrt(_c**2 / g_uu)
+        u4 = dt_dtau * u
+
+        return einsum('i,ij,j->', u4, g, u4)  # debe ser -c^2
