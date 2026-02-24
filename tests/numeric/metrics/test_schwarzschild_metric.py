@@ -250,3 +250,55 @@ class TestSchwarzschildMetric:
         path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
         E = path._get_E(sch)
         assert np.allclose(E, E[0]), "E is not constant over the trajectory"
+
+    def test_same_trajectory_with_different_coordinates(self):
+        # CI 1
+        initial_conditions_1_cartesian = initial_conditions_1_rp.convert_to("Cartesian")
+        taus_1 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_1)
+
+        ## 1.1 Spherical to Cartesian
+        path_spherical = sch.geodesic.get_path(initial_conditions_1_rp, taus_1) # (8, 100)
+        path_cartesian = sch.geodesic.get_path(initial_conditions_1_cartesian, taus_1).convert_to("Spherical")  # (8, 100)
+        for i in range(7):
+            assert np.isclose(path_spherical[i], path_cartesian[i]).all(), "The trajectories are not the same"
+
+        ## 1.2 Cartesian to Spherical
+        path_cartesian = sch.geodesic.get_path(initial_conditions_1_cartesian, taus_1)  # (8, 100)
+        path_spherical = sch.geodesic.get_path(initial_conditions_1_rp, taus_1).convert_to("Cartesian")  # (4, 100)
+        for i in range(7):
+            assert np.isclose(path_cartesian[i], path_spherical[i]).all(), "The trajectories are not the same"
+
+        # CI 2
+        initial_conditions_2_cartesian = initial_conditions_2_rp.convert_to("Cartesian")
+        taus_2 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_2)
+
+        ## 2.1 Spherical to Cartesian
+        path_spherical = sch.geodesic.get_path(initial_conditions_2_rp, taus_2) # (8, 100)
+        path_cartesian = sch.geodesic.get_path(initial_conditions_2_cartesian, taus_2).convert_to("Spherical")  # (8, 100)
+        for i in range(7):
+            assert np.isclose(path_spherical[i], path_cartesian[i]).all(), "The trajectories are not the same"
+
+        ## 2.2 Cartesian to Spherical
+        path_cartesian = sch.geodesic.get_path(initial_conditions_2_cartesian, taus_2)  # (8, 100)
+        path_spherical = sch.geodesic.get_path(initial_conditions_2_rp, taus_2).convert_to("Cartesian")  # (4, 100) 
+        for i in range(7):
+            assert np.isclose(path_cartesian[i], path_spherical[i]).all(), "The trajectories are not the same"
+
+        # CI 3
+        initial_conditions_3_cartesian = initial_conditions_3_rp.convert_to("Cartesian")
+        taus_3 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_3)
+
+        ## 3.1 Spherical to Cartesian
+        path_spherical = sch.geodesic.get_path(initial_conditions_3_rp, taus_3) # (8, 100)
+        path_cartesian = sch.geodesic.get_path(initial_conditions_3_cartesian, taus_3).convert_to("Spherical")  # (8, 100)
+        for i in range(7):
+            assert np.isclose(path_spherical[i], path_cartesian[i]).all(), "The trajectories are not the same"
+
+        ## 3.2 Cartesian to Spherical
+        path_cartesian = sch.geodesic.get_path(initial_conditions_3_cartesian, taus_3)  # (8, 100)
+        path_spherical = sch.geodesic.get_path(initial_conditions_3_rp, taus_3).convert_to("Cartesian")  # (4, 100) 
+        for i in range(7):
+            assert np.isclose(path_cartesian[i], path_spherical[i]).all(), "The trajectories are not the same"

@@ -8,6 +8,7 @@ from ..coordinates import coordinate_systems
 class Geodesic:
     def __init__(self, metric):
         self.metric = metric
+        self.valid_coordinate = self.metric.valid_coordinate
 
     def model_geodesic(self, tau, ys0):
         xs0 = ys0[:4]
@@ -33,6 +34,11 @@ class Geodesic:
         taus : list
             List of proper time values where the solution is evaluated.
         """
+        original_coordinate = initial_conditions.name_metric
+        original_kwargs = initial_conditions.kwargs
+        if initial_conditions.name_metric != self.valid_coordinate:
+            initial_conditions = initial_conditions.convert_to(self.valid_coordinate, **self.metric.kwargs)
+
         ys0 = self.metric.get_4state_vector(initial_conditions)
         sol = self._get_path_from_4state_vector(ys0, taus)
 
@@ -40,6 +46,9 @@ class Geodesic:
         ys = coordinate_systems[initial_conditions.name_metric](
             sol[:4], vels=dxs_dt[1:], from_dxs_dt=True, **initial_conditions.kwargs
         )
+
+        if original_coordinate != initial_conditions.name_metric:
+            ys = ys.convert_to(original_coordinate, **original_kwargs)
 
         return ys
 

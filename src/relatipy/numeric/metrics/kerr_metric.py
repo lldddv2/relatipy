@@ -5,7 +5,7 @@ from .base import BaseMetric
 
 class Kerr(BaseMetric):
     def __init__(self, mass, a):
-        super().__init__(mass)
+        super().__init__(mass, valid_coordinate="BoyerLindquist", kwargs={"a": a})
         self.a = a * self.R_s / 2
 
     def _metric_dimensionless(self, xs):

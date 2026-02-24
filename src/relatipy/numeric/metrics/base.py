@@ -6,11 +6,11 @@ from ..utils.dimensions import validator
 from ..geodesic.geodesic import Geodesic
 
 class BaseMetric:
-    def __init__(self, mass):
+    def __init__(self, mass, valid_coordinate="Cartesian", kwargs={}):
         self.mass = validator.validate_scalar(mass)
-
+        self.valid_coordinate = valid_coordinate
         self.R_s = 2 * _G * self.mass / _c**2  # Schwarzschild radius
-
+        self.kwargs = kwargs
         self.geodesic = Geodesic(self)
 
     def metric(self, xs, dimensionless=True):

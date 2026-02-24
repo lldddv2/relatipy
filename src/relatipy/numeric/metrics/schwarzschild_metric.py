@@ -5,7 +5,7 @@ from .base import BaseMetric
 
 class Schwarzschild(BaseMetric):
     def __init__(self, mass):
-        super().__init__(mass)
+        super().__init__(mass, valid_coordinate="Spherical")
 
     def _metric_dimensionless(self, xs):
         """
