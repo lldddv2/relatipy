@@ -10,6 +10,7 @@ from .base import CoordinateBase
 from .cartesian import Cartesian
 from .spherical import Spherical
 from .boyer_lindquist import BoyerLindquist
+from .cilindrical import Cylindrical
 
 # Dictionary mapping coordinate system names to their classes
 coordinate_systems = {
@@ -17,6 +18,7 @@ coordinate_systems = {
     "Cartesian": Cartesian,
     "Spherical": Spherical,
     "BoyerLindquist": BoyerLindquist,
+    "Cylindrical": Cylindrical,
 }
 
 __all__ = [
@@ -24,5 +26,6 @@ __all__ = [
     "Cartesian",
     "Spherical",
     "BoyerLindquist",
+    "Cylindrical",
     "coordinate_systems",
 ]
