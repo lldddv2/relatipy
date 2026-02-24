@@ -20,7 +20,7 @@ class BaseMetric:
         Parameters
         ----------
         xs : list
-            List of coordinates [t, x, y, z] or array of shape (N, 4).
+            List of coordinates [t, x, y, z] or array of shape (4,) or (4, N).
         """
         xs = numpy.asarray(xs, dtype=object)
 
@@ -30,8 +30,10 @@ class BaseMetric:
             return metric if dimensionless else self._metric_geom_to_si(metric)
 
         if xs.ndim == 2:
+            xs = xs.T  # (4, N) -> (N, 4)
             metrics = self._metric_dimensionless(xs)
-            return metrics if dimensionless else numpy.array([self._metric_geom_to_si(g) for g in metrics])
+            metrics = metrics if dimensionless else numpy.array([self._metric_geom_to_si(g) for g in metrics])
+            return metrics.T  # (N, 4, 4) -> (4, 4, N)
 
         raise ValueError(f"xs must be 1D (single point) or 2D (N points), got shape {xs.shape}")
     

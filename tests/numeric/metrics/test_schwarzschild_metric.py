@@ -33,7 +33,7 @@ x_vec_1 = np.array(initial_conditions_1.position())
 # CI 2
 M_2 = 1.989e30 * u.kg
 
-position_ep_2 = [900e3, np.pi / 3, 0.0]
+position_ep_2 = [900e6, np.pi / 3, 0.0]
 momentum_ep_2 = [0.0, 0, 10]
 
 xs_2 = [0.0 * u.s, position_ep_2[0] * u.m, position_ep_2[1] * u.rad, position_ep_2[2] * u.rad]
@@ -198,3 +198,25 @@ class TestSchwarzschildMetric:
         assert np.isclose(pos_ep[1], pos_rp[1]).all(), "The second position is not the same" # check if the second position is the same
         assert np.isclose(pos_ep[2], pos_rp[2]).all(), "The third position is not the same" # check if the third position is the same
         assert np.isclose(pos_ep[3], pos_rp[3]).all(), "The fourth position is not the same" # check if the fourth position is the same       
+
+    def test_schwarzschild_ds_dtau(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_1)
+        path = sch.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        ds_dtau = path._get_ds_dtau(sch)
+        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_2)
+        path = sch.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        ds_dtau = path._get_ds_dtau(sch)
+        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_3)
+        path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        ds_dtau = path._get_ds_dtau(sch)
+        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
