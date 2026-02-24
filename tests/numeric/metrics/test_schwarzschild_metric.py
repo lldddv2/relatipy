@@ -228,3 +228,25 @@ class TestSchwarzschildMetric:
         path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
         Lz = path._get_Lz()
         assert np.allclose(Lz, Lz[0]), "Lz is not constant over the trajectory"
+
+    def test_schwarzschild_E(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_1)
+        path = sch.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        E = path._get_E(sch)
+        assert np.allclose(E, E[0]), "E is not constant over the trajectory"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_2)
+        path = sch.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        E = path._get_E(sch)
+        assert np.allclose(E, E[0]), "E is not constant over the trajectory"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_3)
+        path = sch.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        E = path._get_E(sch)
+        assert np.allclose(E, E[0]), "E is not constant over the trajectory"

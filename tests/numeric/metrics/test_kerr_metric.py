@@ -203,3 +203,25 @@ class TestKerrMetric:
         path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
         ds_dtau = path._get_ds_dtau(kerr)
         assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+
+    def test_kerr_E(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_1, a_1)
+        path = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        E = path._get_E(kerr)
+        assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_2, a_2)
+        path = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        E = path._get_E(kerr)
+        assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_3, a_3)
+        path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        E = path._get_E(kerr)
+        assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"

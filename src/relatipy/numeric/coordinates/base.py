@@ -1,5 +1,5 @@
 from curses import echo
-from numpy import array, zeros_like, concatenate, asarray
+from numpy import array, zeros_like, concatenate, asarray, ones, einsum
 from itertools import product
 
 from ..constants import _c
@@ -111,8 +111,6 @@ class CoordinateBase:
         float
             g_{mu nu} u^mu u^nu (debería ser -c^2)
         """
-        from numpy import einsum, ones
-
         g = metric.metric(self.xs)  # (N, 4, 4)
         
         u = ones((4, len(self.dxs_dt[0])))
@@ -126,3 +124,14 @@ class CoordinateBase:
         rho = cylindrical.xs[1]
         v_phi = cylindrical.vs[1]
         return mass_particle * rho * v_phi
+
+    def _get_E(self, metric):
+        "obtener la energía conservada E = -g_{t mu} u^mu"
+        from numpy import einsum, ones
+
+        g = metric.metric(self.xs)  # (4, 4, N)
+
+        u = ones((4, len(self.dxs_dt[0])))
+        u[1:, :] = self.dxs_dt  # (4, N)
+
+        return -einsum('jn,jn->n', g[0, :, :], u)
