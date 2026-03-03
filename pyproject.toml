@@ -18,6 +18,8 @@ dependencies = [
     "plotly",
     "einsteinpy",
     "pytest>=9.0.2",
+    "astropy>=6",
+    "spiceypy>=8.0.2",
 ]
 
 [project.optional-dependencies]

@@ -1,6 +1,6 @@
 from astropy import units as u
 from ..constants import _c_SI, _G_SI
-
+from numpy import asarray
 
 
 class Validator:
@@ -86,6 +86,6 @@ class Validator:
         for i in vector_si:
             new_vector.append(self.validate_scalar(i))
 
-        return new_vector
+        return asarray(new_vector)
 
 validator = Validator()

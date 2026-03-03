@@ -302,3 +302,56 @@ class TestSchwarzschildMetric:
         path_spherical = sch.geodesic.get_path(initial_conditions_3_rp, taus_3).convert_to("Cartesian")  # (4, 100) 
         for i in range(7):
             assert np.isclose(path_cartesian[i], path_spherical[i]).all(), "The trajectories are not the same"
+
+
+    def test_schwarzschild_geodesic_with_orbital_elements(self):
+        # CI 1
+        initial_conditions_1_orbital_elements = initial_conditions_1_rp.convert_to("OrbitalElements", mass=M_1)
+        taus_1 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_1)
+
+        ## 1.1 Spherical to OrbitalElements
+        path_spherical = sch.geodesic.get_path(initial_conditions_1_rp, taus_1).convert_to("Spherical") # (8, 100)
+        path_orbital_elements = sch.geodesic.get_path(initial_conditions_1_orbital_elements, taus_1).convert_to("Spherical")  # (8, 100)
+
+        assert np.isclose(path_spherical[0], path_orbital_elements[0]).all()
+        assert np.isclose(path_spherical[1], path_orbital_elements[1]).all()
+        assert np.isclose(path_spherical[2], path_orbital_elements[2]).all()
+        assert np.isclose(path_spherical[3], path_orbital_elements[3]).all()
+        assert np.isclose(path_spherical[4], path_orbital_elements[4]).all()
+        assert np.isclose(path_spherical[5], path_orbital_elements[5]).all()
+        assert np.isclose(path_spherical[6], path_orbital_elements[6]).all()
+
+        # CI 2
+        initial_conditions_2_orbital_elements = initial_conditions_2_rp.convert_to("OrbitalElements", mass=M_2)
+        taus_2 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_2)
+
+        ## 2.1 Spherical to OrbitalElements
+        path_spherical = sch.geodesic.get_path(initial_conditions_2_rp, taus_2).convert_to("Spherical") # (8, 100)
+        path_orbital_elements = sch.geodesic.get_path(initial_conditions_2_orbital_elements, taus_2).convert_to("Spherical")  # (8, 100)
+
+        assert np.isclose(path_spherical[0], path_orbital_elements[0]).all()
+        assert np.isclose(path_spherical[1], path_orbital_elements[1]).all()
+        assert np.isclose(path_spherical[2], path_orbital_elements[2]).all()
+        assert np.isclose(path_spherical[3], path_orbital_elements[3]).all()
+        assert np.isclose(path_spherical[4], path_orbital_elements[4]).all()
+        assert np.isclose(path_spherical[5], path_orbital_elements[5]).all()
+        assert np.isclose(path_spherical[6], path_orbital_elements[6]).all()
+
+        # CI 3
+        initial_conditions_3_orbital_elements = initial_conditions_3_rp.convert_to("OrbitalElements", mass=M_3)
+        taus_3 = np.linspace(0, 100, 100)
+        sch = rp_Schwarzschild(M_3)
+
+        ## 3.1 Spherical to OrbitalElements
+        path_spherical = sch.geodesic.get_path(initial_conditions_3_rp, taus_3).convert_to("Spherical") # (8, 100)
+        path_orbital_elements = sch.geodesic.get_path(initial_conditions_3_orbital_elements, taus_3).convert_to("Spherical")  # (8, 100)
+
+        assert np.isclose(path_spherical[0], path_orbital_elements[0], atol=1e-4).all()
+        assert np.isclose(path_spherical[1], path_orbital_elements[1], atol=1e-4).all()
+        assert np.isclose(path_spherical[2], path_orbital_elements[2], atol=1e-4).all()
+        assert np.isclose(path_spherical[3], path_orbital_elements[3], atol=1e-4).all()
+        assert np.isclose(path_spherical[4], path_orbital_elements[4], atol=1e-4).all()
+        assert np.isclose(path_spherical[5], path_orbital_elements[5], atol=1e-4).all()
+        assert np.isclose(path_spherical[6], path_orbital_elements[6], atol=1e-4).all()
