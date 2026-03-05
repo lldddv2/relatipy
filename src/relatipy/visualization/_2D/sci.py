@@ -68,7 +68,7 @@ class SciSubplot:
             "legend.labelspacing":  0.4,    # espacio vertical entre entradas
 
             # ── Resolución ────────────────────────────────────────────────
-            "figure.dpi":           300,
+            "figure.dpi":           125,
             "savefig.dpi":          300,
             "savefig.bbox":         "tight",
         })
