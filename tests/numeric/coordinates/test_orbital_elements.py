@@ -1,4 +1,5 @@
 import numpy as np
+import astropy.units as u_astropy
 from relatipy.numeric.coordinates import OrbitalElements, Cartesian
 
 # CI 1
@@ -22,7 +23,7 @@ fs = [0.5, 0.6, 0.7, 0.8]
 mass_2 = 1.0
 
 # CI 3: estado cartesiano de una órbita acotada (e < 1) para que el round-trip sea válido
-_mass_3 = 1e30  # kg, masa central grande para órbita ligada
+_mass_3 = 1e30 * u_astropy.kg  # masa central en kg explícito
 _oe_ref = OrbitalElements(0.0, 1e7, 0.1, 0.2, 0.3, 0.4, 0.5, _mass_3)
 _cart_ref = _oe_ref.convert_to("Cartesian")
 xs = _cart_ref.xs
