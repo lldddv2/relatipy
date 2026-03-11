@@ -3,7 +3,7 @@
 Exports package version and convenience imports if needed.
 """
 
-__version__ = "0.0.0"
+__version__ = "0.3.0"
 
 # Expose subpackages for convenience
 from . import numeric

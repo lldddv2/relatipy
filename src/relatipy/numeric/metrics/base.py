@@ -48,31 +48,6 @@ class BaseMetric:
         """
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    @staticmethod
-    def _metric_geom_to_si(g_geom):
-        """
-        Convert metric from geometric convention (x0 = ct)
-        to SI convention (x0 = t).
-
-        Parameters
-        ----------
-        g_geom : array-like (4x4)
-            Metric tensor in geometric units.
-
-        Returns
-        -------
-        numpy.ndarray
-            Metric tensor in SI convention.
-        """
-        g_geom = numpy.asarray(g_geom, dtype=float)
-        g_si = numpy.zeros_like(g_geom)
-
-        for mu, nu in product(range(4), repeat=2):
-            n_zero = (mu == 0) + (nu == 0)
-            g_si[mu, nu] = (_c_SI ** n_zero) * g_geom[mu, nu]
-
-        return g_si
-
     def get_4velocity(self, coordinate):
         """
         Returns the four-velocity of a test particle in the given metric.
@@ -124,12 +99,52 @@ class BaseMetric:
 
     @staticmethod
     def _christoffel_dimensionless_to_si(Gamma_geom):
+        """
+        Convert Christoffel symbols from geometric units (G=c=1, positions in GM/c²)
+        to SI convention (x0 = t in seconds, positions in meters).
+
+        Scaling follows from the coordinate transformation:
+        - t_geom = t_SI / T_ref
+        - r_geom = r_SI / L_ref
+
+        which implies
+        Γ_SI^ρ_{μν} = c_SI^{(μ==0)+(ν==0)-(ρ==0)}
+                      * L_ref^{(ρ in {0,1}) - (μ in {0,1}) - (ν in {0,1})}
+                      * Γ_geom^ρ_{μν}.
+        """
+        from ..constants import _L_ref
+
         Gamma_geom = numpy.asarray(Gamma_geom, dtype=float)
         Gamma_si = numpy.zeros_like(Gamma_geom)
 
         for rho in range(4):
             for mu, nu in product(range(4), repeat=2):
-                exponent = (mu == 0) + (nu == 0) - (rho == 0)
-                Gamma_si[rho, mu, nu] = (_c_SI ** exponent) * Gamma_geom[rho, mu, nu]
+                exp_c = (mu == 0) + (nu == 0) - (rho == 0)
+                in_tr = lambda a: (a == 0) or (a == 1)
+                exp_L = in_tr(rho) - in_tr(mu) - in_tr(nu)
+                factor = (_c_SI ** exp_c) * (_L_ref ** exp_L)
+                Gamma_si[rho, mu, nu] = factor * Gamma_geom[rho, mu, nu]
 
         return Gamma_si
+
+    @staticmethod
+    def _metric_geom_to_si(g_geom):
+        """
+        Convert metric from geometric units (G=c=1, positions in GM/c²)
+        to SI convention (x0 = t in seconds, positions in meters).
+
+        Conversion factors:
+        - Temporal indices (mu=0 or nu=0): multiply by c_SI per index
+        - Angular indices (mu=2,3 or nu=2,3): multiply by L_ref per index
+          because g[2,2] = -r² and r is in geometric units
+        """
+        from ..constants import _L_ref
+        g_geom = numpy.asarray(g_geom, dtype=float)
+        g_si = numpy.zeros_like(g_geom)
+
+        for mu, nu in product(range(4), repeat=2):
+            n_zero = (mu == 0) + (nu == 0)
+            n_r = (mu in [2, 3]) + (nu in [2, 3])
+            g_si[mu, nu] = (_c_SI ** n_zero) * (_L_ref ** n_r) * g_geom[mu, nu]
+
+        return g_si

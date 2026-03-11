@@ -39,22 +39,15 @@ class Spherical(CoordinateBase):
         sin_x3 = sin(xs[3])
         cos_x3 = cos(xs[3])
 
-        # vx = sin(theta)*cos(phi)*vr + r*cos(theta)*cos(phi)*vtheta - r*sin(theta)*sin(phi)*vphi
-        vs_p[0] = (
-            sin_x2 * cos_x3 * vs[0]
-            + xs[1] * cos_x2 * cos_x3 * vs[1]
-            - xs[1] * sin_x2 * sin_x3 * vs[2]
-        )
+        # vs[0] = vr/c, vs[1] = r*dθ/dt/c, vs[2] = r*sin(θ)*dφ/dt/c
+        # vx/c = sin(θ)cos(φ)*vr/c + cos(θ)cos(φ)*(r*dθ/dt/c) - sin(θ)sin(φ)*(r*sin(θ)*dφ/dt/c)/sin(θ)
+        vs_p[0] = sin_x2 * cos_x3 * vs[0] + cos_x2 * cos_x3 * vs[1] - sin_x3 * vs[2]
 
-        # vy = sin(theta)*sin(phi)*vs[0] + xs[1]*cos(theta)*sin(phi)*vs[1] + xs[1]*sin(theta)*cos(phi)*vs[2]
-        vs_p[1] = (
-            sin_x2 * sin_x3 * vs[0]
-            + xs[1] * cos_x2 * sin_x3 * vs[1]
-            + xs[1] * sin_x2 * cos_x3 * vs[2]
-        )
+        # vy/c = sin(θ)sin(φ)*vr/c + cos(θ)sin(φ)*(r*dθ/dt/c) + cos(φ)*(r*sin(θ)*dφ/dt/c)/sin(θ)
+        vs_p[1] = sin_x2 * sin_x3 * vs[0] + cos_x2 * sin_x3 * vs[1] + cos_x3 * vs[2]
 
-        # vz = cos(theta)*vs[0] - xs[1]*sin(theta)*vs[1]
-        vs_p[2] = cos_x2 * vs[0] - xs[1] * sin_x2 * vs[1]
+        # vz/c = cos(θ)*vr/c - sin(θ)*(r*dθ/dt/c)
+        vs_p[2] = cos_x2 * vs[0] - sin_x2 * vs[1]
 
         return xs_p, vs_p
 
@@ -68,23 +61,18 @@ class Spherical(CoordinateBase):
         xs[2] = arccos(xs_p[3] / xs[1])
         xs[3] = arctan2(xs_p[2], xs_p[1])
 
-        # Velocidades esféricas (solo las 3 espaciales)
-        # Usando las fórmulas correctas que son inversas exactas de las de _convert_to_cartesian
         sin_x2 = sin(xs[2])
         cos_x2 = cos(xs[2])
         sin_x3 = sin(xs[3])
         cos_x3 = cos(xs[3])
 
-        # dr/dt = sin(theta)*cos(phi)*vx + sin(theta)*sin(phi)*vs_p[1] + cos(theta)*vz
+        # vr = sin(theta)*cos(phi)*vx + sin(theta)*sin(phi)*vy + cos(theta)*vz
         vs[0] = sin_x2 * cos_x3 * vs_p[0] + sin_x2 * sin_x3 * vs_p[1] + cos_x2 * vs_p[2]
 
-        # dtheta/dt = (1/r) * (cos(theta)*cos(phi)*vs_p[0] + cos(theta)*sin(phi)*vs_p[1] - sin(theta)*vs_p[2])
-        vs[1] = (
-            cos_x2 * cos_x3 * vs_p[0] + cos_x2 * sin_x3 * vs_p[1] - sin_x2 * vs_p[2]
-        ) / xs[1]
+        # vs[1] = r*dtheta/dt = cos(theta)*cos(phi)*vx + cos(theta)*sin(phi)*vy - sin(theta)*vz
+        vs[1] = cos_x2 * cos_x3 * vs_p[0] + cos_x2 * sin_x3 * vs_p[1] - sin_x2 * vs_p[2]
 
-        vs[2] = (-sin_x3 * vs_p[0] + cos_x3 * vs_p[1]) / (xs[1] * sin_x2)
+        # vs[2] = r*sin(theta)*dphi/dt = -sin(phi)*vx + cos(phi)*vy
+        vs[2] = -sin_x3 * vs_p[0] + cos_x3 * vs_p[1]
 
-        coordinate = Spherical(xs, vels=vs, from_dxs_dt=False)
-
-        return coordinate
+        return Spherical(xs, vels=vs, from_dxs_dt=False)
