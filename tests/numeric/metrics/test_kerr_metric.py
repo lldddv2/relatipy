@@ -7,7 +7,23 @@ from einsteinpy.coordinates import BoyerLindquistDifferential
 from relatipy.numeric.metrics import Kerr as rp_Kerr
 from relatipy.numeric.coordinates import BoyerLindquist
 from einsteinpy.geodesic import Timelike
-from initial_conditions import M_1, M_2, M_3, xs_1, vs_1, xs_2, vs_2, xs_3, vs_3, position_ep_1, position_ep_2, position_ep_3, momentum_ep_1, momentum_ep_2, momentum_ep_3
+from initial_conditions import (
+    M_1,
+    M_2,
+    M_3,
+    xs_1,
+    vs_1,
+    xs_2,
+    vs_2,
+    xs_3,
+    vs_3,
+    position_ep_1,
+    position_ep_2,
+    position_ep_3,
+    momentum_ep_1,
+    momentum_ep_2,
+    momentum_ep_3,
+)
 
 # CI 1
 a_1 = 0.5  # dimensionless spin parameter
@@ -79,23 +95,44 @@ class TestKerrMetric:
         assert np.isclose(g, g_rp).all()
 
     def test_kerr_christoffel_symbols(self):
+        """
+        Verifica:
+        - Simetría Γ^ρ_{μν} = Γ^ρ_{νμ} (conexión de Levi-Civita)
+        - Consistencia entre dimensionless=True y dimensionless=False
+        """
+
         # CI 1
         kerr = rp_Kerr(M_1, a_1)
-        christoffel = kerr.get_christoffel_symbols(xs_1, dimensionless=False)
-        christoffel_rp = kerr.get_christoffel_symbols(xs_1, dimensionless=False)
-        assert np.isclose(christoffel, christoffel_rp).all()
+        G_dimless = kerr.get_christoffel_symbols(xs_1, dimensionless=True)
+        G_si = kerr.get_christoffel_symbols(xs_1, dimensionless=False)
+        assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
+            "CI1: Christoffel no es simétrico en índices bajos (dimensionless)"
+        )
+        assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
+            "CI1: Christoffel no es simétrico en índices bajos (SI)"
+        )
 
         # CI 2
         kerr = rp_Kerr(M_2, a_2)
-        christoffel = kerr.get_christoffel_symbols(xs_2, dimensionless=False)
-        christoffel_rp = kerr.get_christoffel_symbols(xs_2, dimensionless=False)
-        assert np.isclose(christoffel, christoffel_rp).all()
+        G_dimless = kerr.get_christoffel_symbols(xs_2, dimensionless=True)
+        G_si = kerr.get_christoffel_symbols(xs_2, dimensionless=False)
+        assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
+            "CI2: Christoffel no es simétrico en índices bajos (dimensionless)"
+        )
+        assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
+            "CI2: Christoffel no es simétrico en índices bajos (SI)"
+        )
 
         # CI 3
         kerr = rp_Kerr(M_3, a_3)
-        christoffel = kerr.get_christoffel_symbols(xs_3, dimensionless=False)
-        christoffel_rp = kerr.get_christoffel_symbols(xs_3, dimensionless=False)
-        assert np.isclose(christoffel, christoffel_rp).all()
+        G_dimless = kerr.get_christoffel_symbols(xs_3, dimensionless=True)
+        G_si = kerr.get_christoffel_symbols(xs_3, dimensionless=False)
+        assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
+            "CI3: Christoffel no es simétrico en índices bajos (dimensionless)"
+        )
+        assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
+            "CI3: Christoffel no es simétrico en índices bajos (SI)"
+        )
 
     # Comparar geodésicas completas con einsteinpy se ha descartado por
     # diferencias de convención en las condiciones iniciales y 4-velocidad.
@@ -143,6 +180,28 @@ class TestKerrMetric:
         path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
         E = path._get_E(kerr)
         assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"
+
+    def test_kerr_Lz(self):
+        # CI 1
+        taus_1 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_1, a_1)
+        path = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
+        Lz = path._get_Lz(kerr)
+        assert np.isclose(Lz, Lz[0]).all(), "CI1: Lz no es constante"
+
+        # CI 2
+        taus_2 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_2, a_2)
+        path = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
+        Lz = path._get_Lz(kerr)
+        assert np.isclose(Lz, Lz[0]).all(), "CI2: Lz no es constante"
+
+        # CI 3
+        taus_3 = np.linspace(0, 100, 100)
+        kerr = rp_Kerr(M_3, a_3)
+        path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
+        Lz = path._get_Lz(kerr)
+        assert np.isclose(Lz, Lz[0]).all(), "CI3: Lz no es constante"
 
     def test_kerr_Q(self):
         # CI 1

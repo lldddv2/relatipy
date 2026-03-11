@@ -53,34 +53,54 @@ class BoyerLindquist(CoordinateBase):
 
     @staticmethod
     def _convert_to_cartesian(xs, vs, a):
+        # xs = [t, r, theta, phi]  (unidades geométricas)
+        # vs = [vr, vtheta, vphi]  velocidades físicas BL:
+        #   vr     = dr/dt     * sqrt(Sigma) / sqrt(r²+a²)
+        #   vtheta = dtheta/dt * sqrt(Sigma)
+        #   vphi   = dphi/dt   * sqrt(r²+a²) * sin(theta)
+        # Jacobiana BL→Cart expresada en vs (no en dxs_dt):
+        #   dx/dt = (r/xa) * sin(theta)*cos(phi) * (xa/sqrt_cos)*vr
+        #         + xa*cos(theta)*cos(phi)        * (1/sqrt_cos)*vtheta
+        #         - sin(phi)                      * vphi
+        # donde sqrt_cos = sqrt(Sigma), xa = sqrt(r²+a²)
         xs_p = numpy.zeros_like(xs)
         vs_p = numpy.zeros_like(vs)
 
-        xs[0] = xs_p[0]
+        xs_p[0] = xs[0]
 
-        xa = sqrt(xs[1] ** 2 + a**2)
-        sin_norm = xa * sin(xs[2])
-        xs_p[1] = sin_norm * cos(xs[3])
-        xs_p[2] = sin_norm * sin(xs[3])
-        xs_p[3] = xs[1] * cos(xs[2])
+        r, theta, phi = xs[1], xs[2], xs[3]
+        xa = sqrt(r**2 + a**2)
+        sqrt_cos = sqrt(a**2 * cos(theta) ** 2 + r**2)  # sqrt(Sigma)
+        sin_t = sin(theta)
+        cos_t = cos(theta)
+        sin_p = sin(phi)
+        cos_p = cos(phi)
+
+        xs_p[1] = xa * sin_t * cos_p
+        xs_p[2] = xa * sin_t * sin_p
+        xs_p[3] = r * cos_t
+
+        # dxs_dt = vs convertidas de vuelta
+        dr_dt = vs[0] * xa / sqrt_cos
+        dtheta_dt = vs[1] / sqrt_cos
+        dphi_dt = vs[2] / (xa * sin_t)
 
         vs_p[0] = (
-            (xs[1] * vs[0] * sin(xs[2]) * cos(xs[3]) / xa)
-            + (xa * cos(xs[2]) * cos(xs[3]) * vs[1])
-            - (xa * sin(xs[2]) * sin(xs[3]) * vs[2])
+            (r * dr_dt * sin_t * cos_p / xa)
+            + (xa * cos_t * cos_p * dtheta_dt)
+            - (xa * sin_t * sin_p * dphi_dt)
         )
         vs_p[1] = (
-            (xs[1] * vs[0] * sin(xs[2]) * sin(xs[3]) / xa)
-            + (xa * cos(xs[2]) * sin(xs[3]) * vs[1])
-            + (xa * sin(xs[2]) * cos(xs[3]) * vs[2])
+            (r * dr_dt * sin_t * sin_p / xa)
+            + (xa * cos_t * sin_p * dtheta_dt)
+            + (xa * sin_t * cos_p * dphi_dt)
         )
-        vs_p[2] = (vs[0] * cos(xs[2])) - (xs[1] * sin(xs[2]) * vs[1])
+        vs_p[2] = (dr_dt * cos_t) - (r * sin_t * dtheta_dt)
 
         return xs_p, vs_p
 
     @staticmethod
     def _convert_from_cartesian(xs_p, vs_p, a):
-
         xs = numpy.zeros_like(xs_p)
         vs = numpy.zeros_like(vs_p)
 
@@ -108,8 +128,30 @@ class BoyerLindquist(CoordinateBase):
             (vs_p[1] * xs_p[1] - vs_p[0] * xs_p[2]) / (xs_p[1] ** 2)
         )
 
-        coordinate = BoyerLindquist(xs, vels=vs, from_dxs_dt=False, a=a)
+        coordinate = BoyerLindquist(xs, vels=vs, from_dxs_dt=True, a=a)
         return coordinate
+
+    def _get_Lz(self, metric, mass_particle=1.0):
+        """
+        Obtener el momento angular azimutal conservado en Kerr.
+
+        En Boyer-Lindquist, la cantidad conservada asociada a la simetría
+        axial es el momento canónico covariante:
+            L_z = p_φ = g_{φμ} u^μ = g_{φφ} u^φ + g_{tφ} u^t
+
+        El término g_{tφ} u^t es el efecto de frame-dragging; ignorarlo
+        (como hace la fórmula newtoniana ρ·v_φ) produce una cantidad que
+        NO se conserva a lo largo de la geodésica de Kerr.
+        """
+        from numpy import einsum, ones
+
+        g = metric.metric(self.xs)  # (4, 4, N)
+
+        u = ones((4, len(self.dxs_dt[0])))
+        u[1:, :] = self.dxs_dt  # (4, N)
+
+        # L_z = g_{3μ} u^μ  (índice 3 = φ)
+        return mass_particle * einsum("jn,jn->n", g[3, :, :], u)
 
     def _get_Q(self, metric):
         "Obtener la constante de Carter Q"
@@ -117,12 +159,14 @@ class BoyerLindquist(CoordinateBase):
         r, theta = self.xs[1], self.xs[2]
 
         E = self._get_E(metric)
-        Lz = self._get_Lz()
-        
+        Lz = self._get_Lz(metric)
+
         g = metric.metric(self.xs)  # (4, 4, N)
-        
+
         # p_theta = g_theta_theta * theta_dot
         g_thth = g[2, 2, :]
         p_theta = g_thth * self.dxs_dt[1]
-        
-        return p_theta**2 + numpy.cos(theta) ** 2 * (a**2 * (1 - E**2) + Lz**2 / numpy.sin(theta) ** 2)
+
+        return p_theta**2 + numpy.cos(theta) ** 2 * (
+            a**2 * (1 - E**2) + Lz**2 / numpy.sin(theta) ** 2
+        )

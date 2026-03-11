@@ -32,8 +32,8 @@ class Kerr(BaseMetric):
             a_2  = a * a
             R_s  = self.R_s
 
-            Sigma = x1_2 * (1 + a_2 / x1_2 * c_x2)
-            Delta = x1_2 * (1 - (R_s * x1 + a_2) / x1_2)
+            Sigma = x1_2 + a_2 * c_x2
+            Delta = x1_2 - R_s * x1 + a_2
 
             A = 1 - R_s * x1 / Sigma
             B = -Sigma / Delta
