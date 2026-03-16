@@ -20,7 +20,7 @@ class SciSubplot:
         "gray":    "#999999",   # curvas de ajuste
     }
 
-    def __init__(self, grid=False, minor_ticks=True, *args, **kwargs):
+    def __init__(self, grid=False, minor_ticks=True, subplot=None, *args, **kwargs):
         import matplotlib as mpl
         from matplotlib.ticker import AutoMinorLocator
 
@@ -73,17 +73,58 @@ class SciSubplot:
             "savefig.bbox":         "tight",
         })
 
-        self.fig = plt.figure(*args, **kwargs)
-        self.ax  = self.fig.add_subplot(111)
+        # ── Creación de figura y ejes (soporte para subplots) ─────────────
+        if subplot is None:
+            # Comportamiento original: una sola figura y un solo eje
+            self.fig = plt.figure(*args, **kwargs)
+            self.ax = self.fig.add_subplot(111)
+            self.axs = self.ax
+        else:
+            # Nuevo comportamiento: subplots tipo matplotlib
+            # Ejemplo de uso:
+            #   workspace = SciSubplot(subplot=(2, 2), figsize=(6, 6))
+            #   fig, axs = workspace.fig, workspace.axs
+            if isinstance(subplot, (tuple, list)):
+                # subplot=(nrows, ncols, ...) + args/kwargs normales de subplots
+                self.fig, axs = plt.subplots(*subplot, *args, **kwargs)
+            elif isinstance(subplot, dict):
+                # subplot={"nrows": ..., "ncols": ..., ...} + args normales
+                # Ojo: en Python, los args posicionales deben ir antes que los kwargs
+                self.fig, axs = plt.subplots(*args, **subplot, **kwargs)
+            else:
+                raise ValueError(
+                    "El parámetro 'subplot' debe ser una tupla/lista (nrows, ncols, ...) "
+                    "o un dict con argumentos para matplotlib.pyplot.subplots."
+                )
+
+            self.axs = axs
+            # Eje "principal" para mantener compatibilidad con código existente
+            if hasattr(axs, "flat"):
+                self.ax = axs.flat[0]
+            else:
+                self.ax = axs
 
         # ── Minor ticks ───────────────────────────────────────────────────
         if minor_ticks:
-            self.ax.xaxis.set_minor_locator(AutoMinorLocator())
-            self.ax.yaxis.set_minor_locator(AutoMinorLocator())
+            axes_iter = (
+                list(self.axs.flat)
+                if hasattr(self.axs, "flat")
+                else [self.axs]
+            )
+            for _ax in axes_iter:
+                _ax.xaxis.set_minor_locator(AutoMinorLocator())
+                _ax.yaxis.set_minor_locator(AutoMinorLocator())
 
         # ── Grid (opcional, muy sutil) ────────────────────────────────────
         if grid:
-            self.add_grid()
+            axes_iter = (
+                list(self.axs.flat)
+                if hasattr(self.axs, "flat")
+                else [self.axs]
+            )
+            for _ax in axes_iter:
+                _ax.grid(True, linestyle="--", color="black",
+                         alpha=0.12, lw=0.5, zorder=0)
 
     # ── Helpers ───────────────────────────────────────────────────────────
 
