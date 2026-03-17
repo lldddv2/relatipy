@@ -4,7 +4,9 @@ Kerr black hole 3D plotter (event horizon + optional ergosphere).
 import numpy as np
 
 from .base import BasePlotBlackHole, EquatorialPlane
-from ..base_elements import construct_surface, construct_arrow_scatter
+from ..base_elements import construct_surface, construct_arrow_scatter, construct_path
+import plotly.graph_objects as go
+from ..orbits import construct_isco
 
 
 def _build_kerr_surface(r_func, a, n_theta=60, n_phi=60) -> tuple:
@@ -43,13 +45,15 @@ def _build_kerr_surface(r_func, a, n_theta=60, n_phi=60) -> tuple:
 class PlotKerr(BasePlotBlackHole):
     """Plotter for Kerr black hole (event horizon + optional ergosphere)."""
 
-    def __init__(self, metric, show_ergosphere=True):
+    def __init__(self, metric, show_ergosphere=True, show_isco_prograde=True, show_isco_retrograde=True):
         from relatipy.numeric.metrics.kerr_metric import Kerr
 
         if not isinstance(metric, Kerr):
             raise TypeError("metric must be a Kerr instance")
         super().__init__(metric)
         self.show_ergosphere = show_ergosphere
+        self.show_isco_prograde = show_isco_prograde
+        self.show_isco_retrograde = show_isco_retrograde
         self.add_plane(EquatorialPlane())
 
     def _build_black_hole_elements(self) -> list:
@@ -95,5 +99,13 @@ class PlotKerr(BasePlotBlackHole):
                 label=f"Spin (a: {a:.1f})",
             )
             elements.extend(spin_traces)
+        
+        # ISCOs
+        if self.show_isco_prograde:
+            isco_prograde = construct_isco(self.metric.isco_prograde, True, 'blue', 8, 4, 0.6)
+            elements.extend(isco_prograde)
+        if self.show_isco_retrograde:
+            isco_retrograde = construct_isco(self.metric.isco_retrograde, False, 'green', 8, 4, 0.6)
+            elements.extend(isco_retrograde)
 
         return elements

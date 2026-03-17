@@ -333,3 +333,16 @@ class OrbitalElements:
         if mass is None:
             raise ValueError("mass is required to convert to OrbitalElements.")
         return OrbitalElements.from_cartesian(xs_p, vs_p, mass)
+
+    def _get_period(self):
+        """
+        Calcula el periodo orbital en unidades geométricas [GM/c³].
+        """
+        L = _G_SI * self.mass / _c_SI**2  # m por unidad geométrica (para esta masa)
+        T = _G_SI * self.mass / _c_SI**3  # s por unidad geométrica (para esta masa)
+
+        a_m  = self.a * L
+        mu_si = _G_SI * self.mass
+
+        T_sec = 2 * numpy.pi * numpy.sqrt(a_m**3 / mu_si)
+        return T_sec / T

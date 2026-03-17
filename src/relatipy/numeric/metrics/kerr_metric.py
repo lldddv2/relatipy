@@ -7,6 +7,36 @@ class Kerr(BaseMetric):
     def __init__(self, mass, a):
         super().__init__(mass, valid_coordinate="BoyerLindquist", kwargs={"a": a})
         self.a = a * self.R_s / 2
+        self.isco_prograde = self._get_isco(prograde=True)
+        self.isco_retrograde = self._get_isco(prograde=False)
+
+    def _get_isco(self, prograde: bool = True) -> float:
+        """
+        Calculates the radius of the ISCO in the Kerr metric.
+
+        Parameters
+        ----------
+        prograde : bool
+            If True, prograde (co-rotating) orbit. If False, retrograde.
+
+        Returns
+        -------
+        float
+            Radius of the ISCO in geometric units (same as M).
+
+        References
+        ----------
+        Bardeen, Press & Teukolsky (1972), ApJ, 178, 347.
+        """
+        a_hat = self.a / self.mass  # spin adimensional ∈ [0, 1]
+
+        Z1 = 1 + (1 - a_hat**2)**(1/3) * (
+            (1 + a_hat)**(1/3) + (1 - a_hat)**(1/3)
+        )
+        Z2 = numpy.sqrt(3 * a_hat**2 + Z1**2)
+
+        sign = -1 if prograde else +1
+        return self.mass * (3 + Z2 + sign * numpy.sqrt((3 - Z1) * (3 + Z1 + 2 * Z2)))
 
     def _metric_dimensionless(self, xs):
         """

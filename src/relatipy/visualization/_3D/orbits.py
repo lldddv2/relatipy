@@ -71,3 +71,72 @@ def construct_basic_path_plot(R_s, path, color_path='red', color_black_hole='bla
 
     set_axis_equal(fig, max_range*1.2)
     return fig
+
+
+def construct_isco(r: float, prograde: bool, color: str, n_arrows: int = 8, line_width: int = 4, opacity: float = 0.9) -> list:
+    """
+    Construye el círculo ISCO con flechas de rotación tangenciales centradas sobre el círculo.
+
+    Parameters
+    ----------
+    r : float
+        Radio del ISCO en unidades geométricas.
+    prograde : bool
+        Si True, sentido antihorario (pro-grado). Si False, horario (retro-grado).
+    color : str
+        Color del círculo y las flechas.
+    n_arrows : int
+        Número de flechas distribuidas sobre el círculo.
+    line_width : int
+        Grosor de línea en píxeles de pantalla.
+    opacity : float
+        Opacidad del círculo.
+
+    Returns
+    -------
+    list[go.Scatter3d]
+    """
+    label = "↺ ISCO pro-grado" if prograde else "↻ ISCO retro-grado"
+    sign = 1 if prograde else -1
+
+    phis = np.linspace(0, 2 * np.pi, 120)
+    circle = go.Scatter3d(
+        x=r * np.cos(phis), y=r * np.sin(phis), z=np.zeros(120),
+        mode='lines',
+        line=dict(color=color, width=line_width, dash='dashdot'),
+        opacity=opacity,
+        name=label,
+        legendgroup=label,
+    )
+
+    length   = r * 0.3
+    head_len = 0.2 * length
+    spread   = 0.12 * length
+
+    arrow_phis = np.linspace(0, 2 * np.pi, n_arrows, endpoint=False)
+    arrows = []
+    for phi in arrow_phis:
+        u_hat = sign * (-np.sin(phi))
+        v_hat = sign * ( np.cos(phi))
+
+        tip_x = r * np.cos(phi)
+        tip_y = r * np.sin(phi)
+
+        bx = tip_x - head_len * u_hat
+        by = tip_y - head_len * v_hat
+
+        px, py = -v_hat, u_hat  # perpendicular
+
+        arrows.append(go.Scatter3d(
+            x=[tip_x, bx + spread * px, None, tip_x, bx - spread * px],
+            y=[tip_y, by + spread * py, None, tip_y, by - spread * py],
+            z=[0, 0, None, 0, 0],
+            mode='lines',
+            line=dict(color=color, width=line_width),
+            opacity=1,
+            hoverinfo='skip',
+            showlegend=False,
+            legendgroup=label,
+        ))
+
+    return [circle] + arrows

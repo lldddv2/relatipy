@@ -6,6 +6,10 @@ from .base import BaseMetric
 class Schwarzschild(BaseMetric):
     def __init__(self, mass):
         super().__init__(mass, valid_coordinate="Spherical")
+        self.isco = self._get_isco()
+
+    def _get_isco(self):
+        return 3 * self.R_s
 
     def _metric_dimensionless(self, xs):
         """
