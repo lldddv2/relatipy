@@ -56,13 +56,13 @@ class OrbitalElements:
         e : float
             Excentricidad (0 <= e < 1 para órbitas cerradas)
         inc : float
-            Inclinación [rad]
+            Inclinación [deg]
         Omega : float
-            Longitud del nodo ascendente (RAAN) [rad]
+            Longitud del nodo ascendente (RAAN) [deg]
         omega : float
-            Argumento del periastro [rad]
+            Argumento del periastro [deg]
         f : float
-            Anomalía verdadera [rad]
+            Anomalía verdadera [deg]
         mass : float
             Masa del cuerpo central [kg]
         """
@@ -80,10 +80,22 @@ class OrbitalElements:
         self.t = _as_array_or_scalar(t)
         self.a = _as_array_or_scalar(a)
         self.e = _as_array_or_scalar(e)
+        # API pública en grados, pero mantenemos internamente radianes para SPICE.
         self.inc = _as_array_or_scalar(inc)
         self.Omega = _as_array_or_scalar(Omega)
         self.omega = _as_array_or_scalar(omega)
         self.f = _as_array_or_scalar(f)
+        deg2rad = numpy.pi / 180.0
+        self._inc_rad = numpy.asarray(self.inc, dtype=float) * deg2rad
+        self._Omega_rad = numpy.asarray(self.Omega, dtype=float) * deg2rad
+        self._omega_rad = numpy.asarray(self.omega, dtype=float) * deg2rad
+        self._f_rad = numpy.asarray(self.f, dtype=float) * deg2rad
+        if not isinstance(self.inc, numpy.ndarray):
+            # Normalizar a float para evitar que scalars queden como 0-d arrays
+            self._inc_rad = float(self._inc_rad)
+            self._Omega_rad = float(self._Omega_rad)
+            self._omega_rad = float(self._omega_rad)
+            self._f_rad = float(self._f_rad)
 
         # La masa puede ser escalar o lista; para listas usamos el validador existente
         self.mass = _mass_to_kg(mass)
@@ -91,7 +103,10 @@ class OrbitalElements:
         self.name_metric = "OrbitalElements"
         self.kwargs = {"mass": mass}
 
-        self.state_vector = numpy.array((self.t, self.a, self.e, self.inc, self.Omega, self.omega, self.f))
+        # Nota: state_vector refleja la API pública (ángulos en grados).
+        self.state_vector = numpy.array(
+            (self.t, self.a, self.e, self.inc, self.Omega, self.omega, self.f)
+        )
 
 
     # si se hace []
@@ -109,19 +124,19 @@ class OrbitalElements:
         if index is not None:
             a = self.a[index]
             e = self.e[index]
-            inc = self.inc[index]
-            Omega = self.Omega[index]
-            omega = self.omega[index]
-            f = self.f[index]
+            inc = self._inc_rad[index]
+            Omega = self._Omega_rad[index]
+            omega = self._omega_rad[index]
+            f = self._f_rad[index]
             t = self.t[index] if isinstance(self.t, numpy.ndarray) else self.t
             mu = self.mu[index] if isinstance(self.mu, numpy.ndarray) else self.mu
         else:
             a = self.a
             e = self.e
-            inc = self.inc
-            Omega = self.Omega
-            omega = self.omega
-            f = self.f
+            inc = self._inc_rad
+            Omega = self._Omega_rad
+            omega = self._omega_rad
+            f = self._f_rad
             t = self.t
             mu = self.mu
 
@@ -214,6 +229,7 @@ class OrbitalElements:
         cartesian.t = self.t
         cartesian.a = self.a
         cartesian.e = self.e
+        # Propagamos la API pública (ángulos en grados) a la estructura de destino.
         cartesian.inc = self.inc
         cartesian.Omega = self.Omega
         cartesian.omega = self.omega
@@ -321,8 +337,19 @@ class OrbitalElements:
             numpy.sqrt(one_minus_e) * numpy.cos(E / 2)
         )
 
+        # SPICE devuelve ángulos en radianes; nuestra API los quiere en grados.
+        rad2deg = 180.0 / numpy.pi
         t_geom = t_sec / time_unit
-        return OrbitalElements(t_geom, a_geom, e, inc, Omega, omega, f, mass)
+        return OrbitalElements(
+            t_geom,
+            a_geom,
+            e,
+            float(inc) * rad2deg,
+            float(Omega) * rad2deg,
+            float(omega) * rad2deg,
+            float(f) * rad2deg,
+            mass,
+        )
 
     @staticmethod
     def _convert_from_cartesian(xs_p, vs_p, **kwargs):

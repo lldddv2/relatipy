@@ -23,7 +23,7 @@ class Geodesic:
 
         return numpy.concatenate([us0, as_])
 
-    def get_path(self, initial_conditions, taus, integrator="Radau"):
+    def get_path(self, initial_conditions, taus, integrator="Radau", adaptative=True):
         """
         Returns the geodesic equations for a test particle in the given metric.
 
@@ -40,7 +40,7 @@ class Geodesic:
             initial_conditions = initial_conditions.convert_to(self.valid_coordinate, **self.metric.kwargs)
 
         ys0 = self.metric.get_4state_vector(initial_conditions)
-        sol = self._get_path_from_4state_vector(ys0, taus, integrator=integrator)
+        sol = self._get_path_from_4state_vector(ys0, taus, integrator=integrator, adaptative=adaptative)
 
         dxs_dt = self.metric.get_dxs_dt_from_4velocity(sol[4:])
         ys = coordinate_systems[initial_conditions.name_metric](
@@ -52,7 +52,7 @@ class Geodesic:
 
         return ys
 
-    def _get_path_from_4state_vector(self, ys0, taus, integrator="Radau"):
+    def _get_path_from_4state_vector(self, ys0, taus, integrator="Radau", adaptative=True):
         """
         Returns the geodesic equations for a test particle in the given metric.
 
@@ -63,9 +63,16 @@ class Geodesic:
         taus : list
             List of proper time values where the solution is evaluated.
         """
+        if len(taus) < 2:
+            raise ValueError("taus must contain at least 2 values.")
+
         t_span = (taus[0], taus[-1])
 
-        sol = solve_ivp(self.model_geodesic, t_span, ys0, t_eval=taus, method=integrator)
+        if adaptative:
+            sol = solve_ivp(self.model_geodesic, t_span, ys0, method=integrator)
+        else:
+            sol = solve_ivp(self.model_geodesic, t_span, ys0, t_eval=taus, method=integrator)
+
         if sol.status == -1:
             print("WARNING: Integration failed.")
 
