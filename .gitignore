@@ -7,3 +7,4 @@ __pycache__/
 .DS_Store
 **/radau_core.so
 **/radau_core.dll
+build/

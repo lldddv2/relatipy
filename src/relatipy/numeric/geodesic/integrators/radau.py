@@ -58,6 +58,7 @@ def _find_radau_core_path() -> str | None:
 
 # ---- Load C backend (radau_core.{so,dll,...}) ------------------------------
 _C_LIB = None
+_RADAU_LOAD_ERROR: str | None = None
 try:
     _SO_PATH = _find_radau_core_path()
     if _SO_PATH is None:
@@ -109,8 +110,18 @@ try:
         _int_p,  # n_out
     ]
     _C_LIB = _lib
-except Exception:
-    pass  # C backend unavailable
+except Exception as _e:
+    _C_LIB = None
+    _RADAU_LOAD_ERROR = str(_e)
+
+
+def _radau_backend_error(what: str) -> RuntimeError:
+    detail = f" ({_RADAU_LOAD_ERROR})" if _RADAU_LOAD_ERROR else ""
+    return RuntimeError(
+        f"C backend not loaded; cannot call {what}.{detail} "
+        "If the shared library is for another OS (e.g. Linux ELF inside a py3-none-any wheel on macOS), "
+        "reinstall from source on this machine: pip install --no-cache-dir /path/to/relatipy"
+    )
 
 
 def project_kerr_trajectory(Rs, a, q_arr, u_arr, E0, Lz0, Q0, tol=1e-12, max_iter=20):
@@ -161,7 +172,7 @@ def project_kerr_trajectory(Rs, a, q_arr, u_arr, E0, Lz0, Q0, tol=1e-12, max_ite
     _integrate_kerr_radau2 : Full Radau geodesic integration with projection.
     """
     if _C_LIB is None:
-        raise RuntimeError("C backend not loaded; cannot call project_kerr_trajectory")
+        raise _radau_backend_error("project_kerr_trajectory")
     N = len(q_arr)
     _ptr = lambda arr: arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     _C_LIB.kerr_project_trajectory(
@@ -245,7 +256,7 @@ def _integrate_kerr_radau2(
     True
     """
     if _C_LIB is None:
-        raise RuntimeError("C backend not loaded; cannot call _integrate_kerr_radau2")
+        raise _radau_backend_error("_integrate_kerr_radau2")
 
     N_alloc = n_steps + 2
     out_t = np.zeros(N_alloc, dtype=np.float64)

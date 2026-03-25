@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from setuptools import setup
+from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 from setuptools.command.build_py import build_py as _build_py
 
 ROOT = Path(__file__).parent.resolve()
@@ -60,6 +61,17 @@ class BuildPy(_build_py):
             _compile_radau_core(d)
 
 
+class RelatipyBdistWheel(_bdist_wheel):
+    """radau_core.so/.dll is native; wheel tag must be platform-specific (not py3-none-any)."""
+
+    def finalize_options(self) -> None:
+        super().finalize_options()
+        self.root_is_pure = False
+
+
 setup(
-    cmdclass={"build_py": BuildPy},
+    cmdclass={
+        "build_py": BuildPy,
+        "bdist_wheel": RelatipyBdistWheel,
+    },
 )
