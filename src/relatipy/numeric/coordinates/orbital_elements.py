@@ -1,21 +1,72 @@
+"""
+Classical Keplerian orbital elements and conversion to/from Cartesian states.
+
+This module provides :class:`OrbitalElements`, which stores the standard set
+of osculating elements and uses `spiceypy` (SPICE ``conics`` / ``oscelt``) to
+convert between elements and Cartesian position and velocity. Time
+:math:`t` and semi-major axis :math:`a` are expressed in **geometric units**
+(:math:`GM/c^3` and :math:`GM/c^2`) consistent with the rest of the numeric
+stack; angular elements are given in **degrees** in the public API but are
+converted internally to radians for SPICE.
+
+Notes
+-----
+When ``astropy.units`` is installed, a central mass may be passed as a
+:class:`astropy.units.Quantity` with dimensions of mass; otherwise a numeric
+``mass`` is interpreted as geometric units where :math:`M = 1` corresponds to
+one solar mass (reference mass :math:`M_\\odot \\approx 1.98892\\times 10^{30}` kg).
+
+See Also
+--------
+relatipy.numeric.coordinates.cartesian.Cartesian :
+    Target type for :meth:`OrbitalElements.convert_to_cartesian`.
+
+Examples
+--------
+>>> import numpy as np
+>>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+>>> oe = OrbitalElements(0.0, 100.0, 0.1, 30.0, 10.0, 20.0, 45.0, mass=1.0)
+>>> oe.state_vector.shape
+(7,)
+"""
+
 import numpy
 import spiceypy as spice
-from ..constants import _G, _G_SI, _c_SI
-from ..utils.dimensions import validator
+from ..constants import _G_SI, _c_SI
 
 try:
     import astropy.units as u
 except ImportError:
     u = None
 
-_M_ref_kg = 1.98892e30  # kg — 1 unidad geométrica de masa = 1 masa solar
+# kg — one geometric mass unit = one solar mass (reference)
+_M_ref_kg = 1.98892e30
 
 
 def _mass_to_kg(mass):
     """
-    Return mass as float in kg.
-    - astropy Quantity con unidad de masa: convierte directamente a kg.
-    - float/int: interpreta como unidades geométricas (M=1 → 1 masa solar = _M_ref_kg kg).
+    Convert central-body mass to kilograms.
+
+    If ``mass`` is an ``astropy.units.Quantity`` with mass dimension, it is
+    converted to kg. Otherwise it is treated as a dimensionless geometric mass
+    and multiplied by the reference solar mass in kg.
+
+    Parameters
+    ----------
+    mass : float or astropy.units.Quantity
+        Central mass. Scalar numeric values are interpreted as geometric units
+        (:math:`M=1` → one solar mass in kg).
+
+    Returns
+    -------
+    float
+        Mass in kilograms.
+
+    Examples
+    --------
+    >>> from relatipy.numeric.coordinates.orbital_elements import _mass_to_kg
+    >>> _mass_to_kg(1.0)  # doctest: +ELLIPSIS
+    1988920000000000000000000000000.0
     """
     if u is not None and hasattr(mass, "to_value"):
         return float(mass.to_value(u.kg))
@@ -24,16 +75,48 @@ def _mass_to_kg(mass):
 
 def _state_to_spice_units(xs, vs, mass_kg):
     """
-    Convert state to SPICE units (km, km/s, s).
-    Expects xs=(t, x, y, z), vs=(vx, vy, vz) with position in geometric units [GM/c²],
-    velocity in [v/c] and time in geometric units [GM/c³].
+    Map a geometric Cartesian state to SPICE physical units (km, km/s, s).
+
+    Parameters
+    ----------
+    xs : array_like, shape (4,)
+        Event :math:`(t, x, y, z)` with :math:`t` in geometric time
+        :math:`GM/c^3` and spatial components in geometric length :math:`GM/c^2`.
+    vs : array_like, shape (3,)
+        Cartesian velocity components :math:`v^i/c` (dimensionless).
+    mass_kg : float
+        Central mass in kg, used to define the geometric–SI scale.
+
+    Returns
+    -------
+    pos_km : ndarray, shape (3,)
+        Position in km.
+    vel_km_s : ndarray, shape (3,)
+        Velocity in km/s.
+    t_sec : float
+        Time in seconds.
+
+    Notes
+    -----
+    The conversion uses :math:`L = GM/c^2` (meters per geometric length) and
+    :math:`T = GM/c^3` (seconds per geometric time) for the given ``mass_kg``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from relatipy.numeric.coordinates.orbital_elements import _state_to_spice_units
+    >>> xs = np.array([0.0, 1.0, 0.0, 0.0])
+    >>> vs = np.zeros(3)
+    >>> pk, vk, ts = _state_to_spice_units(xs, vs, 1.98892e30)
+    >>> pk.shape
+    (3,)
     """
     xs = numpy.asarray(xs, dtype=float)
     vs = numpy.asarray(vs, dtype=float)
-    length_unit = _G_SI * mass_kg / _c_SI**2  # GM/c² en metros
-    time_unit = _G_SI * mass_kg / _c_SI**3    # GM/c³ en segundos
+    length_unit = _G_SI * mass_kg / _c_SI**2  # GM/c² in meters
+    time_unit = _G_SI * mass_kg / _c_SI**3    # GM/c³ in seconds
     pos_m = xs[1:4] * length_unit
-    vel_dimless = vs  # v/c from validator
+    vel_dimless = vs  # v/c (dimensionless)
     vel_m_s = vel_dimless * _c_SI
     pos_km = pos_m / 1000.0
     vel_km_s = vel_m_s / 1000.0
@@ -43,32 +126,74 @@ def _state_to_spice_units(xs, vs, mass_kg):
 
 
 class OrbitalElements:
+    """
+    Keplerian (osculating) orbital elements with SPICE-backed Cartesian maps.
+
+    Stores time, semi-major axis, eccentricity, inclination, longitude of the
+    ascending node, argument of periapsis, and true anomaly. Public angles are
+    in degrees; time and semi-major axis use geometric units consistent with
+    Cartesian coordinates in this package.
+
+    Parameters
+    ----------
+    t : float or array_like
+        Coordinate time in geometric units :math:`GM/c^3`. Scalar or sequence
+        for batch orbits.
+    a : float or array_like
+        Semi-major axis in geometric length units :math:`GM/c^2`.
+    e : float or array_like
+        Eccentricity; for bound orbits typically :math:`0 \\leq e < 1`.
+    inc : float or array_like
+        Inclination in degrees.
+    Omega : float or array_like
+        Longitude of the ascending node (RAAN) in degrees.
+    omega : float or array_like
+        Argument of periapsis in degrees.
+    f : float or array_like
+        True anomaly in degrees.
+    mass : float or astropy.units.Quantity, optional
+        Central mass: geometric scalar (default ``1`` = one solar mass in kg) or
+        an ``astropy`` mass quantity converted to kg.
+
+    Attributes
+    ----------
+    t, a, e, inc, Omega, omega, f : float or ndarray
+        Orbital elements as provided (angles in degrees).
+    mass : float
+        Central mass in kg.
+    mu : float or ndarray
+        Gravitational parameter :math:`\\mu = GM` in km³/s² for SPICE.
+    name_metric : str
+        Registry label for this coordinate system (``OrbitalElements``).
+    kwargs : dict
+        Original keyword arguments (e.g. ``{\"mass\": mass}``).
+    state_vector : ndarray
+        Concatenation ``(t, a, e, inc, Omega, omega, f)``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+    >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+    >>> len(oe.state_vector)
+    7
+    """
+
     def __init__(self, t, a, e, inc, Omega, omega, f, mass=1):
-        """
-        Elementos orbitales clásicos (Keplerianos).
-
-        Parameters
-        ----------
-        t : float
-            Tiempo coordenado [s], por defecto 0.0
-        a : float
-            Semi-eje mayor [m]
-        e : float
-            Excentricidad (0 <= e < 1 para órbitas cerradas)
-        inc : float
-            Inclinación [deg]
-        Omega : float
-            Longitud del nodo ascendente (RAAN) [deg]
-        omega : float
-            Argumento del periastro [deg]
-        f : float
-            Anomalía verdadera [deg]
-        mass : float
-            Masa del cuerpo central [kg]
-        """
-
         def _as_array_or_scalar(value):
-            """Return numpy array for sequences, scalar float otherwise."""
+            """
+            Normalize an element to a float, or to a float ndarray if sequence-like.
+
+            Parameters
+            ----------
+            value : scalar or sequence
+                Orbital element value.
+
+            Returns
+            -------
+            float or ndarray
+                Scalar float for a single value; otherwise a float array.
+            """
             if isinstance(value, (list, tuple)):
                 return numpy.asarray(value, dtype=float)
             arr = numpy.asarray(value)
@@ -76,11 +201,9 @@ class OrbitalElements:
                 return float(arr)
             return arr.astype(float)
 
-        # Permitir tanto escalares como listas / arrays para los elementos orbitales
         self.t = _as_array_or_scalar(t)
         self.a = _as_array_or_scalar(a)
         self.e = _as_array_or_scalar(e)
-        # API pública en grados, pero mantenemos internamente radianes para SPICE.
         self.inc = _as_array_or_scalar(inc)
         self.Omega = _as_array_or_scalar(Omega)
         self.omega = _as_array_or_scalar(omega)
@@ -91,35 +214,98 @@ class OrbitalElements:
         self._omega_rad = numpy.asarray(self.omega, dtype=float) * deg2rad
         self._f_rad = numpy.asarray(self.f, dtype=float) * deg2rad
         if not isinstance(self.inc, numpy.ndarray):
-            # Normalizar a float para evitar que scalars queden como 0-d arrays
             self._inc_rad = float(self._inc_rad)
             self._Omega_rad = float(self._Omega_rad)
             self._omega_rad = float(self._omega_rad)
             self._f_rad = float(self._f_rad)
 
-        # La masa puede ser escalar o lista; para listas usamos el validador existente
         self.mass = _mass_to_kg(mass)
-        self.mu = (_G_SI * self.mass) / 1e9  # km³/s² para SPICE
+        self.mu = (_G_SI * self.mass) / 1e9  # km³/s² for SPICE
         self.name_metric = "OrbitalElements"
         self.kwargs = {"mass": mass}
 
-        # Nota: state_vector refleja la API pública (ángulos en grados).
         self.state_vector = numpy.array(
             (self.t, self.a, self.e, self.inc, self.Omega, self.omega, self.f)
         )
 
-
-    # si se hace []
     def __getitem__(self, index):
+        """
+        Return a component of the public state vector.
+
+        Parameters
+        ----------
+        index : int or slice
+            Index into ``state_vector``.
+
+        Returns
+        -------
+        scalar or ndarray
+            Selected element(s).
+
+        Examples
+        --------
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        >>> oe[1]
+        10.0
+        """
         return self.state_vector[index]
 
     def __setitem__(self, index, value):
+        """
+        Update a component of ``state_vector`` in place.
+
+        Parameters
+        ----------
+        index : int or slice
+            Index into ``state_vector``.
+        value : scalar or array_like
+            New value(s).
+
+        Notes
+        -----
+        This does not resynchronize internal radian caches or derived fields;
+        prefer constructing a new instance if elements change meaningfully.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        >>> oe[1] = 20.0
+        >>> oe[1]
+        20.0
+        """
         self.state_vector[index] = value
 
     def _get_elts(self, index=None):
         """
-        Construye el vector de elementos orbitales en formato SPICE (osculating elements).
-        elts = [rp, ecc, inc, lnode, argp, m0, t0, mu] en km, rad, km³/s².
+        Build the SPICE osculating-element vector for ``spice.conics``.
+
+        Parameters
+        ----------
+        index : int, optional
+            If batch elements are stored as arrays, index of the orbit to use.
+            If omitted, scalar elements are used.
+
+        Returns
+        -------
+        list
+            ``[rp, ecc, inc, lnode, argp, m0, t0, mu]`` with ``rp`` in km,
+            angles in rad, ``t0`` in s, and ``mu`` in km³/s².
+
+        Notes
+        -----
+        Mean anomaly at epoch ``m0`` is obtained from the true anomaly via the
+        eccentric anomaly.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+        >>> elts = oe._get_elts()
+        >>> len(elts)
+        8
         """
         if index is not None:
             a = self.a[index]
@@ -142,29 +328,44 @@ class OrbitalElements:
 
         length_unit = _G_SI * self.mass / _c_SI**2  # GM/c² en metros
         time_unit = _G_SI * self.mass / _c_SI**3    # GM/c³ en segundos
-        rp_km = a * length_unit * (1 - e) / 1000.0  # unidades geométricas → km
+        rp_km = a * length_unit * (1 - e) / 1000.0  # geometric → km
         one_minus_e = numpy.maximum(1 - e, 1e-15)
         E = 2 * numpy.arctan2(
             numpy.sqrt(one_minus_e) * numpy.sin(f / 2),
             numpy.sqrt(1 + e) * numpy.cos(f / 2)
         )
         M0 = E - e * numpy.sin(E)
-        t0_sec = float(t) * time_unit  # unidades geométricas → segundos
+        t0_sec = float(t) * time_unit  # geometric → seconds
         return [rp_km, e, inc, Omega, omega, M0, t0_sec, mu]
 
     def _to_cartesian_arrays(self):
         """
-        Convierte elementos orbitales a posición y velocidad cartesianas 3D
-        usando spiceypy.conics.
+        Convert orbital elements to Cartesian position and velocity arrays.
 
-        Devuelve:
-        - r_geom: array de forma (3,) en unidades geométricas [GM/c²]
-        - v_dimless: array de forma (3,) en v/c (adimensional)
-        Para el caso vectorial:
-        - r_geom: array de forma (N, 3) en unidades geométricas [GM/c²]
-        - v_dimless: array de forma (N, 3) en v/c (adimensional)
+        Uses :func:`spiceypy.spiceypy.conics` in km, km/s and maps back to
+        geometric length and :math:`v/c`.
+
+        Returns
+        -------
+        r_geom : ndarray, shape (3,) or (N, 3)
+            Position in geometric units :math:`GM/c^2`.
+        v_dimless : ndarray, shape (3,) or (N, 3)
+            Velocity components :math:`v^i/c`.
+
+        Notes
+        -----
+        If ``a`` is a one-dimensional array with more than one entry, each
+        orbit is processed in a loop (batch mode).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+        >>> r, v = oe._to_cartesian_arrays()
+        >>> r.shape
+        (3,)
         """
-        # Detectar si estamos en modo "batch" (varias órbitas)
         is_batch = isinstance(self.a, numpy.ndarray) and self.a.ndim > 0 and self.a.size > 1
 
         length_unit = _G_SI * self.mass / _c_SI**2  # GM/c² en metros
@@ -172,64 +373,76 @@ class OrbitalElements:
 
         if not is_batch:
             elts = self._get_elts()
-            t_sec = float(self.t) * time_unit  # unidades geométricas → segundos
+            t_sec = float(self.t) * time_unit  # geometric → seconds
             state_km = spice.conics(elts, t_sec)  # km, km/s
             r_km = numpy.array(state_km[:3])
             v_km_s = numpy.array(state_km[3:])
             r_m = r_km * 1000.0
-            r_geom = r_m / length_unit  # metros → unidades geométricas
+            r_geom = r_m / length_unit
             v_m_s = v_km_s * 1000.0
-            v_dimless = v_m_s / _c_SI  # m/s → v/c
+            v_dimless = v_m_s / _c_SI
             return r_geom, v_dimless
 
-        # Modo vectorial: iterar sobre cada conjunto de elementos orbitales
         n_orbits = len(self[0])
         r_list = []
         v_list = []
         for i in range(n_orbits):
             elts_i = self._get_elts(index=i)
             t_i = self.t[i] if isinstance(self.t, numpy.ndarray) else self.t
-            t_sec_i = float(t_i) * time_unit  # unidades geométricas → segundos
+            t_sec_i = float(t_i) * time_unit
             state_km_i = spice.conics(elts_i, t_sec_i)
             r_km_i = numpy.array(state_km_i[:3])
             v_km_s_i = numpy.array(state_km_i[3:])
-            r_geom_i = (r_km_i * 1000.0) / length_unit  # km → m → unidades geométricas
-            v_dimless_i = (v_km_s_i * 1000.0) / _c_SI   # km/s → m/s → v/c
+            r_geom_i = (r_km_i * 1000.0) / length_unit
+            v_dimless_i = (v_km_s_i * 1000.0) / _c_SI
             r_list.append(r_geom_i)
             v_list.append(v_dimless_i)
 
-        r_geom = numpy.stack(r_list, axis=0)    # (N, 3)
-        v_dimless = numpy.stack(v_list, axis=0) # (N, 3)
+        r_geom = numpy.stack(r_list, axis=0)
+        v_dimless = numpy.stack(v_list, axis=0)
         return r_geom, v_dimless
 
     def convert_to_cartesian(self):
-        """Convierte a coordenadas cartesianas (4-posición + 3-velocidad)."""
+        """
+        Convert to Cartesian coordinates (four-position and three-velocity).
+
+        Returns
+        -------
+        Cartesian
+            Instance of :class:`~relatipy.numeric.coordinates.cartesian.Cartesian`
+            with ``from_dxs_dt=False``. Orbital attributes are copied for
+            downstream checks.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+        >>> cart = oe.convert_to_cartesian()
+        >>> cart.name_metric
+        'Cartesian'
+        """
         from .cartesian import Cartesian
 
         r_vec, v_vec = self._to_cartesian_arrays()
-        # Caso escalar
         if r_vec.ndim == 1:
             xs = numpy.array([self.t, r_vec[0], r_vec[1], r_vec[2]])
             vs = numpy.array([v_vec[0], v_vec[1], v_vec[2]])
         else:
-            # Caso vectorial: r_vec y v_vec tienen forma (N, 3)
             t_array = (
                 self.t if isinstance(self.t, numpy.ndarray) else numpy.asarray([self.t] * r_vec.shape[0])
             )
             xs = numpy.array(
                 [t_array, r_vec[:, 0], r_vec[:, 1], r_vec[:, 2]]
-            )  # (4, N)
+            )
             vs = numpy.array(
                 [v_vec[:, 0], v_vec[:, 1], v_vec[:, 2]]
-            )  # (3, N)
+            )
 
         cartesian = Cartesian(xs, vels=vs, from_dxs_dt=False)
 
-        # Propagar los parámetros orbitales para permitir comprobaciones de conservación
         cartesian.t = self.t
         cartesian.a = self.a
         cartesian.e = self.e
-        # Propagamos la API pública (ángulos en grados) a la estructura de destino.
         cartesian.inc = self.inc
         cartesian.Omega = self.Omega
         cartesian.omega = self.omega
@@ -240,12 +453,34 @@ class OrbitalElements:
 
     def convert_to(self, target_system, **kwargs):
         """
-        Convierte a otro sistema de coordenadas pasando por cartesiana.
+        Convert to another registered coordinate system via Cartesian.
 
         Parameters
         ----------
         target_system : str
-            Nombre del sistema destino (debe estar en coordinate_systems).
+            Key in ``relatipy.numeric.coordinates.coordinate_systems``.
+        **kwargs
+            Passed to the target class factory (e.g. ``mass`` required when
+            converting to ``\"OrbitalElements\"``).
+
+        Returns
+        -------
+        CoordinateBase subclass
+            Instance of the requested system.
+
+        Raises
+        ------
+        ValueError
+            If ``target_system`` is not registered, or if converting to
+            ``\"OrbitalElements\"`` without ``mass`` in ``kwargs``.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+        >>> same = oe.convert_to("OrbitalElements", mass=1.0)
+        >>> same.name_metric
+        'OrbitalElements'
         """
         from . import coordinate_systems
 
@@ -268,8 +503,37 @@ class OrbitalElements:
     @staticmethod
     def from_cartesian(xs, vs, mass, t=None):
         """
-        Construye OrbitalElements desde posición y velocidad cartesianas
-        usando spiceypy.oscelt.
+        Build :class:`OrbitalElements` from a Cartesian state using ``oscelt``.
+
+        Dispatches to vector or scalar helpers depending on the shape of
+        ``xs``.
+
+        Parameters
+        ----------
+        xs : array_like
+            Four-position; either shape ``(4,)`` or batch ``(4, N)``.
+        vs : array_like
+            Velocity ``v/c``, shape ``(3,)`` or ``(3, N)`` matching ``xs``.
+        mass : float or astropy.units.Quantity
+            Central mass (geometric or quantity); see :class:`OrbitalElements`.
+        t : float or astropy.units.Quantity, optional
+            Override time in seconds if given; otherwise taken from the geometric
+            time in ``xs`` after unit conversion.
+
+        Returns
+        -------
+        OrbitalElements
+            Fitted osculating elements.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> xs = np.array([0.0, 1e6, 0.0, 0.0], dtype=float)
+        >>> vs = np.array([0.0, 0.0, 1e-4], dtype=float)
+        >>> oe = OrbitalElements.from_cartesian(xs, vs, mass=1.0)
+        >>> oe.name_metric
+        'OrbitalElements'
         """
         if isinstance(xs[1], numpy.ndarray):
             return OrbitalElements.from_cartesian_vector(xs, vs, mass, t)
@@ -278,8 +542,34 @@ class OrbitalElements:
     @staticmethod
     def from_cartesian_vector(xs, vs, mass, t=None):
         """
-        Construye OrbitalElements desde posición y velocidad cartesianas
-        usando spiceypy.oscelt.
+        Build :class:`OrbitalElements` for ``N`` Cartesian states (columns).
+
+        Parameters
+        ----------
+        xs : array_like, shape (4, N)
+            Batch of four-positions in geometric units.
+        vs : array_like, shape (3, N)
+            Batch of velocities :math:`v/c`.
+        mass : float or astropy.units.Quantity
+            Central mass, shared by all columns.
+        t : float or astropy.units.Quantity, optional
+            Optional per-call time override in seconds (see
+            :meth:`from_cartesian_scalar`).
+
+        Returns
+        -------
+        OrbitalElements
+            Elements with array fields of length ``N``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> xs = np.array([[0.0, 0.0], [1e6, 2e6], [0.0, 0.0], [0.0, 0.0]], dtype=float)
+        >>> vs = np.array([[0.0, 0.0], [0.0, 0.0], [1e-4, 1e-4]], dtype=float)
+        >>> oe = OrbitalElements.from_cartesian_vector(xs, vs, mass=1.0)
+        >>> np.asarray(oe.a).size
+        2
         """
         N = len(xs[0])
         ts = numpy.zeros(N)
@@ -296,17 +586,40 @@ class OrbitalElements:
     @staticmethod
     def from_cartesian_scalar(xs, vs, mass, t=None):
         """
-        Construye OrbitalElements desde posición y velocidad cartesianas
-        usando spiceypy.oscelt.
+        Build :class:`OrbitalElements` from one Cartesian state using ``oscelt``.
 
         Parameters
         ----------
-        xs : array-like, shape (4,)
-            4-posición [t, x, y, z] (t en unidades geométricas [GM/c³], posición en unidades geométricas [GM/c²])
-        vs : array-like, shape (3,)
-            Velocidad cartesiana [vx, vy, vz] en v/c (sin unidades)
-        mass : float or Quantity
-            Masa del cuerpo central [kg]
+        xs : array_like, shape (4,)
+            Four-position ``(t, x, y, z)`` with ``t`` in geometric time and
+            spatial part in geometric length.
+        vs : array_like, shape (3,)
+            Cartesian velocity :math:`v^i/c`.
+        mass : float or astropy.units.Quantity
+            Central mass.
+        t : float or astropy.units.Quantity, optional
+            If set, evaluation epoch in seconds (bypassing geometric time from
+            ``xs`` after internal conversion path).
+
+        Returns
+        -------
+        OrbitalElements
+            Osculating elements; angles in degrees, ``t`` and ``a`` geometric.
+
+        Notes
+        -----
+        True anomaly is recovered from mean anomaly with a fixed-point iteration
+        on the eccentric anomaly.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> xs = np.array([0.0, 1e6, 0.0, 0.0], dtype=float)
+        >>> vs = np.array([0.0, 0.0, 1e-4], dtype=float)
+        >>> oe = OrbitalElements.from_cartesian_scalar(xs, vs, mass=1.0)
+        >>> hasattr(oe, "e")
+        True
         """
         mass_kg = _mass_to_kg(mass)
         pos_km, vel_km_s, t_sec = _state_to_spice_units(xs, vs, mass_kg)
@@ -323,8 +636,8 @@ class OrbitalElements:
         rp_m = rp_km * 1000.0
         a_m = rp_m / (1 - e)
 
-        length_unit = _G_SI * mass_kg / _c_SI**2  # GM/c² en metros
-        time_unit = _G_SI * mass_kg / _c_SI**3    # GM/c³ en segundos
+        length_unit = _G_SI * mass_kg / _c_SI**2
+        time_unit = _G_SI * mass_kg / _c_SI**3
         a_geom = a_m / length_unit
 
         E = M0
@@ -337,7 +650,6 @@ class OrbitalElements:
             numpy.sqrt(one_minus_e) * numpy.cos(E / 2)
         )
 
-        # SPICE devuelve ángulos en radianes; nuestra API los quiere en grados.
         rad2deg = 180.0 / numpy.pi
         t_geom = t_sec / time_unit
         return OrbitalElements(
@@ -354,7 +666,36 @@ class OrbitalElements:
     @staticmethod
     def _convert_from_cartesian(xs_p, vs_p, **kwargs):
         """
-        Alias de from_cartesian para compatibilidad con CoordinateBase.convert_to.
+        Bridge for ``CoordinateBase.convert_to`` (same as :meth:`from_cartesian`).
+
+        Parameters
+        ----------
+        xs_p : array_like
+            Four-position Cartesian state.
+        vs_p : array_like
+            Three-velocity :math:`v/c`.
+        **kwargs
+            Must include ``mass``.
+
+        Returns
+        -------
+        OrbitalElements
+            Elements from :meth:`from_cartesian`.
+
+        Raises
+        ------
+        ValueError
+            If ``mass`` is missing from ``kwargs``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> xs = np.array([0.0, 1e6, 0.0, 0.0], dtype=float)
+        >>> vs = np.zeros(3, dtype=float)
+        >>> oe = OrbitalElements._convert_from_cartesian(xs, vs, mass=1.0)
+        >>> oe.name_metric
+        'OrbitalElements'
         """
         mass = kwargs.get("mass")
         if mass is None:
@@ -363,12 +704,29 @@ class OrbitalElements:
 
     def _get_period(self):
         """
-        Calcula el periodo orbital en unidades geométricas [GM/c³].
-        """
-        L = _G_SI * self.mass / _c_SI**2  # m por unidad geométrica (para esta masa)
-        T = _G_SI * self.mass / _c_SI**3  # s por unidad geométrica (para esta masa)
+        Orbital period in geometric time units :math:`GM/c^3`.
 
-        a_m  = self.a * L
+        Uses Kepler's third law with semi-major axis in meters derived from
+        geometric ``a`` and the central mass.
+
+        Returns
+        -------
+        float or ndarray
+            Period in geometric time; shape follows broadcast of ``self.a`` if
+            array-like.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+        >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
+        >>> T = oe._get_period()
+        >>> T > 0
+        True
+        """
+        L = _G_SI * self.mass / _c_SI**2
+        T = _G_SI * self.mass / _c_SI**3
+
+        a_m = self.a * L
         mu_si = _G_SI * self.mass
 
         T_sec = 2 * numpy.pi * numpy.sqrt(a_m**3 / mu_si)

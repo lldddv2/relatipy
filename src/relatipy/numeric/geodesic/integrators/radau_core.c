@@ -1,20 +1,24 @@
-/*
- * radau_core.c
+/**
+ * @file radau_core.c
+ * @brief Radau IIA three-stage (order 5) geodesic integrator for the Kerr metric in Boyer–Lindquist coordinates.
  *
- * Radau IIA 3-stage (order 5) geodesic integrator for the Kerr metric
- * in Boyer-Lindquist coordinates.
+ * This module integrates the geodesic equations in **covariant phase space** \f$(q^\mu, p_\mu)\f$ so that the
+ * right-hand side remains finite away from the polar axis, avoiding the \f$\cot\theta \to \infty\f$ singularity
+ * that appears if one writes the equations directly in terms of coordinate velocities. The stored trajectory
+ * is expressed as \f$[q^\mu, u^\mu]\f$ with \f$u^\mu = g^{\mu\nu} p_\nu\f$.
  *
- * Compile (macOS/Linux):
- *   cc -O3 -march=native -shared -fPIC -o radau_core.so radau_core.c -lm
+ * At each stored output point, the four-velocity is projected onto the simultaneous solution of the unit
+ * normalization, conserved energy \f$E\f$, axial angular momentum \f$L_z\f$, and Carter constant \f$Q\f$ using
+ * a small Newton iteration.
  *
- * Integration is performed in covariant phase space (q^mu, p_mu) to avoid
- * the Boyer-Lindquist coordinate singularity at theta=0 (same strategy as
- * the Yoshida integrator). Output is stored as [q^mu, u^mu].
+ * @par Build (example)
+ * @code
+ * cc -O3 -march=native -shared -fPIC -o radau_core.so radau_core.c -lm
+ * @endcode
  *
- * Constraint projection (normalization, E, Lz, Carter Q) is applied via
- * Newton iteration at every stored output point.
- *
- * Reference: Hairer & Wanner, "Solving ODEs II", §IV.5 (Radau IIA).
+ * @par References
+ * Hairer, E., & Wanner, G. (1996). *Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems*.
+ * Springer, Section IV.5 (Radau IIA methods).
  */
 
 #include <math.h>
@@ -24,14 +28,31 @@
 /* ===================================================================== */
 /*  KERR METRIC INFRASTRUCTURE  (Boyer-Lindquist: [t, r, theta, phi])   */
 /* ===================================================================== */
-/*
- * Metric (a = spin parameter):
- *   g00 = 1 - Rs*r/Sigma,  g11 = -Sigma/Delta,  g22 = -Sigma,
- *   g33 = -(r^2+a^2 + Rs*r*a^2/Sigma*sin^2)*sin^2,
- *   g03 = g30 = Rs*r*a/Sigma * sin^2
- *   Sigma = r^2 + a^2 cos^2(theta),  Delta = r^2 - Rs*r + a^2
- */
 
+/**
+ * @brief Evaluate Kerr metric components in Boyer–Lindquist coordinates.
+ *
+ * Coordinates are \f$q^\mu = (t, r, \theta, \phi)\f$. With Schwarzschild radius \f$R_s\f$ and spin \f$a\f$,
+ * \f$\Sigma = r^2 + a^2\cos^2\theta\f$, \f$\Delta = r^2 - R_s r + a^2\f$, and the non-zero components are
+ * \f[
+ *   g_{00} = 1 - \frac{R_s r}{\Sigma}, \quad
+ *   g_{11} = -\frac{\Sigma}{\Delta}, \quad
+ *   g_{22} = -\Sigma,
+ * \f]
+ * \f[
+ *   g_{33} = -\left(r^2 + a^2 + \frac{R_s r a^2}{\Sigma}\sin^2\theta\right)\sin^2\theta, \quad
+ *   g_{03} = g_{30} = \frac{R_s r a}{\Sigma}\sin^2\theta.
+ * \f]
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin parameter \f$a\f$.
+ * @param[in] q Pointer to \f$[t,r,\theta,\phi]\f$.
+ * @param[out] g00 Component \f$g_{00}\f$.
+ * @param[out] g11 Component \f$g_{11}\f$.
+ * @param[out] g22 Component \f$g_{22}\f$.
+ * @param[out] g33 Component \f$g_{33}\f$.
+ * @param[out] g03 Component \f$g_{03}=g_{30}\f$.
+ */
 static void kerr_metric(double Rs, double a,
                          const double *q,
                          double *g00, double *g11, double *g22,
@@ -51,7 +72,18 @@ static void kerr_metric(double Rs, double a,
     *g03 = Rs * r * a / Sigma * s2;
 }
 
-/* u^mu = g^{mu nu} p_nu  (analytic 2×2 block inversion) */
+/**
+ * @brief Raise covector: \f$u^\mu = g^{\mu\nu} p_\nu\f$ using analytic \f$2\times 2\f$ inversion in the \f$(t,\phi)\f$ block.
+ *
+ * The \f$(r,\theta)\f$ directions decouple: \f$u^1 = p_1/g_{11}\f$, \f$u^2 = p_2/g_{22}\f$.
+ * For the \f$(t,\phi)\f$ block, \f$\det(g_{00}g_{33}-g_{03}^2)\f$ is inverted explicitly.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] q Position \f$q^\mu\f$.
+ * @param[in] p Covector \f$p_\mu\f$.
+ * @param[out] u Contravariant four-velocity components \f$u^\mu\f$.
+ */
 static void kerr_ginv_dot_p(double Rs, double a,
                              const double *q, const double *p, double *u)
 {
@@ -65,7 +97,15 @@ static void kerr_ginv_dot_p(double Rs, double a,
     u[3] = (-g03 * p[0] + g00 * p[3]) / det2;
 }
 
-/* p_mu = g_{mu nu} u^nu */
+/**
+ * @brief Lower vector: \f$p_\mu = g_{\mu\nu} u^\nu\f$.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] q Position \f$q^\mu\f$.
+ * @param[in] u Contravariant four-velocity \f$u^\mu\f$.
+ * @param[out] p Covector \f$p_\mu\f$.
+ */
 static void kerr_g_dot_u(double Rs, double a,
                           const double *q, const double *u, double *p)
 {
@@ -77,9 +117,19 @@ static void kerr_g_dot_u(double Rs, double a,
     p[3] = g03 * u[0] + g33 * u[3];
 }
 
-/*
- * Kick force for Kerr: F[m] = sum_{a,r} p[a] * Gamma^a_{r m} * u[r]
- * (analytical Christoffel symbols in Boyer-Lindquist coordinates)
+/**
+ * @brief Geodesic “kick” force for covariant momentum: \f$F_\mu = p_\alpha \Gamma^\alpha_{\mu\beta} u^\beta\f$.
+ *
+ * Christoffel symbols \f$\Gamma^\alpha_{\mu\beta}\f$ are implemented in closed form in Boyer–Lindquist
+ * coordinates and contracted with \f$p_\alpha\f$ and \f$u^\beta\f$ as required by Hamiltonian geodesic flow
+ * in \f$(q,p)\f$ space.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] q Position \f$q^\mu\f$.
+ * @param[in] p Covector \f$p_\mu\f$.
+ * @param[in] u Contravariant four-velocity \f$u^\mu\f$.
+ * @param[out] F Components \f$F_\mu\f$.
  */
 static void kerr_kick_force(
     double Rs, double a,
@@ -171,14 +221,15 @@ static void kerr_kick_force(
 /* ===================================================================== */
 /*  KERR CONSTRAINT PROJECTION (Newton iteration)                        */
 /* ===================================================================== */
-/*
- * Projects u^mu onto the 4-constraint surface:
- *   C1 = g_{mu nu} u^mu u^nu - 1 = 0       (normalization)
- *   C2 = -(g_{0mu} u^mu) - E0   = 0        (energy)
- *   C3 =   g_{3mu} u^mu  - Lz0  = 0        (angular momentum)
- *   C4 = p_theta^2 + cos^2(th)[a^2(1-E^2) + Lz^2/sin^2(th)] - Q0 = 0
- */
 
+/**
+ * @brief Solve a \f$4\times 4\f$ linear system \f$A x = b\f$ by Gaussian elimination with partial pivoting.
+ *
+ * @param[in] A Coefficient matrix \f$A\f$ (copied internally; not modified in place).
+ * @param[in] b Right-hand side \f$b\f$.
+ * @param[out] x Solution vector \f$x\f$.
+ * @return 0 on success, \f$-1\f$ if the matrix is singular (within a tiny numerical threshold).
+ */
 static int solve4x4(double A[4][4], const double *b, double *x)
 {
     double aug[4][5];
@@ -209,6 +260,31 @@ static int solve4x4(double A[4][4], const double *b, double *x)
     return 0;
 }
 
+/**
+ * @brief Project \f$u^\mu\f$ onto the simultaneous zeros of four Kerr geodesic constraints via Newton iteration.
+ *
+ * The residuals are
+ * \f[
+ *   C_1 = g_{\mu\nu} u^\mu u^\nu - 1, \quad
+ *   C_2 = E - E_0, \quad C_3 = L_z - L_{z,0},
+ * \f]
+ * with \f$E = -p_0\f$, \f$L_z = p_3\f$, \f$p_\mu = g_{\mu\nu} u^\nu\f$, and Carter’s relation
+ * \f[
+ *   C_4 = p_\theta^2 + \cos^2\theta\left[a^2(1-E^2) + \frac{L_z^2}{\sin^2\theta}\right] - Q_0.
+ * \f]
+ * The Jacobian of \f$\mathbf{C}\f$ with respect to \f$u^\mu\f$ is assembled and a Newton step solves
+ * \f$J\,\delta u = -\mathbf{C}\f$ until \f$\|\mathbf{C}\|_\infty < \texttt{tol}\f$ or \p max_iter is reached.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] q Position \f$q^\mu\f$ (read-only).
+ * @param[in,out] u Four-velocity \f$u^\mu\f$; overwritten by the projected values.
+ * @param[in] E0 Target conserved energy parameter \f$E_0\f$.
+ * @param[in] Lz0 Target axial angular momentum \f$L_{z,0}\f$.
+ * @param[in] Q0 Target Carter constant \f$Q_0\f$.
+ * @param[in] tol Convergence tolerance on the maximum absolute residual.
+ * @param[in] max_iter Maximum Newton iterations.
+ */
 void kerr_project_constraints(
     double Rs, double a,
     const double *q, double *u,
@@ -258,6 +334,20 @@ void kerr_project_constraints(
     }
 }
 
+/**
+ * @brief Apply kerr_project_constraints() along a trajectory of \p N points.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] q_arr Positions, row-major \f$N\times 4\f$ array (\f$q^\mu\f$ per row).
+ * @param[in,out] u_arr Four-velocities, row-major \f$N\times 4\f$; overwritten in place.
+ * @param[in] E0 Target energy \f$E_0\f$.
+ * @param[in] Lz0 Target \f$L_{z,0}\f$.
+ * @param[in] Q0 Target Carter \f$Q_0\f$.
+ * @param[in] tol Newton tolerance (passed through).
+ * @param[in] max_iter Maximum Newton iterations (passed through).
+ * @param[in] N Number of points along the trajectory.
+ */
 void kerr_project_trajectory(
     double Rs, double a,
     const double *q_arr, double *u_arr,
@@ -274,26 +364,32 @@ void kerr_project_trajectory(
 /* ===================================================================== */
 /*  RADAU IIA 3-STAGE, ORDER 5                                           */
 /* ===================================================================== */
-/*
- * Fixed-point (Picard) iteration for the implicit stage equations.
- *
- * Butcher tableau (Hairer & Wanner, SODII, §IV.5):
- *   c = [(4-√6)/10, (4+√6)/10, 1]
- *   b = A[2]  (c_3 = 1  =>  Y_3 = y_{n+1} after convergence)
- *
- * Integration in phase space [q^mu, p_mu] avoids the cot(theta) -> inf
- * singularity at the polar axis in Boyer-Lindquist coordinates.
- */
+
+/** Butcher matrix \f$A\f$ for the three-stage Radau IIA method (row \f$s\f$, stage \f$r\f$). */
 static const double RADAU3_A[3][3] = {
     { 0.19681547722366597, -0.06553542585019844,  0.02377097434422321 },
     { 0.39442431473908988,  0.29207341166522843, -0.04154875212599793 },
     { 0.37640306270046727,  0.51248582618842162,  0.11111111111111111 }
 };
+/** Stage abscissas \f$c_s\f$; the last stage has \f$c_3 = 1\f$ so the final stage value is the step end. */
 static const double RADAU3_C[3] = {
     0.15505102572168219, 0.64494897427831781, 1.0
 };
 
-/* Geodesic RHS in phase space: dy8/dtau where y8 = [q^mu, p_mu] */
+/**
+ * @brief Right-hand side for geodesic flow in phase space \f$y = (q^\mu, p_\mu)\f$.
+ *
+ * With affine parameter \f$\tau\f$,
+ * \f[
+ *   \frac{\mathrm{d} q^\mu}{\mathrm{d}\tau} = u^\mu = g^{\mu\nu} p_\nu, \qquad
+ *   \frac{\mathrm{d} p_\mu}{\mathrm{d}\tau} = F_\mu = p_\alpha \Gamma^\alpha_{\mu\beta} u^\beta.
+ * \f]
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] y8 Phase vector \f$[q^0,\ldots,q^3,p_0,\ldots,p_3]\f$.
+ * @param[out] dy8 Time derivative \f$\mathrm{d}y/\mathrm{d}\tau\f$ (same layout as \p y8).
+ */
 static void kerr_geodesic_rhs_qp(double Rs, double a,
                                    const double *y8, double *dy8)
 {
@@ -303,7 +399,19 @@ static void kerr_geodesic_rhs_qp(double Rs, double a,
     kerr_kick_force(Rs, a, y8, y8 + 4, u, dy8 + 4); /* dp/dtau = F_mu      */
 }
 
-/* One Radau IIA step. y8_{n+1} = Y[2] after fixed-point convergence. */
+/**
+ * @brief One step of the three-stage Radau IIA method with fixed-point iteration on the implicit stages.
+ *
+ * Stages \f$Y_s\f$ satisfy \f$Y_s = y_n + h \sum_r A_{sr} f(Y_r)\f$. The initial guess uses the explicit
+ * Euler increment along \f$f(y_n)\f$ at abscissas \f$c_s\f$, then Picard iteration refines \f$Y_s\f$ until
+ * \p n_fix_iter passes. The accepted step is the third stage \f$Y_3\f$ (since \f$c_3=1\f$).
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in,out] y8 Phase vector at \f$\tau_n\f$; overwritten with \f$y_{n+1}\f$.
+ * @param[in] h Step size \f$h\f$.
+ * @param[in] n_fix_iter Number of fixed-point iterations per step.
+ */
 static void kerr_radau3_step_qp(double Rs, double a,
                                   double *y8, double h, int n_fix_iter)
 {
@@ -328,21 +436,27 @@ static void kerr_radau3_step_qp(double Rs, double a,
     for (i = 0; i < 8; i++) y8[i] = Y[2][i];
 }
 
-/*
- * Main integration function.
+/**
+ * @brief Integrate a Kerr geodesic with Radau IIA (three stages, order 5) and store a subsampled trajectory.
  *
- * Parameters
- * ----------
- * Rs, a        : Kerr metric parameters
- * state0       : initial [q^0..q^3, u^0..u^3]  (contravariant velocity)
- * tau0,tau_end : proper-time span
- * n_steps      : total Radau steps
- * stride       : store every stride-th step (initial always stored)
- * n_fix_iter   : fixed-point iterations per step (5 recommended)
- * E0,Lz0,Q0   : conserved quantities (energy, z-angular momentum, Carter)
- * out_t        : pre-allocated double[n_steps+2]
- * out_y        : pre-allocated double[(n_steps+2)*8], row-major (N, 8)
- * n_out        : output: number of stored points
+ * The routine converts the initial state from \f$[q^\mu, u^\mu]\f$ to \f$[q^\mu, p_\mu]\f$, projects
+ * \f$u^\mu\f$ onto the constraint surface, advances with kerr_radau3_step_qp(), and at each stored time
+ * recomputes \f$u^\mu = g^{\mu\nu} p_\nu\f$, projects again, and writes \f$[q^\mu, u^\mu]\f$ to \p out_y.
+ *
+ * @param[in] Rs Schwarzschild radius \f$R_s\f$.
+ * @param[in] a Kerr spin \f$a\f$.
+ * @param[in] state0 Initial \f$[q^0,\ldots,q^3,u^0,\ldots,u^3]\f$ (contravariant velocity).
+ * @param[in] tau0 Initial proper time \f$\tau_0\f$.
+ * @param[in] tau_end Final proper time.
+ * @param[in] n_steps Number of Radau steps (uniform step \f$h = (\tau_{\mathrm{end}}-\tau_0)/\texttt{n\_steps}\f$).
+ * @param[in] stride Store every \p stride-th completed step (the initial state is always stored).
+ * @param[in] n_fix_iter Fixed-point iterations per implicit step (e.g. 5).
+ * @param[in] E0 Target conserved energy \f$E_0\f$.
+ * @param[in] Lz0 Target \f$L_{z,0}\f$.
+ * @param[in] Q0 Target Carter constant \f$Q_0\f$.
+ * @param[out] out_t Proper times at stored points, length at least \f$\texttt{n\_steps}+2\f$.
+ * @param[out] out_y Row-major \f$(N_{\mathrm{out}}, 8)\f$ array \f$[q^\mu, u^\mu]\f$ per row.
+ * @param[out] n_out Number of rows written to \p out_t and \p out_y.
  */
 void kerr_radau2(
     double Rs, double a,

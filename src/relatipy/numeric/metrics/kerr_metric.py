@@ -1,10 +1,106 @@
+"""
+Kerr black-hole spacetime in Boyer–Lindquist coordinates (numeric).
+
+This module provides :class:`Kerr`, a concrete metric used by the numeric stack
+for geodesic integration and related calculations. Coordinates are
+:math:`(t, r, \\theta, \\phi)` with the same dimensionless conventions as
+:class:`~relatipy.numeric.metrics.base.BaseMetric` (geometric units with
+:math:`G=c=1` in internal formulas, and masses handled as in the validator).
+
+The line element in Boyer–Lindquist form is
+
+.. math::
+
+    ds^2 = -\\left(1 - \\frac{2Mr}{\\Sigma}\\right)\\, dt^2
+    - \\frac{4Mra\\sin^2\\theta}{\\Sigma}\\, dt\\, d\\phi
+    + \\frac{\\Sigma}{\\Delta}\\, dr^2 + \\Sigma\\, d\\theta^2
+    + \\left(r^2 + a^2 + \\frac{2M r a^2 \\sin^2\\theta}{\\Sigma}\\right)
+      \\sin^2\\theta\\, d\\phi^2,
+
+with :math:`\\Sigma = r^2 + a^2 \\cos^2\\theta` and
+:math:`\\Delta = r^2 - 2Mr + a^2`.
+
+Notes
+-----
+Christoffel components in :meth:`Kerr._get_christoffel_symbols` were generated
+from symbolic expressions (see ``utils/symbolic_to_numeric.py``) and then
+manually optimized.
+
+References
+----------
+Bardeen, J. M., Press, W. H., & Teukolsky, S. A. (1972). Rotating black holes:
+locally nonrotating frames, energy extraction, and scalar synchrotron radiation.
+*The Astrophysical Journal*, 178, 347–370.
+
+Examples
+--------
+>>> from relatipy.numeric.metrics import Kerr
+>>> bh = Kerr(1.0, 0.5)
+>>> bool(bh.isco_prograde < bh.isco_retrograde)
+True
+"""
+
 import numpy
 from numpy import sin, cos, tan
 
 from .base import BaseMetric
 
+
 class Kerr(BaseMetric):
+    """
+    Kerr metric in Boyer–Lindquist coordinates.
+
+    The constructor stores the dimensionless spin parameter and precomputes
+    innermost stable circular orbit (ISCO) radii for prograde and retrograde
+    equatorial motion.
+
+    Parameters
+    ----------
+    mass : float or astropy.units.Quantity
+        Black-hole mass, in the same convention as :class:`BaseMetric`
+        (validated by ``validator.validate_scalar``; bare floats are treated as
+        geometric mass in units of the reference solar mass).
+    a : float
+        Dimensionless Kerr spin parameter :math:`a/M` (often denoted
+        :math:`a_*`), with :math:`|a| \\leq 1` for sub-extremal black holes.
+        It is converted internally to the length-like spin :math:`a` used in
+        Boyer–Lindquist formulas via ``a * R_s / 2``.
+
+    Attributes
+    ----------
+    a : float
+        Spin parameter in length units consistent with :attr:`BaseMetric.R_s`
+        and coordinate :math:`r` (internal Boyer–Lindquist :math:`a`).
+    isco_prograde : float
+        ISCO radius for co-rotating equatorial orbits (geometric units).
+    isco_retrograde : float
+        ISCO radius for counter-rotating equatorial orbits (geometric units).
+
+    Examples
+    --------
+    >>> from relatipy.numeric.metrics import Kerr
+    >>> k = Kerr(1.0, 0.9)
+    >>> bool(k.a > 0)
+    True
+    """
+
     def __init__(self, mass, a):
+        """
+        Set internal spin, register Boyer–Lindquist coordinates, and compute ISCO radii.
+
+        Parameters
+        ----------
+        mass : float or astropy.units.Quantity
+            Black-hole mass (same convention as :class:`BaseMetric`).
+        a : float
+            Dimensionless Kerr spin :math:`a/M` used to set :attr:`a`.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.metrics import Kerr
+        >>> float(Kerr(1.0, 0.0).isco_prograde)
+        6.0
+        """
         super().__init__(mass, valid_coordinate="BoyerLindquist", kwargs={"a": a})
         self.a = a * self.R_s / 2
         self.isco_prograde = self._get_isco(prograde=True)
@@ -12,21 +108,37 @@ class Kerr(BaseMetric):
 
     def _get_isco(self, prograde: bool = True) -> float:
         """
-        Calculates the radius of the ISCO in the Kerr metric.
+        Innermost stable circular orbit (ISCO) radius for Kerr in the equatorial plane.
+
+        Uses the closed-form expression from Bardeen, Press & Teukolsky (1972)
+        in terms of the dimensionless spin :math:`\\hat{a} = a_{\\mathrm{int}}/M`,
+        where :math:`a_{\\mathrm{int}}` is the internal spin :attr:`a` and
+        :math:`M` is :attr:`~BaseMetric.mass`.
 
         Parameters
         ----------
-        prograde : bool
-            If True, prograde (co-rotating) orbit. If False, retrograde.
+        prograde : bool, optional
+            If True, return the ISCO for co-rotating (prograde) orbits; if
+            False, for counter-rotating (retrograde) orbits.
 
         Returns
         -------
         float
-            Radius of the ISCO in geometric units (same as M).
+            ISCO radius in the same geometric length units as coordinates
+            (consistent with :attr:`BaseMetric.R_s` and :attr:`a`).
 
         References
         ----------
-        Bardeen, Press & Teukolsky (1972), ApJ, 178, 347.
+        Bardeen, J. M., Press, W. H., & Teukolsky, S. A. (1972). Rotating black
+        holes: locally nonrotating frames, energy extraction, and scalar
+        synchrotron radiation. *The Astrophysical Journal*, 178, 347–370.
+
+        Examples
+        --------
+        >>> from relatipy.numeric.metrics import Kerr
+        >>> k = Kerr(1.0, 0.0)
+        >>> bool(abs(k._get_isco(True) - 6.0) < 1e-10)
+        True
         """
         a_hat = self.a / self.mass  # spin adimensional ∈ [0, 1]
 
@@ -40,16 +152,38 @@ class Kerr(BaseMetric):
 
     def _metric_dimensionless(self, xs):
         """
-        Returns the Kerr metric tensor in Boyer-Lindquist coordinates.
+        Kerr metric tensor :math:`g_{\\mu\\nu}` in Boyer–Lindquist coordinates.
+
+        Coordinates are :math:`x^\\mu = (t, r, \\theta, \\phi)`. The implementation
+        matches the standard Kerr form with :math:`\\Sigma` and :math:`\\Delta` as
+        above, using :attr:`BaseMetric.R_s` for :math:`2M`.
 
         Parameters
         ----------
-        xs : list
-            List of coordinates [t, r, theta, phi] of boyer-lindquist coordinates.
-        mass : float
-            Mass of the black hole in kg.
-        a : float
-            Spin parameter of the black hole.
+        xs : array_like
+            Coordinates ``[t, r, theta, phi]``. A single point has shape ``(4,)``;
+            several points have shape ``(N, 4)``.
+
+        Returns
+        -------
+        numpy.ndarray
+            If ``xs`` is one-dimensional, an array of shape ``(4, 4)``. If
+            ``xs`` has shape ``(N, 4)``, an array of shape ``(N, 4, 4)``.
+
+        Notes
+        -----
+        Off-diagonal components implement the :math:`g_{t\\phi} = g_{\\phi t}`
+        coupling. The matrix is symmetric; entries are set explicitly only where
+        non-zero.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.metrics import Kerr
+        >>> k = Kerr(1.0, 0.5)
+        >>> g = k._metric_dimensionless(np.array([0.0, 10.0, 1.0, 0.0]))
+        >>> g.shape
+        (4, 4)
         """
         xs = numpy.asarray(xs, dtype=float)
 
@@ -106,12 +240,39 @@ class Kerr(BaseMetric):
     # Generated by utils/symbolic_to_numeric.py
     def _get_christoffel_symbols(self, xs):
         """
-        Returns the Christoffel symbols of the metric.
+        Christoffel symbols :math:`\\Gamma^\\lambda_{\\mu\\nu}` of the Kerr metric.
+
+        Indices are ordered as ``Gamma[lambda, mu, nu]``. Only non-zero components
+        are filled; symmetry :math:`\\Gamma^\\lambda_{\\mu\\nu} =
+        \\Gamma^\\lambda_{\\nu\\mu}` is enforced by copying mirrored entries.
 
         Parameters
         ----------
-        xs : array of shape (4,) or (N, 4)
-            Coordinates [x0, x1, x2, x3].
+        xs : array_like of shape (4,) or (N, 4)
+            Boyer–Lindquist coordinates ``(t, r, theta, phi)``. For ``(N, 4)``,
+            Christoffels are computed pointwise in a loop.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of shape ``(4, 4, 4)`` for a single point, or ``(N, 4, 4, 4)``
+            for ``N`` points.
+
+        Notes
+        -----
+        Expressions were generated symbolically and then partially folded for
+        performance. The polar angle :math:`\\theta` must avoid the coordinate
+        singularities of :math:`\\tan\\theta` (e.g. :math:`\\theta = 0, \\pi`).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from relatipy.numeric.metrics import Kerr
+        >>> k = Kerr(1.0, 0.5)
+        >>> x = np.array([0.0, 10.0, np.pi / 4, 0.0])
+        >>> G = k._get_christoffel_symbols(x)
+        >>> G.shape
+        (4, 4, 4)
         """
         xs = numpy.asarray(xs, dtype=float)
 

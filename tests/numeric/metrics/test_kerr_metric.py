@@ -1,4 +1,29 @@
-# test_kerr_metric.py
+"""
+Tests for the numeric Kerr metric and related geodesic quantities.
+
+This module compares ``relatipy``'s Kerr implementation with EinsteinPy's
+covariant metric in Boyer–Lindquist coordinates, checks Christoffel symbol
+symmetry and dimensionless versus SI consistency, and validates timelike
+normalization and conserved quantities along numerically integrated geodesics.
+
+Three independent initial-condition sets (``xs_i``, ``vs_i``, masses ``M_i``,
+and dimensionless spins ``a_i``) are built at import time using helpers from
+``initial_conditions``.
+
+Notes
+-----
+Full trajectory comparison against EinsteinPy geodesics is not performed here
+because of convention differences in initial data and four-velocity between
+packages.
+
+Examples
+--------
+Run this test module with pytest from the repository root:
+
+.. code-block:: console
+
+    python -m pytest tests/numeric/metrics/test_kerr_metric.py -v
+"""
 
 import numpy as np
 import astropy.units as u
@@ -75,7 +100,39 @@ x_vec_3 = np.array(initial_conditions_3.position())
 
 
 class TestKerrMetric:
+    """
+    Regression tests for the Kerr metric and Kerr geodesic invariants.
+
+    Uses three fixed initial-condition sets defined at module level together
+    with EinsteinPy ``BoyerLindquistDifferential`` and relatipy
+    ``BoyerLindquist`` state objects.
+
+    Examples
+    --------
+    .. code-block:: console
+
+        python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric -v
+    """
+
     def test_kerr_metric(self):
+        """
+        Match covariant Kerr metric components to EinsteinPy.
+
+        For each initial-condition set, compares the full :math:`4 \\times 4`
+        covariant metric from EinsteinPy's ``metric_covariant`` at the position
+        vector with ``relatipy.numeric.metrics.Kerr.metric(..., dimensionless=False)``.
+
+        Notes
+        -----
+        Uses SI units for the relatipy call (``dimensionless=False``) to align
+        with EinsteinPy's coordinate scaling for the same masses and spins.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_metric -v
+        """
         # CI 1
         kerr = ep_Kerr(coords=initial_conditions_1, M=M_1, a=a_1 * u.one)
         g = kerr.metric_covariant(x_vec_1)
@@ -96,20 +153,34 @@ class TestKerrMetric:
 
     def test_kerr_christoffel_symbols(self):
         """
-        Verifica:
-        - Simetría Γ^ρ_{μν} = Γ^ρ_{νμ} (conexión de Levi-Civita)
-        - Consistencia entre dimensionless=True y dimensionless=False
-        """
+        Check Christoffel symmetry in the last two indices.
 
+        Verifies that the Levi-Civita connection satisfies
+        :math:`\\Gamma^{\\rho}{}_{\\mu\\nu} = \\Gamma^{\\rho}{}_{\\nu\\mu}` by
+        comparing each array with its transpose over the last two axes, for
+        both ``dimensionless=True`` and ``dimensionless=False``.
+
+        Notes
+        -----
+        The relatipy Kerr implementation returns Christoffel components as a
+        three-index array; symmetry is checked independently for dimensionless
+        and SI-normalized outputs.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_christoffel_symbols -v
+        """
         # CI 1
         kerr = rp_Kerr(M_1, a_1)
         G_dimless = kerr.get_christoffel_symbols(xs_1, dimensionless=True)
         G_si = kerr.get_christoffel_symbols(xs_1, dimensionless=False)
         assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
-            "CI1: Christoffel no es simétrico en índices bajos (dimensionless)"
+            "CI1: Christoffel is not symmetric in the lower pair of indices (dimensionless)"
         )
         assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
-            "CI1: Christoffel no es simétrico en índices bajos (SI)"
+            "CI1: Christoffel is not symmetric in the lower pair of indices (SI)"
         )
 
         # CI 2
@@ -117,10 +188,10 @@ class TestKerrMetric:
         G_dimless = kerr.get_christoffel_symbols(xs_2, dimensionless=True)
         G_si = kerr.get_christoffel_symbols(xs_2, dimensionless=False)
         assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
-            "CI2: Christoffel no es simétrico en índices bajos (dimensionless)"
+            "CI2: Christoffel is not symmetric in the lower pair of indices (dimensionless)"
         )
         assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
-            "CI2: Christoffel no es simétrico en índices bajos (SI)"
+            "CI2: Christoffel is not symmetric in the lower pair of indices (SI)"
         )
 
         # CI 3
@@ -128,38 +199,64 @@ class TestKerrMetric:
         G_dimless = kerr.get_christoffel_symbols(xs_3, dimensionless=True)
         G_si = kerr.get_christoffel_symbols(xs_3, dimensionless=False)
         assert np.isclose(G_dimless, G_dimless.transpose(0, 2, 1)).all(), (
-            "CI3: Christoffel no es simétrico en índices bajos (dimensionless)"
+            "CI3: Christoffel is not symmetric in the lower pair of indices (dimensionless)"
         )
         assert np.isclose(G_si, G_si.transpose(0, 2, 1)).all(), (
-            "CI3: Christoffel no es simétrico en índices bajos (SI)"
+            "CI3: Christoffel is not symmetric in the lower pair of indices (SI)"
         )
 
-    # Comparar geodésicas completas con einsteinpy se ha descartado por
-    # diferencias de convención en las condiciones iniciales y 4-velocidad.
+    # Full geodesic comparison with EinsteinPy is omitted due to convention
+    # differences in initial conditions and four-velocity.
 
     def test_kerr_ds_dtau(self):
+        """
+        Assert unit timelike normalization :math:`\\mathrm{d}s/\\mathrm{d}\\tau = 1`.
+
+        Integrates the geodesic for each initial-condition set over a fixed
+        proper-time grid and checks that the path's ``_get_ds_dtau`` values are
+        unity everywhere (natural units).
+
+        Notes
+        -----
+        This encodes the timelike constraint after numerical integration.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_ds_dtau -v
+        """
         # CI 1
         taus_1 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_1, a_1)
         path = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
         ds_dtau = path._get_ds_dtau(kerr)
-        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+        assert np.isclose(ds_dtau, 1).all(), "ds/dtau deviates from 1 along the path"
 
         # CI 2
         taus_2 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_2, a_2)
         path = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
         ds_dtau = path._get_ds_dtau(kerr)
-        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+        assert np.isclose(ds_dtau, 1).all(), "ds/dtau deviates from 1 along the path"
 
         # CI 3
         taus_3 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_3, a_3)
         path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
         ds_dtau = path._get_ds_dtau(kerr)
-        assert np.isclose(ds_dtau, 1).all(), "The ds/dtau is not c**2"
+        assert np.isclose(ds_dtau, 1).all(), "ds/dtau deviates from 1 along the path"
 
     def test_kerr_E(self):
+        """
+        Energy constant :math:`E` is conserved along the integrated geodesic.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_E -v
+        """
         # CI 1
         taus_1 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_1, a_1)
@@ -182,28 +279,46 @@ class TestKerrMetric:
         assert np.isclose(E, E[0]).all(), "E is not constant over the trajectory"
 
     def test_kerr_Lz(self):
+        """
+        Azimuthal angular momentum :math:`L_z` is conserved along the path.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_Lz -v
+        """
         # CI 1
         taus_1 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_1, a_1)
         path = kerr.geodesic.get_path(initial_conditions_1_rp, taus_1)
         Lz = path._get_Lz(kerr)
-        assert np.isclose(Lz, Lz[0]).all(), "CI1: Lz no es constante"
+        assert np.isclose(Lz, Lz[0]).all(), "CI1: Lz is not constant along the trajectory"
 
         # CI 2
         taus_2 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_2, a_2)
         path = kerr.geodesic.get_path(initial_conditions_2_rp, taus_2)
         Lz = path._get_Lz(kerr)
-        assert np.isclose(Lz, Lz[0]).all(), "CI2: Lz no es constante"
+        assert np.isclose(Lz, Lz[0]).all(), "CI2: Lz is not constant along the trajectory"
 
         # CI 3
         taus_3 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_3, a_3)
         path = kerr.geodesic.get_path(initial_conditions_3_rp, taus_3)
         Lz = path._get_Lz(kerr)
-        assert np.isclose(Lz, Lz[0]).all(), "CI3: Lz no es constante"
+        assert np.isclose(Lz, Lz[0]).all(), "CI3: Lz is not constant along the trajectory"
 
     def test_kerr_Q(self):
+        """
+        Carter constant :math:`Q` is conserved along the integrated geodesic.
+
+        Examples
+        --------
+        .. code-block:: console
+
+            python -m pytest tests/numeric/metrics/test_kerr_metric.py::TestKerrMetric::test_kerr_Q -v
+        """
         # CI 1
         taus_1 = np.linspace(0, 100, 100)
         kerr = rp_Kerr(M_1, a_1)

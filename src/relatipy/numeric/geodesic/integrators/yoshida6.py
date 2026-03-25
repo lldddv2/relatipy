@@ -1,18 +1,38 @@
 """
 Yoshida 6th-order symplectic integrator for geodesic equations.
 
-Works in Hamiltonian phase space (q^μ, p_μ) where p_μ = g_{μν} u^ν.
-Uses Störmer-Verlet (DKD) as the 2nd-order base and a 7-stage Yoshida
-composition for 6th-order accuracy.
+This module provides a fixed-step Yoshida composition integrator in Hamiltonian
+phase space :math:`(q^\\mu, p_\\mu)` with :math:`p_\\mu = g_{\\mu\\nu} u^\\nu`.
+It uses Störmer–Verlet (drift–kick–drift) as the second-order base scheme and a
+seven-stage palindromic Yoshida composition for sixth-order accuracy.
 
-The kick force is computed using the identity
+The kick force uses the analytical Christoffel symbols (no finite differences):
 
-    F_μ = g_{μρ} a^ρ,   a^ρ = -Γ^ρ_{αβ} u^α u^β
+.. math::
 
-which avoids finite differences entirely and reuses the analytical
-Christoffel symbols already implemented for each metric.
+    F_\\mu = g_{\\mu\\rho} a^\\rho, \\quad
+    a^\\rho = -\\Gamma^\\rho_{\\alpha\\beta} u^\\alpha u^\\beta
 
-Reference: Yoshida, H. (1990), Phys. Lett. A 150, 262-268.
+When the compiled extension ``yoshida6_core.so`` is present, Schwarzschild and
+Kerr geodesics can be integrated in C; otherwise a pure Python path is used.
+
+Notes
+-----
+The composition weights are fixed constants (palindromic seven-stage scheme).
+
+References
+----------
+Yoshida, H. (1990). Construction of higher order symplectic integrators.
+*Physics Letters A*, 150(5–7), 262–268.
+
+Examples
+--------
+>>> import numpy as np
+>>> # Integration requires a metric instance; see relatipy.numeric.metrics.
+>>> # from relatipy.numeric.metrics import SchwarzschildMetric
+>>> # m = SchwarzschildMetric(R_s=2.0)
+>>> # y = Yoshida6Integrator(m)
+>>> # out = y.integrate(np.zeros(8), (0.0, 1.0), n_steps=10)
 """
 
 import ctypes
@@ -102,14 +122,50 @@ except Exception:
 def project_kerr_trajectory(Rs, a, q_arr, u_arr, E0, Lz0, Q0,
                              tol=1e-12, max_iter=20):
     """
-    In-place Newton projection of Kerr 4-velocities onto constraint surface.
+    Project Kerr four-velocities onto the constraint surface (in-place).
+
+    Uses a Newton iteration in the C backend to correct ``u_arr`` so that the
+    normalization and conserved quantities (energy :math:`E`, axial angular
+    momentum :math:`L_z`, Carter constant :math:`Q`) match the target values at
+    each fixed position row in ``q_arr``.
 
     Parameters
     ----------
-    Rs, a   : Kerr metric parameters (self.metric.R_s, self.metric.a)
-    q_arr   : (N, 4) C-contiguous float64 — positions (fixed)
-    u_arr   : (N, 4) C-contiguous float64 — velocities, corrected in-place
-    E0, Lz0, Q0 : conserved quantities from initial conditions
+    Rs : float
+        Schwarzschild radius parameter for the Kerr metric.
+    a : float
+        Spin parameter :math:`a` of the Kerr metric.
+    q_arr : ndarray, shape (N, 4), dtype float64
+        C-contiguous position coordinates :math:`q^\\mu` (read-only).
+    u_arr : ndarray, shape (N, 4), dtype float64
+        C-contiguous four-velocities :math:`u^\\mu`; updated in-place.
+    E0 : float
+        Target conserved energy (from initial conditions).
+    Lz0 : float
+        Target conserved axial angular momentum.
+    Q0 : float
+        Target Carter constant :math:`Q`.
+    tol : float, optional
+        Convergence tolerance for the projection (default ``1e-12``).
+    max_iter : int, optional
+        Maximum Newton iterations per point (default ``20``).
+
+    Raises
+    ------
+    RuntimeError
+        If the C extension is not loaded.
+
+    Returns
+    -------
+    None
+        Velocities are written in-place to ``u_arr``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> q = np.zeros((2, 4), dtype=np.float64)
+    >>> u = np.zeros((2, 4), dtype=np.float64)
+    >>> # project_kerr_trajectory(2.0, 0.0, q, u, E0, Lz0, Q0)  # needs C backend
     """
     if _C_LIB is None:
         raise RuntimeError("C backend not loaded; cannot call project_kerr_trajectory")
@@ -122,28 +178,58 @@ def project_kerr_trajectory(Rs, a, q_arr, u_arr, E0, Lz0, Q0,
         ctypes.c_double(tol), ctypes.c_int(max_iter), ctypes.c_int(N),
     )
 
+
 def _integrate_kerr_radau2(Rs, a, state0, tau_span, n_steps,
                            E0, Lz0, Q0, stride=1, n_fix_iter=5):
     """
     Fixed-step Radau IIA (order 5) integration for Kerr geodesics in C.
 
-    Constraint projection (normalization, E, Lz, Carter Q) is applied
-    at every stored output point inside the C loop.
+    Constraint projection (normalization, :math:`E`, :math:`L_z`, Carter
+    :math:`Q`) is applied at every stored output point inside the C loop.
 
     Parameters
     ----------
-    Rs, a       : Kerr metric parameters
-    state0      : array_like (8,) — [q^mu, u^mu]
-    tau_span    : (tau0, tau_end)
-    n_steps     : number of Radau steps
-    E0,Lz0,Q0  : conserved quantities (computed from initial state)
-    stride      : store output every stride steps (default 1)
-    n_fix_iter  : fixed-point iterations per step (default 5)
+    Rs : float
+        Schwarzschild radius parameter.
+    a : float
+        Kerr spin parameter.
+    state0 : array_like, shape (8,)
+        Initial phase-space vector :math:`[q^\\mu, u^\\mu]`.
+    tau_span : tuple of float
+        Proper-time interval ``(tau0, tau_end)``.
+    n_steps : int
+        Number of Radau steps.
+    E0 : float
+        Conserved energy (from the initial state).
+    Lz0 : float
+        Conserved axial angular momentum.
+    Q0 : float
+        Carter constant :math:`Q`.
+    stride : int, optional
+        Store output every ``stride`` steps (default ``1``).
+    n_fix_iter : int, optional
+        Fixed-point iterations per step in the C integrator (default ``5``).
 
     Returns
     -------
-    result.t : ndarray (N_out,)
-    result.y : ndarray (8, N_out)
+    result : simple namespace
+        Object with attributes:
+
+        - ``t`` : ndarray, shape (N_out,)
+            Proper time at each output point.
+        - ``y`` : ndarray, shape (8, N_out)
+            States :math:`[q^\\mu, u^\\mu]` as columns.
+
+    Raises
+    ------
+    RuntimeError
+        If the C extension is not loaded.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> s0 = np.zeros(8, dtype=np.float64)
+    >>> # _integrate_kerr_radau2(Rs, a, s0, (0.0, 1.0), 4, E0, Lz0, Q0)
     """
     if _C_LIB is None:
         raise RuntimeError("C backend not loaded; cannot call _integrate_kerr_radau2")
@@ -187,15 +273,45 @@ _YOSHIDA6_WEIGHTS = [_W1, _W2, _W3, _W0, _W3, _W2, _W1]
 
 class Yoshida6Integrator:
     """
-    Yoshida 6th-order symplectic integrator for geodesic equations.
+    Sixth-order Yoshida symplectic integrator for Hamiltonian geodesic flow.
 
-    State input/output uses the same convention as all other integrators:
-        state = [q^0, q^1, q^2, q^3, u^0, u^1, u^2, u^3]
+    State vectors follow the project convention ``state = [q^0, q^1, q^2, q^3,
+    u^0, u^1, u^2, u^3]``. Internally the integrator advances :math:`(q, p)` with
+    :math:`p_\\mu = g_{\\mu\\nu} u^\\nu` using a seven-stage Yoshida composition
+    of Störmer–Verlet steps.
 
-    Internally works in (q, p) phase space with p_μ = g_{μν} u^ν.
+    Parameters
+    ----------
+    metric : object
+        Metric instance providing ``metric(q)`` (and Christoffel symbols via
+        ``get_christoffel_symbols`` for the Python path). For the C backend,
+        the class name must be ``Schwarzschild`` or ``Kerr``.
+
+    Attributes
+    ----------
+    metric : object
+        The spacetime metric used for integration.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> # Yoshida6Integrator(metric).integrate(state0, (0.0, 1.0), n_steps=8)
     """
 
     def __init__(self, metric):
+        """
+        Initialize the integrator with a metric instance.
+
+        Parameters
+        ----------
+        metric : object
+            Metric providing ``metric(q)`` and ``get_christoffel_symbols(q)``
+            for the pure Python integrator.
+
+        Examples
+        --------
+        >>> # Yoshida6Integrator(schwarzschild_metric_instance)
+        """
         self.metric = metric
 
     # ------------------------------------------------------------------
@@ -204,26 +320,40 @@ class Yoshida6Integrator:
 
     def _kick_force(self, q, p, g, g_inv):
         """
-        Kick force in covariant phase space.
+        Covariant kick force :math:`F_\\mu` for the geodesic Hamiltonian flow.
 
-        From the geodesic Hamiltonian H = ½ g^{μν} p_μ p_ν the canonical
-        equation gives:
+        From :math:`H = \\tfrac{1}{2} g^{\\mu\\nu} p_\\mu p_\\nu`, the canonical
+        equation gives
 
-            dp_μ/dτ = Γ_{σρμ} u^σ u^ρ = g_{σα} Γ^α_{ρμ} u^σ u^ρ
+        .. math::
 
-        where Γ^α_{ρμ} are the Christoffel symbols (already implemented
-        analytically for each metric).
+            \\frac{\\mathrm{d} p_\\mu}{\\mathrm{d}\\tau}
+            = \\Gamma_{\\sigma\\rho\\mu} u^\\sigma u^\\rho
+            = g_{\\sigma\\alpha} \\Gamma^\\alpha_{\\rho\\mu} u^\\sigma u^\\rho
+
+        with Christoffel symbols :math:`\\Gamma^\\alpha_{\\rho\\mu}` supplied by
+        ``self.metric.get_christoffel_symbols``.
 
         Parameters
         ----------
-        q      : ndarray(4,) — position
-        p      : ndarray(4,) — covariant momenta p_μ
-        g      : ndarray(4,4) — metric g_{μν}(q)
-        g_inv  : ndarray(4,4) — inverse metric g^{μν}(q)
+        q : ndarray, shape (4,)
+            Position :math:`q^\\mu`.
+        p : ndarray, shape (4,)
+            Covariant momentum :math:`p_\\mu`.
+        g : ndarray, shape (4, 4)
+            Metric :math:`g_{\\mu\\nu}(q)`.
+        g_inv : ndarray, shape (4, 4)
+            Inverse metric :math:`g^{\\mu\\nu}(q)`.
 
         Returns
         -------
-        ndarray(4,) — kick force F_μ
+        ndarray, shape (4,)
+            Kick force components :math:`F_\\mu`.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> # F = integrator._kick_force(q, p, g, g_inv)  # inside Yoshida6Integrator
         """
         u     = g_inv @ p                                   # u^α = g^{αβ} p_β
         chris = self.metric.get_christoffel_symbols(q)      # Γ^α_{ρμ}, shape (4,4,4)
@@ -232,11 +362,32 @@ class Yoshida6Integrator:
 
     def _verlet_step(self, q, p, h):
         """
-        One Störmer-Verlet DKD step.
+        One Störmer–Verlet drift–kick–drift sub-step of step size ``h``.
 
-        1. half-drift: q_{1/2} = q       + (h/2) g^{μν}(q)       p_ν
-        2. kick:       p'      = p       + h     F(q_{1/2}, p)
-        3. half-drift: q'      = q_{1/2} + (h/2) g^{μν}(q_{1/2}) p'_ν
+        The scheme applies: (1) half drift with :math:`g^{\\mu\\nu}(q)`;
+        (2) kick using :meth:`_kick_force` at the midpoint; (3) second half
+        drift using the metric at the midpoint and updated :math:`p`.
+
+        Parameters
+        ----------
+        q : ndarray, shape (4,)
+            Position before the step.
+        p : ndarray, shape (4,)
+            Covariant momentum before the step.
+        h : float
+            Sub-step size in proper time.
+
+        Returns
+        -------
+        q_new : ndarray, shape (4,)
+            Position after the sub-step.
+        p_new : ndarray, shape (4,)
+            Covariant momentum after the sub-step.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> # q_new, p_new = integrator._verlet_step(q, p, h)
         """
         # --- first half-drift ---
         g0     = self.metric.metric(q)
@@ -255,7 +406,30 @@ class Yoshida6Integrator:
         return q_new, p_new
 
     def _yoshida_step(self, q, p, h):
-        """One Yoshida 6th-order step = 7 Verlet sub-steps."""
+        """
+        One full Yoshida sixth-order step as seven Verlet sub-steps.
+
+        Parameters
+        ----------
+        q : ndarray, shape (4,)
+            Position at the start of the step.
+        p : ndarray, shape (4,)
+            Covariant momentum at the start of the step.
+        h : float
+            Total step size (partitioned by internal composition weights).
+
+        Returns
+        -------
+        q : ndarray, shape (4,)
+            Position at the end of the step.
+        p : ndarray, shape (4,)
+            Covariant momentum at the end of the step.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> # q, p = integrator._yoshida_step(q, p, h)
+        """
         for w in _YOSHIDA6_WEIGHTS:
             q, p = self._verlet_step(q, p, w * h)
         return q, p
@@ -265,7 +439,38 @@ class Yoshida6Integrator:
     # ------------------------------------------------------------------
 
     def _integrate_c(self, state0, tau0, tau_end, n_steps, stride):
-        """Call the compiled C integration function (Schwarzschild or Kerr)."""
+        """
+        Integrate using the compiled C routine (Schwarzschild or Kerr).
+
+        Parameters
+        ----------
+        state0 : ndarray, shape (8,)
+            Initial state :math:`[q^\\mu, u^\\mu]`.
+        tau0 : float
+            Start of proper time.
+        tau_end : float
+            End of proper time.
+        n_steps : int
+            Number of Yoshida steps.
+        stride : int
+            Store output every ``stride`` steps.
+
+        Returns
+        -------
+        result : simple namespace
+            ``result.t`` — proper times; ``result.y`` — states with shape
+            ``(8, N_out)``.
+
+        Raises
+        ------
+        ValueError
+            If the metric class is not supported by the C backend.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> # integrator._integrate_c(s0, 0.0, 1.0, n_steps=4, stride=1)
+        """
         metric_name = type(self.metric).__name__
         N_alloc = n_steps + 2
         out_t = np.zeros(N_alloc, dtype=np.float64)
@@ -314,25 +519,44 @@ class Yoshida6Integrator:
 
     def integrate(self, state0, tau_span, n_steps, stride=1):
         """
-        Integrate geodesic equations with fixed step size.
+        Integrate the geodesic equations with a fixed step size.
+
+        Uses the C backend when available for ``Schwarzschild`` or ``Kerr``
+        metrics; otherwise integrates in pure Python via :meth:`_yoshida_step`.
 
         Parameters
         ----------
         state0 : array_like, shape (8,)
-            Initial state [q^0..q^3, u^0..u^3].
-        tau_span : (tau0, tau_end)
-            Proper-time integration interval.
+            Initial state :math:`[q^0, \\ldots, q^3, u^0, \\ldots, u^3]`.
+        tau_span : tuple of float
+            Proper-time interval ``(tau0, tau_end)``.
         n_steps : int
-            Total number of Yoshida steps (h = Δτ / n_steps).
-        stride : int
-            Store output every `stride` steps (default 1).
-            The initial state is always stored.
+            Number of Yoshida steps; step size is
+            :math:`h = (\\tau_{\\mathrm{end}} - \\tau_0) / n_{\\mathrm{steps}}`.
+        stride : int, optional
+            Store output every ``stride`` steps (default ``1``). The initial
+            state is always stored.
 
         Returns
         -------
-        result : namespace
-            .t — ndarray(N_out,)   proper time at output points
-            .y — ndarray(8, N_out) state [q^μ, u^μ] at output points
+        result : simple namespace
+            Object with attributes:
+
+            - ``t`` : ndarray, shape (N_out,)
+                Proper time at output points.
+            - ``y`` : ndarray, shape (8, N_out)
+                State :math:`[q^\\mu, u^\\mu]` at each output (columns).
+
+        Raises
+        ------
+        ValueError
+            If ``state0`` does not have shape ``(8,)``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> state0 = np.zeros(8)
+        >>> # Yoshida6Integrator(metric).integrate(state0, (0.0, 1.0), n_steps=10)
         """
         state0 = np.asarray(state0, dtype=float)
         if state0.shape != (8,):
@@ -391,12 +615,43 @@ def yoshida6_integrate_geodesic(
     tau_eval=None,
 ):
     """
-    Convenience wrapper for Yoshida 6th-order geodesic integration.
+    Convenience wrapper around :class:`Yoshida6Integrator` for geodesic output.
+
+    When ``adaptive_output`` is False and ``tau_eval`` is provided, the stride
+    for stored steps is chosen from ``n_steps`` and the length of ``tau_eval``.
+
+    Parameters
+    ----------
+    metric : object
+        Metric instance passed to :class:`Yoshida6Integrator`.
+    state0 : array_like, shape (8,)
+        Initial state :math:`[q^\\mu, u^\\mu]`.
+    tau0 : float
+        Start of proper time.
+    tau_end : float
+        End of proper time.
+    n_steps : int
+        Number of Yoshida steps in ``[tau0, tau_end]``.
+    adaptive_output : bool, optional
+        If True (default) or if ``tau_eval`` is None, output is stored every
+        step (``stride=1``). If False and ``tau_eval`` is set, stride is
+        ``max(1, n_steps // len(tau_eval))``.
+    tau_eval : array_like or None, optional
+        Optional array of evaluation times; only affects ``stride`` when
+        ``adaptive_output`` is False.
 
     Returns
     -------
-    tau   : ndarray, shape (N,)
-    state : ndarray, shape (N, 8) — [q^μ, u^μ] at each output point
+    tau : ndarray, shape (N,)
+        Proper times at output points.
+    state : ndarray, shape (N, 8)
+        States :math:`[q^\\mu, u^\\mu]` at each output row.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> state0 = np.zeros(8)
+    >>> # tau, state = yoshida6_integrate_geodesic(m, state0, 0.0, 1.0, 10)
     """
     state0 = np.asarray(state0, dtype=float)
 

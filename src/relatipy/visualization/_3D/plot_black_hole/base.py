@@ -1,5 +1,25 @@
 """
-Base classes and descriptors for 3D black hole plotting.
+Base classes for 3D black-hole and orbit visualization with Plotly.
+
+This module defines lightweight configuration objects (:class:`OrbitPath`,
+:class:`EquatorialPlane`, :class:`SquarePlane`) and the abstract
+:class:`BasePlotBlackHole`, which collects orbit paths and optional reference
+planes, then builds a :mod:`plotly.graph_objects` figure with the event
+horizon (implemented in subclasses), trajectories, markers, and equal scene
+axes.
+
+Notes
+-----
+Spatial extent of the scene is inferred from Cartesian samples of all added
+paths; if no paths are present, a default range proportional to
+:attr:`~relatipy.numeric.metrics.base.BaseMetric.R_s` is used.
+
+Examples
+--------
+>>> from relatipy.visualization._3D.plot_black_hole import OrbitPath
+>>> cfg = OrbitPath(None, color="red", label="orbit")
+>>> cfg.label
+'orbit'
 """
 import numpy as np
 from abc import ABC, abstractmethod
@@ -15,7 +35,55 @@ from ..orbits import set_axis_equal
 
 
 class OrbitPath:
-    """Encapsulates a path to be plotted (stores parameters only)."""
+    """
+    Container for styling and display options of a single orbit path.
+
+    Instances store only parameters; geometry is resolved when
+    :meth:`BasePlotBlackHole.plot` converts each path to Cartesian coordinates
+    and calls the helpers in :mod:`~relatipy.visualization._3D.base_elements`.
+
+    Parameters
+    ----------
+    path : object
+        Trajectory or coordinate path with a ``convert_to("Cartesian")`` API
+        compatible with the plotting stack (typically a geodesic result object).
+    color : str, optional
+        Line and marker color for this orbit. Default is ``"red"``.
+    opacity : float, optional
+        Opacity for the path trace, in ``[0, 1]``. Default is ``0.6``.
+    size : float, optional
+        Marker size for start/end decorations. Default is ``5``.
+    show_start : bool, optional
+        If True, draw a point at the initial spatial position. Default is True.
+    show_end : bool, optional
+        If True, draw a velocity arrow at the final spatial position. Default is True.
+    label : str, optional
+        Legend label for the path and derived markers. Default is ``"orbit"``.
+
+    Attributes
+    ----------
+    path : object
+        The trajectory or path object supplied at construction.
+    color : str
+        Line and marker color.
+    opacity : float
+        Opacity for the path trace.
+    size : float
+        Marker size for start/end decorations.
+    show_start : bool
+        Whether to show the start point.
+    show_end : bool
+        Whether to show the end arrow.
+    label : str
+        Legend label.
+
+    Examples
+    --------
+    >>> from relatipy.visualization._3D.plot_black_hole import OrbitPath
+    >>> op = OrbitPath(None, color="blue", opacity=0.5, label="test")
+    >>> op.color
+    'blue'
+    """
 
     def __init__(
         self,
@@ -37,7 +105,33 @@ class OrbitPath:
 
 
 class EquatorialPlane:
-    """Encapsulates the equatorial plane (circular disk)."""
+    """
+    Configuration for a circular disk in the equatorial (x–y) plane.
+
+    The disk radius is chosen at plot time from the spatial extent of the
+    scene (see :meth:`BasePlotBlackHole.plot`).
+
+    Parameters
+    ----------
+    color : str, optional
+        Surface color. Default is ``"gray"``.
+    opacity : float, optional
+        Surface opacity. Default is ``0.08``.
+
+    Attributes
+    ----------
+    color : str
+        Surface color.
+    opacity : float
+        Surface opacity.
+
+    Examples
+    --------
+    >>> from relatipy.visualization._3D.plot_black_hole import EquatorialPlane
+    >>> plane = EquatorialPlane(color="gray", opacity=0.1)
+    >>> plane.opacity
+    0.1
+    """
 
     def __init__(self, color='gray', opacity=0.08):
         self.color = color
@@ -45,7 +139,37 @@ class EquatorialPlane:
 
 
 class SquarePlane:
-    """Encapsulates a square equatorial plane."""
+    """
+    Configuration for a square reference plane in the equatorial plane.
+
+    The half-edge length ``semi_side`` sets the extent in the x and y
+    directions; the plane is centered on the origin.
+
+    Parameters
+    ----------
+    semi_side : float
+        Half side length of the square in the same length units as the plot.
+    color : str, optional
+        Surface color. Default is ``"gray"``.
+    opacity : float, optional
+        Surface opacity. Default is ``0.08``.
+
+    Attributes
+    ----------
+    semi_side : float
+        Half side length of the square.
+    color : str
+        Surface color.
+    opacity : float
+        Surface opacity.
+
+    Examples
+    --------
+    >>> from relatipy.visualization._3D.plot_black_hole import SquarePlane
+    >>> sq = SquarePlane(10.0, color="gray")
+    >>> sq.semi_side
+    10.0
+    """
 
     def __init__(self, semi_side, color='gray', opacity=0.08):
         self.semi_side = semi_side
@@ -54,7 +178,37 @@ class SquarePlane:
 
 
 class BasePlotBlackHole(ABC):
-    """Base class for 3D black hole + orbits visualization."""
+    """
+    Abstract base class for a 3D Plotly figure with a black hole and orbits.
+
+    Subclasses implement :meth:`_build_black_hole_elements` to supply the
+    horizon (and related) geometry. Call :meth:`add_path` and :meth:`add_plane`
+    to register content, then :meth:`plot` to assemble the figure.
+
+    Parameters
+    ----------
+    metric : BaseMetric
+        Spacetime metric instance (e.g. :class:`~relatipy.numeric.metrics.schwarzschild_metric.Schwarzschild`).
+        Its ``R_s`` attribute scales the default scene when no paths are added.
+
+    Attributes
+    ----------
+    metric : BaseMetric
+        The metric backing this visualization.
+    _paths : list of OrbitPath
+        Registered orbit paths and their display options.
+    _planes : list of EquatorialPlane or SquarePlane
+        Registered reference planes.
+
+    Examples
+    --------
+    >>> from relatipy.visualization._3D.plot_black_hole import PlotSchwarzschild
+    >>> from relatipy.numeric.metrics import Schwarzschild
+    >>> plotter = PlotSchwarzschild(Schwarzschild(1.989e30))
+    >>> fig = plotter.plot()
+    >>> fig is not None
+    True
+    """
 
     def __init__(self, metric):
         self.metric = metric
@@ -71,7 +225,39 @@ class BasePlotBlackHole(ABC):
         show_end=True,
         label="orbit",
     ) -> None:
-        """Create and append an OrbitPath."""
+        """
+        Append an :class:`OrbitPath` built from the given trajectory.
+
+        Parameters
+        ----------
+        path : object
+            Trajectory with ``convert_to("Cartesian")`` for the plotting stack.
+        color : str, optional
+            Line and marker color. Default is ``"red"``.
+        opacity : float, optional
+            Path opacity. Default is ``0.6``.
+        size : float, optional
+            Marker size for start/end decorations. Default is ``5``.
+        show_start : bool, optional
+            Whether to draw the start point. Default is True.
+        show_end : bool, optional
+            Whether to draw the end arrow. Default is True.
+        label : str, optional
+            Legend label. Default is ``"orbit"``.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> from relatipy.visualization._3D.plot_black_hole import PlotSchwarzschild
+        >>> from relatipy.numeric.metrics import Schwarzschild
+        >>> p = PlotSchwarzschild(Schwarzschild(1.989e30))
+        >>> p.add_path(None, label="orbit")
+        >>> len(p._paths)
+        1
+        """
         self._paths.append(
             OrbitPath(
                 path,
@@ -85,16 +271,80 @@ class BasePlotBlackHole(ABC):
         )
 
     def add_plane(self, plane) -> None:
-        """Add an EquatorialPlane or SquarePlane instance."""
+        """
+        Register a reference plane (circular or square equatorial).
+
+        Parameters
+        ----------
+        plane : EquatorialPlane or SquarePlane
+            Plane configuration appended to :attr:`_planes` and drawn in
+            :meth:`plot`.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> from relatipy.visualization._3D.plot_black_hole import (
+        ...     PlotSchwarzschild,
+        ...     SquarePlane,
+        ... )
+        >>> from relatipy.numeric.metrics import Schwarzschild
+        >>> p = PlotSchwarzschild(Schwarzschild(1.989e30))
+        >>> p.add_plane(SquarePlane(5.0))
+        """
         self._planes.append(plane)
 
     @abstractmethod
     def _build_black_hole_elements(self) -> list:
-        """Return list of plotly elements for the black hole (horizon, etc.)."""
+        """
+        Build Plotly traces for the black hole (e.g. event horizon).
+
+        Returns
+        -------
+        list
+            List of :mod:`plotly.graph_objects` traces (e.g. mesh or surface)
+            rendered in addition to paths and planes.
+
+        Examples
+        --------
+        >>> from relatipy.visualization._3D.plot_black_hole import PlotSchwarzschild
+        >>> from relatipy.numeric.metrics import Schwarzschild
+        >>> plotter = PlotSchwarzschild(Schwarzschild(1.989e30))
+        >>> isinstance(plotter._build_black_hole_elements(), list)
+        True
+        """
         pass
 
     def plot(self, show_center=True):
-        """Build and return the full figure."""
+        """
+        Assemble a 3D figure with horizon, paths, planes, and optional origin.
+
+        Cartesian samples from each path determine the scene scale; the
+        half-range is at least ``max(|spatial coords|)`` over all paths, or
+        ``10 * R_s`` if there are no paths. Axes are set to equal scale via
+        :func:`~relatipy.visualization._3D.orbits.set_axis_equal`.
+
+        Parameters
+        ----------
+        show_center : bool, optional
+            If True, draw a black marker at the coordinate origin. Default is True.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Plotly figure containing all constructed traces.
+
+        Examples
+        --------
+        >>> from relatipy.visualization._3D.plot_black_hole import PlotSchwarzschild
+        >>> from relatipy.numeric.metrics import Schwarzschild
+        >>> plotter = PlotSchwarzschild(Schwarzschild(1.989e30))
+        >>> fig = plotter.plot(show_center=True)
+        >>> len(fig.data) >= 1
+        True
+        """
         import plotly.graph_objects as go
 
         # 1. max_range: max of abs of spatial coords (rows 1,2,3) over all paths; fallback R_s * 10

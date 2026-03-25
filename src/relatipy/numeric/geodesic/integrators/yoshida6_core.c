@@ -1,28 +1,30 @@
-/*
- * yoshida6_core.c
+/**
+ * @file yoshida6_core.c
+ * @brief Sixth-order Yoshida symplectic integrator and related Kerr tools for geodesics.
  *
- * Yoshida 6th-order symplectic integrator for geodesic equations.
- * Supports Schwarzschild (spherical) and Kerr (Boyer-Lindquist) metrics.
+ * This translation unit implements a seven-stage palindromic Yoshida composition of
+ * Störmer–Verlet (drift–kick–drift) steps for timelike geodesics in the Schwarzschild
+ * metric (spherical coordinates) and the Kerr metric (Boyer–Lindquist coordinates).
+ * It also provides Newton-based projection of Kerr four-velocities onto conserved
+ * quantities and a three-stage Radau IIA (order 5) step in \f$(q^\mu, p_\mu)\f$
+ * phase space with optional projection after each stored step.
  *
- * Compile (macOS/Linux):
- *   cc -O3 -march=native -shared -fPIC -o yoshida6_core.so yoshida6_core.c -lm
+ * Phase-space convention: \f$q^\mu\f$ are contravariant coordinates and
+ * \f$p_\mu = g_{\mu\nu} u^\nu\f$ are covariant momenta. The kick uses
+ * \f$F_m = \sum_{a,r} p_a \Gamma^a_{rm} u^r\f$, equivalent to the contraction
+ * with \f$g_{sa}\Gamma^a_{rm} u^s u^r\f$ when \f$g\f$ is symmetric.
  *
- * Phase-space variables:
- *   q^mu  – contravariant coordinates
- *   p_mu  – covariant momenta  p_mu = g_{mu nu} u^nu
- *
- * Kick force:
- *   F_m = sum_{a,r} p[a] * Gamma^a_{r m} * u[r]
- *       = sum_{a,r} p[a] * Gamma[a][r][m] * u[r]
- *
- * This is equivalent to the einsum 'sa,arm,s,r->m' (g_{sa} Gamma^a_{rm} u^s u^r)
- * because p_a = g_{as} u^s, so sum_s g_{sa} u^s = p_a (g symmetric).
+ * @par Build
+ * Example shared library (macOS/Linux):
+ * @code
+ * cc -O3 -march=native -shared -fPIC -o yoshida6_core.so yoshida6_core.c -lm
+ * @endcode
  */
 
 #include <math.h>
 #include <string.h>
 
-/* ---- Yoshida 6th-order weights (7-stage palindromic) ---- */
+/** Yoshida sixth-order composition weights (seven-stage palindromic scheme). */
 static const double YOSHIDA_W[7] = {
      0.784513610477560,
      0.235573213359357,
@@ -52,7 +54,14 @@ static const double YOSHIDA_W[7] = {
  *   G[3][2][3] = G[3][3][2] = cos(theta)/sin(theta)
  */
 
-/* u^mu = g^{mu nu} p_nu  (diagonal inverse metric) */
+/**
+ * @brief Raise indices: \f$u^\mu = g^{\mu\nu} p_\nu\f$ (Schwarzschild, diagonal inverse).
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param p Covariant momentum \f$p_\mu\f$.
+ * @param u Output contravariant four-velocity components \f$u^\mu\f$.
+ */
 static void sch_ginv_dot_p(double Rs, const double *q, const double *p, double *u)
 {
     double r = q[1], theta = q[2];
@@ -65,7 +74,14 @@ static void sch_ginv_dot_p(double Rs, const double *q, const double *p, double *
     u[3] = -p[3] / (r2 * s * s);
 }
 
-/* p_mu = g_{mu nu} u^nu  (diagonal covariant metric) */
+/**
+ * @brief Lower indices: \f$p_\mu = g_{\mu\nu} u^\nu\f$ (Schwarzschild, diagonal metric).
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param u Contravariant four-velocity \f$u^\mu\f$.
+ * @param p Output covariant momentum \f$p_\mu\f$.
+ */
 static void sch_g_dot_u(double Rs, const double *q, const double *u, double *p)
 {
     double r = q[1], theta = q[2];
@@ -78,15 +94,16 @@ static void sch_g_dot_u(double Rs, const double *q, const double *u, double *p)
     p[3] = -r2 * s * s * u[3];
 }
 
-/*
- * Kick force for Schwarzschild:
- *   F[m] = sum_{a,r} p[a] * Gamma^a_{r m} * u[r]
+/**
+ * @brief Geodesic kick force \f$F_m = \sum_{a,r} p_a \Gamma^a_{rm} u^r\f$ (Schwarzschild).
  *
- * Expanded (only non-zero Christoffel contributions):
- *   F[0] = p[0]*G0_01*u[1]  + p[1]*G1_00*u[0]
- *   F[1] = p[0]*G0_01*u[0]  + p[1]*G1_11*u[1] + p[2]*G2_12*u[2] + p[3]*G3_13*u[3]
- *   F[2] = p[1]*G1_22*u[2]  + p[2]*G2_12*u[1] + p[3]*G3_23*u[3]
- *   F[3] = p[1]*G1_33*u[3]  + p[2]*G2_33*u[3] + p[3]*(G3_13*u[1] + G3_23*u[2])
+ * Uses only non-zero Christoffel symbols in spherical Schwarzschild coordinates.
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param p Covariant momentum at the kick point.
+ * @param u Contravariant velocity at the kick point.
+ * @param F Output force components \f$F_m = \mathrm{d}p_m/\mathrm{d}\tau\f$.
  */
 static void sch_kick_force(
     double Rs, const double *q, const double *p, const double *u, double *F)
@@ -117,7 +134,14 @@ static void sch_kick_force(
          + p[3] * (G3_13 * u[1] + G3_23 * u[2]);
 }
 
-/* One Störmer-Verlet DKD step (Schwarzschild) */
+/**
+ * @brief One drift–kick–drift (Störmer–Verlet) symplectic step in \f$(q,p)\f$ (Schwarzschild).
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param h Step size in proper time.
+ * @param q In/out position \f$q^\mu\f$.
+ * @param p In/out covariant momentum \f$p_\mu\f$.
+ */
 static void sch_verlet(double Rs, double h, double *q, double *p)
 {
     double u[4], q_half[4], p_new[4], F[4];
@@ -138,7 +162,14 @@ static void sch_verlet(double Rs, double h, double *q, double *p)
     for (i = 0; i < 4; i++) p[i] = p_new[i];
 }
 
-/* One Yoshida 6th-order step (Schwarzschild) */
+/**
+ * @brief One Yoshida sixth-order composed step (seven Verlet substeps, Schwarzschild).
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param h Macro-step size in proper time.
+ * @param q In/out position \f$q^\mu\f$.
+ * @param p In/out covariant momentum \f$p_\mu\f$.
+ */
 static void sch_yoshida(double Rs, double h, double *q, double *p)
 {
     int k;
@@ -146,21 +177,34 @@ static void sch_yoshida(double Rs, double h, double *q, double *p)
         sch_verlet(Rs, YOSHIDA_W[k] * h, q, p);
 }
 
-/*
- * Main integration function for Schwarzschild.
+/**
+ * @brief Integrate a timelike geodesic with the Yoshida sixth-order scheme (Schwarzschild).
  *
- * Output stored as (N_out, 8) row-major: out_y[n*8 + component].
- * Caller must pre-allocate out_t and out_y with at least (n_steps+1) entries.
+ * Initial state is \f$[q^0,\ldots,q^3,u^0,\ldots,u^3]\f$; output rows are
+ * \f$[q^\mu,u^\mu]\f$ with \f$u^\mu\f$ recomputed from \f$p_\mu\f$ after each stored step.
+ * Storage layout: @p out_y is row-major \f$(N_{\mathrm{out}},8)\f$,
+ * @c out_y[n*8 + k].
+ *
+ * @param Rs Schwarzschild radius \f$R_s\f$.
+ * @param state0 Initial \f$[q^\mu, u^\mu]\f$ (eight components).
+ * @param tau0 Start of proper time.
+ * @param tau_end End of proper time.
+ * @param n_steps Number of Yoshida macro-steps; step size is
+ *     \f$h=(\tau_{\mathrm{end}}-\tau_0)/n_{\mathrm{steps}}\f$.
+ * @param stride Store every @p stride-th step and always the last step.
+ * @param out_t Pre-allocated times, length at least @c n_steps + 1.
+ * @param out_y Pre-allocated flat array, length at least @c (n_steps + 1) * 8.
+ * @param n_out Output: number of rows actually written to @p out_t and @p out_y.
  */
 void yoshida6_schwarzschild(
     double Rs,
-    const double *state0,    /* [q^0..q^3, u^0..u^3] */
+    const double *state0,
     double tau0,
     double tau_end,
     int n_steps,
     int stride,
     double *out_t,
-    double *out_y,           /* (N_out, 8) row-major */
+    double *out_y,
     int *n_out)
 {
     double q[4], p[4], u[4];
@@ -210,7 +254,18 @@ void yoshida6_schwarzschild(
  *   g^11  = 1/g11 = -Delta/Sigma,   g^22 = 1/g22 = -1/Sigma
  */
 
-/* Compute Kerr metric components at q */
+/**
+ * @brief Evaluate Kerr metric components in Boyer–Lindquist coordinates at @p q.
+ *
+ * @param Rs Schwarzschild-radius-like mass parameter.
+ * @param a Spin parameter (convention: related to black-hole spin as in caller).
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param g00 Out: \f$g_{00}\f$.
+ * @param g11 Out: \f$g_{11}\f$.
+ * @param g22 Out: \f$g_{22}\f$.
+ * @param g33 Out: \f$g_{33}\f$.
+ * @param g03 Out: \f$g_{03}=g_{30}\f$.
+ */
 static void kerr_metric(double Rs, double a,
                          const double *q,
                          double *g00, double *g11, double *g22,
@@ -233,7 +288,15 @@ static void kerr_metric(double Rs, double a,
     *g03 = Rs * r * a / Sigma * s2;
 }
 
-/* u^mu = g^{mu nu} p_nu  (Kerr: analytic 2x2 block inversion) */
+/**
+ * @brief Raise indices: \f$u^\mu = g^{\mu\nu} p_\nu\f$ (Kerr; analytic \f$2\times2\f$ block for \f$t,\phi\f$).
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param p Covariant momentum.
+ * @param u Output \f$u^\mu\f$.
+ */
 static void kerr_ginv_dot_p(double Rs, double a,
                              const double *q, const double *p, double *u)
 {
@@ -247,7 +310,15 @@ static void kerr_ginv_dot_p(double Rs, double a,
     u[3] = (-g03 * p[0] + g00 * p[3]) / det2;
 }
 
-/* p_mu = g_{mu nu} u^nu  (Kerr: includes off-diagonal g03) */
+/**
+ * @brief Lower indices: \f$p_\mu = g_{\mu\nu} u^\nu\f$ (Kerr, includes \f$g_{03}\f$).
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param u Contravariant four-velocity.
+ * @param p Output covariant momentum.
+ */
 static void kerr_g_dot_u(double Rs, double a,
                           const double *q, const double *u, double *p)
 {
@@ -259,40 +330,18 @@ static void kerr_g_dot_u(double Rs, double a,
     p[3] = g03 * u[0] + g33 * u[3];
 }
 
-/*
- * Kick force for Kerr: F[m] = sum_{a,r} p[a] * Gamma^a_{r m} * u[r]
+/**
+ * @brief Geodesic kick force \f$F_m = \sum_{a,r} p_a \Gamma^a_{rm} u^r\f$ (Kerr).
  *
- * Christoffel components (translated from kerr_metric.py):
- *   K0_01  Gamma[0][0][1] = Gamma[0][1][0]
- *   K0_02  Gamma[0][0][2] = Gamma[0][2][0]
- *   K0_13  Gamma[0][1][3] = Gamma[0][3][1]
- *   K0_23  Gamma[0][2][3] = Gamma[0][3][2]
- *   K1_00  Gamma[1][0][0]
- *   K1_03  Gamma[1][0][3] = Gamma[1][3][0]
- *   K1_11  Gamma[1][1][1]
- *   K1_12  Gamma[1][1][2] = Gamma[1][2][1]
- *   K1_22  Gamma[1][2][2]
- *   K1_33  Gamma[1][3][3]
- *   K2_00  Gamma[2][0][0]
- *   K2_03  Gamma[2][0][3] = Gamma[2][3][0]
- *   K2_11  Gamma[2][1][1]
- *   K2_12  Gamma[2][1][2] = Gamma[2][2][1]
- *   K2_22  Gamma[2][2][2]
- *   K2_33  Gamma[2][3][3]
- *   K3_01  Gamma[3][0][1] = Gamma[3][1][0]
- *   K3_02  Gamma[3][0][2] = Gamma[3][2][0]
- *   K3_13  Gamma[3][1][3] = Gamma[3][3][1]
- *   K3_23  Gamma[3][2][3] = Gamma[3][3][2]
+ * Christoffel symbols are evaluated in closed form in Boyer–Lindquist coordinates
+ * (implementation aligned with the project’s symbolic Kerr metric module).
  *
- * Expanded kick components:
- *   F[0] = p0*(K0_01*u1 + K0_02*u2) + p1*(K1_00*u0 + K1_03*u3)
- *          + p2*(K2_00*u0 + K2_03*u3) + p3*(K3_01*u1 + K3_02*u2)
- *   F[1] = p0*(K0_01*u0 + K0_13*u3) + p1*(K1_11*u1 + K1_12*u2)
- *          + p2*(K2_11*u1 + K2_12*u2) + p3*(K3_01*u0 + K3_13*u3)
- *   F[2] = p0*(K0_02*u0 + K0_23*u3) + p1*(K1_12*u1 + K1_22*u2)
- *          + p2*(K2_12*u1 + K2_22*u2) + p3*(K3_02*u0 + K3_23*u3)
- *   F[3] = p0*(K0_13*u1 + K0_23*u2) + p1*(K1_03*u0 + K1_33*u3)
- *          + p2*(K2_03*u0 + K2_33*u3) + p3*(K3_13*u1 + K3_23*u2)
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param q Position \f$[t,r,\theta,\phi]\f$.
+ * @param p Covariant momentum at the kick point.
+ * @param u Contravariant velocity at the kick point.
+ * @param F Output \f$\mathrm{d}p_m/\mathrm{d}\tau\f$.
  */
 static void kerr_kick_force(
     double Rs, double a,
@@ -457,7 +506,15 @@ static void kerr_kick_force(
          + p3 * (K3_13 * u1 + K3_23 * u2);
 }
 
-/* One Störmer-Verlet DKD step (Kerr) */
+/**
+ * @brief One drift–kick–drift symplectic step in \f$(q,p)\f$ (Kerr).
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param h Proper-time step size.
+ * @param q In/out position \f$q^\mu\f$.
+ * @param p In/out covariant momentum \f$p_\mu\f$.
+ */
 static void kerr_verlet(double Rs, double a, double h, double *q, double *p)
 {
     double u[4], q_half[4], p_new[4], F[4];
@@ -475,7 +532,15 @@ static void kerr_verlet(double Rs, double a, double h, double *q, double *p)
     for (i = 0; i < 4; i++) p[i] = p_new[i];
 }
 
-/* One Yoshida 6th-order step (Kerr) */
+/**
+ * @brief One Yoshida sixth-order composed step (Kerr).
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param h Macro-step size in proper time.
+ * @param q In/out position \f$q^\mu\f$.
+ * @param p In/out covariant momentum \f$p_\mu\f$.
+ */
 static void kerr_yoshida(double Rs, double a, double h, double *q, double *p)
 {
     int k;
@@ -483,13 +548,26 @@ static void kerr_yoshida(double Rs, double a, double h, double *q, double *p)
         kerr_verlet(Rs, a, YOSHIDA_W[k] * h, q, p);
 }
 
-/*
- * Main integration function for Kerr.
- * Output: (N_out, 8) row-major, same layout as Schwarzschild.
+/**
+ * @brief Integrate a timelike geodesic with the Yoshida sixth-order scheme (Kerr).
+ *
+ * Same output layout as yoshida6_schwarzschild(): row-major \f$(N_{\mathrm{out}},8)\f$
+ * with \f$[q^\mu,u^\mu]\f$ per row.
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter (e.g. \f$a = \chi\,R_s/2\f$ with dimensionless spin \f$\chi\f$ from the Python layer).
+ * @param state0 Initial \f$[q^\mu, u^\mu]\f$.
+ * @param tau0 Start of proper time.
+ * @param tau_end End of proper time.
+ * @param n_steps Number of macro-steps.
+ * @param stride Store every @p stride-th step and the last step.
+ * @param out_t Pre-allocated, length at least @c n_steps + 1.
+ * @param out_y Pre-allocated, length at least @c (n_steps + 1) * 8.
+ * @param n_out Output: number of stored points.
  */
 void yoshida6_kerr(
     double Rs,
-    double a,                /* self.a = spin_param * Rs/2 */
+    double a,
     const double *state0,
     double tau0,
     double tau_end,
@@ -548,7 +626,14 @@ void yoshida6_kerr(
  *          dQ/du3 = cos^2(th)*(2*a^2*E*g03 + 2*Lz*g33/sin^2(th))
  */
 
-/* Gaussian elimination with partial pivoting, 4x4 system: A x = b → x */
+/**
+ * @brief Solve a \f$4\times4\f$ linear system \f$Ax=b\f$ by Gaussian elimination with partial pivoting.
+ *
+ * @param A Coefficient matrix (copied internally; @p A is left unchanged).
+ * @param b Right-hand side.
+ * @param x Output solution vector.
+ * @return 0 on success, -1 if the matrix is singular (pivot below \f$10^{-30}\f$).
+ */
 static int solve4x4(double A[4][4], const double *b, double *x)
 {
     double aug[4][5];
@@ -590,10 +675,23 @@ static int solve4x4(double A[4][4], const double *b, double *x)
     return 0;
 }
 
-/*
- * Single-point Newton projection.
- * q[4]: fixed position (Boyer-Lindquist)
- * u[4]: velocity, corrected in-place
+/**
+ * @brief Newton iteration to project \f$u^\mu\f$ onto Kerr conserved-quantity constraints.
+ *
+ * Enforces unit normalization \f$g_{\mu\nu}u^\mu u^\nu=1\f$, fixed energy \f$E\f$,
+ * axial angular momentum \f$L_z\f$, and Carter constant \f$Q\f$ (via the standard
+ * relation involving \f$p_\theta\f$ and constants \f$E_0,L_{z0},Q_0\f$).
+ * Updates @p u in place; @p q is read-only.
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param q Fixed Boyer–Lindquist position \f$[t,r,\theta,\phi]\f$.
+ * @param u In/out contravariant four-velocity.
+ * @param E0 Target energy parameter \f$E_0\f$.
+ * @param Lz0 Target \f$L_{z0}\f$.
+ * @param Q0 Target Carter constant \f$Q_0\f$.
+ * @param tol Convergence tolerance on max absolute constraint residual.
+ * @param max_iter Maximum Newton iterations.
  */
 void kerr_project_constraints(
     double Rs, double a,
@@ -668,10 +766,19 @@ void kerr_project_constraints(
     }
 }
 
-/*
- * Batch projection over N output points.
- * q_arr: (N, 4) row-major  — positions, fixed
- * u_arr: (N, 4) row-major  — velocities, corrected in-place
+/**
+ * @brief Apply kerr_project_constraints() to each of @p N trajectory samples.
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param q_arr Row-major \f$(N,4)\f$ positions (read-only).
+ * @param u_arr Row-major \f$(N,4)\f$ velocities, updated in place.
+ * @param E0 Target energy.
+ * @param Lz0 Target axial angular momentum.
+ * @param Q0 Target Carter constant.
+ * @param tol Same as kerr_project_constraints().
+ * @param max_iter Same as kerr_project_constraints().
+ * @param N Number of rows.
  */
 void kerr_project_trajectory(
     double Rs, double a,
@@ -710,24 +817,29 @@ void kerr_project_trajectory(
  * steps_per_period >= 20,  n_fix_iter = 5 achieves full 5th-order
  * accuracy at double precision.
  */
+/** Butcher matrix \f$A\f$ for the three-stage Radau IIA method (order 5). */
 static const double RADAU3_A[3][3] = {
     { 0.19681547722366597, -0.06553542585019844,  0.02377097434422321 },
     { 0.39442431473908988,  0.29207341166522843, -0.04154875212599793 },
     { 0.37640306270046727,  0.51248582618842162,  0.11111111111111111 }
 };
+/** Stage abscissas \f$c_i\f$ for Radau IIA (\f$c_3=1\f$). */
 static const double RADAU3_C[3] = {
     0.15505102572168219, 0.64494897427831781, 1.0
 };
 
-/* ---- Kerr geodesic RHS in PHASE SPACE (q^mu, p_mu) ------------------
+/**
+ * @brief Right-hand side for Kerr geodesics in \f$(q^\mu,p_\mu)\f$ phase space.
  *
- * Works with covariant momenta p_mu = g_{mu nu} u^nu, exactly like the
- * Yoshida integrator. This avoids the Boyer-Lindquist coordinate
- * singularity at theta=0 (where cot(theta) -> inf in (q, u) space).
+ * State \f$y_8 = [q^\mu, p_\mu]\f$, derivative
+ * \f$\mathrm{d}y_8/\mathrm{d}\tau = [u^\mu, F_\mu]\f$ with
+ * \f$u^\mu = g^{\mu\nu}p_\nu\f$ and \f$F_\mu\f$ the kick force. Using \f$p_\mu\f$
+ * avoids the raw \f$(q,u)\f$ formulation’s coordinate singularity at \f$\theta=0\f$.
  *
- * y8 = [q^0..q^3, p_0..p_3]
- * dy8 = [dq^mu/dtau, dp_mu/dtau]
- *      = [u^mu, F_mu]  where u^mu = g^{mu nu} p_nu, F_mu = kick force
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param y8 Length-8 state \f$[q^0,\ldots,q^3,p_0,\ldots,p_3]\f$.
+ * @param dy8 Output time derivative of @p y8.
  */
 static void kerr_geodesic_rhs_qp(double Rs, double a,
                                    const double *y8, double *dy8)
@@ -738,7 +850,18 @@ static void kerr_geodesic_rhs_qp(double Rs, double a,
     kerr_kick_force(Rs, a, y8, y8 + 4, u, dy8 + 4); /* dp/dtau = F_mu     */
 }
 
-/* One Radau IIA step in phase space. y8_{n+1} = Y[2] after convergence. */
+/**
+ * @brief One implicit Radau IIA step in \f$(q,p)\f$ via fixed-point (Picard) iteration.
+ *
+ * Stage values \f$Y_s\f$ satisfy \f$Y_s = y_n + h\sum_r A_{sr} f(Y_r)\f$;
+ * after iteration, \f$y_{n+1}\f$ is the last stage (\f$c_3=1\f$).
+ *
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param y8 In/out: current state; overwritten with the advanced state.
+ * @param h Step size.
+ * @param n_fix_iter Number of fixed-point sweeps per step.
+ */
 static void kerr_radau3_step_qp(double Rs, double a,
                                   double *y8, double h, int n_fix_iter)
 {
@@ -766,41 +889,28 @@ static void kerr_radau3_step_qp(double Rs, double a,
     for (i = 0; i < 8; i++) y8[i] = Y[2][i];
 }
 
-/*
- * Kerr Radau2 integration with built-in constraint projection.
+/**
+ * @brief Kerr geodesic integration with three-stage Radau IIA steps and constraint projection.
  *
- * Parameters
- * ----------
- * Rs, a        : Kerr metric parameters
- * state0       : initial [q^0..q^3, u^0..u^3]
- * tau0,tau_end : proper-time span
- * n_steps      : total number of Radau steps
- * stride       : store output every stride steps (initial always stored)
- * n_fix_iter   : fixed-point iterations per step (5 recommended)
- * E0, Lz0, Q0 : conserved quantities (computed from initial state in Python)
- * out_t        : pre-allocated double[n_steps+2]
- * out_y        : pre-allocated double[(n_steps+2)*8], row-major (N, 8)
- * n_out        : written with actual number of stored points
- */
-/*
- * Kerr Radau2 integration with built-in constraint projection.
+ * Advances the trajectory in \f$(q^\mu,p_\mu)\f$ like the Yoshida path (avoids the
+ * \f$\theta=0\f$ singularity of a pure \f$(q,u)\f$ RHS). After each stored step,
+ * \f$u^\mu\f$ is recovered, projected with kerr_project_constraints(), and \f$p_\mu\f$
+ * is refreshed. Output rows are \f$[q^\mu,u^\mu]\f$ in row-major form.
  *
- * Internally works in phase space [q^mu, p_mu] to avoid the
- * Boyer-Lindquist coordinate singularity at theta=0 (same strategy
- * as the Yoshida integrator). Output is stored as [q^mu, u^mu].
- *
- * Parameters
- * ----------
- * Rs, a        : Kerr metric parameters
- * state0       : initial [q^0..q^3, u^0..u^3]   (contravariant velocity)
- * tau0,tau_end : proper-time span
- * n_steps      : total number of Radau steps
- * stride       : store output every stride steps (initial always stored)
- * n_fix_iter   : fixed-point iterations per step (5 recommended)
- * E0, Lz0, Q0 : conserved quantities (computed from initial state in Python)
- * out_t        : pre-allocated double[n_steps+2]
- * out_y        : pre-allocated double[(n_steps+2)*8], row-major (N, 8)
- * n_out        : written with actual number of stored points
+ * @param Rs Mass parameter.
+ * @param a Spin parameter.
+ * @param state0 Initial \f$[q^\mu,u^\mu]\f$ (contravariant velocity).
+ * @param tau0 Start of proper time.
+ * @param tau_end End of proper time.
+ * @param n_steps Number of Radau macro-steps.
+ * @param stride Store every @p stride-th step and the final step.
+ * @param n_fix_iter Fixed-point iterations per implicit step (e.g. 5 for orbital use).
+ * @param E0 Conserved energy parameter (from the Python caller).
+ * @param Lz0 Conserved axial angular momentum.
+ * @param Q0 Carter constant target.
+ * @param out_t Pre-allocated times, length at least @c n_steps + 1.
+ * @param out_y Pre-allocated \f$(N_{\mathrm{out}},8)\f$ flat buffer.
+ * @param n_out Output: number of stored points.
  */
 void kerr_radau2(
     double Rs, double a,

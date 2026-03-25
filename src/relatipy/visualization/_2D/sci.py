@@ -1,30 +1,92 @@
+"""
+Matplotlib subplot styling for publication-quality scientific figures.
+
+This module provides :class:`SciSubplot`, which applies a consistent
+LaTeX-like serif look, inward ticks on all four sides, optional minor
+ticks, and a thin frame—similar to figures in GRAVITY/ESO-style papers
+(Gillessen et al.).
+
+Examples
+--------
+>>> from relatipy.visualization._2D.sci import SciSubplot
+>>> ws = SciSubplot()
+>>> _ = ws.ax.plot([0, 1], [0, 1])
+"""
 import matplotlib.pyplot as plt
 
 
 class SciSubplot:
     """
-    Subplot con aspecto científico estilo GRAVITY/ESO (Gillessen et al.)
-    - Fuente serif tipo LaTeX (STIXGeneral / Computer Modern)
-    - Ticks hacia adentro en los 4 lados
-    - Minor ticks automáticos
-    - Marco delgado
-    - Sin grid por defecto (papers de astrofísica raramente lo usan)
+    Scientific-style subplot with GRAVITY/ESO-inspired aesthetics.
+
+    The style uses LaTeX-like serif fonts (STIXGeneral / Computer Modern
+    family stack), inward ticks on all four sides, optional automatic minor
+    ticks, a thin frame, and no grid by default (common in astrophysics
+    publications).
+
+    Parameters
+    ----------
+    grid : bool, default False
+        If True, draw a very subtle dashed grid on all axes.
+    minor_ticks : bool, default True
+        If True, enable automatic minor tick locators on every axis.
+    subplot : tuple, list, dict, or None, default None
+        If None, create a single figure and one axes via ``add_subplot(111)``.
+        If a tuple or list, it is unpacked as positional arguments to
+        :func:`matplotlib.pyplot.subplots` (e.g. ``(2, 2)`` for a 2×2 grid).
+        If a dict, keys are passed as keyword arguments to ``subplots``.
+    *args
+        Extra positional arguments for :func:`matplotlib.pyplot.figure`
+        (when ``subplot`` is None) or :func:`matplotlib.pyplot.subplots`.
+    **kwargs
+        Extra keyword arguments for ``figure`` or ``subplots``.
+
+    Attributes
+    ----------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure instance.
+    ax : matplotlib.axes.Axes
+        Primary axes; the first flattened entry when ``axs`` is an array.
+    axs : matplotlib.axes.Axes or numpy.ndarray
+        Single axes or array of axes from ``subplots``, depending on layout.
+    COLORS : dict
+        Named colors aligned with GRAVITY/SINFONI-style palettes (keys:
+        ``"black"``, ``"cyan"``, ``"red"``, ``"blue"``, ``"gray"``).
+
+    Raises
+    ------
+    ValueError
+        If ``subplot`` is neither None, a tuple/list, nor a dict.
+
+    Examples
+    --------
+    Single axes (default):
+
+    >>> ws = SciSubplot()
+    >>> ws.ax.plot([0, 1], [0, 1])  # doctest: +ELLIPSIS
+    [...]
+
+    Grid of subplots:
+
+    >>> ws = SciSubplot(subplot=(2, 2), figsize=(6, 6))
+    >>> hasattr(ws.axs, "flat")
+    True
     """
 
-    # ── Paleta de colores estilo GRAVITY ──────────────────────────────────
+    # ── GRAVITY-style color palette ───────────────────────────────────────
     COLORS = {
         "black":   "black",
         "cyan":    "#4DB8FF",   # GRAVITY
-        "red":     "#CC3300",   # flares / referencia
+        "red":     "#CC3300",   # flares / reference
         "blue":    "#1A3E8C",   # SINFONI
-        "gray":    "#999999",   # curvas de ajuste
+        "gray":    "#999999",   # fit curves
     }
 
     def __init__(self, grid=False, minor_ticks=True, subplot=None, *args, **kwargs):
         import matplotlib as mpl
         from matplotlib.ticker import AutoMinorLocator
 
-        # ── Tipografía estilo LaTeX ────────────────────────────────────────
+        # ── LaTeX-like typography ─────────────────────────────────────────
         mpl.rcParams.update({
             "font.family":          "serif",
             "font.serif":           ["TeX Gyre Termes", "Times New Roman",
@@ -50,55 +112,56 @@ class SciSubplot:
             "xtick.minor.width":    0.6,
             "ytick.minor.width":    0.6,
 
-            # ── Líneas / marcadores ───────────────────────────────────────
+            # ── Lines / markers ───────────────────────────────────────────
             "lines.linewidth":      1.2,
             "lines.markersize":     4,
-            "errorbar.capsize":     0,      # sin caps en barras de error
+            "errorbar.capsize":     0,      # no caps on error bars
 
-            # ── Marco y fondo ─────────────────────────────────────────────
+            # ── Frame and background ────────────────────────────────────
             "axes.linewidth":       0.6,
             "axes.edgecolor":       "black",
             "axes.facecolor":       "white",
             "figure.facecolor":     "white",
 
-            # ── Leyenda ───────────────────────────────────────────────────
+            # ── Legend ────────────────────────────────────────────────────
             "legend.frameon":       False,
             "legend.handlelength":  1.5,
-            "legend.handletextpad": 0.5,    # espacio entre handle y texto
-            "legend.labelspacing":  0.4,    # espacio vertical entre entradas
+            "legend.handletextpad": 0.5,    # space between handle and text
+            "legend.labelspacing":  0.4,    # vertical space between entries
 
-            # ── Resolución ────────────────────────────────────────────────
+            # ── Resolution ─────────────────────────────────────────────
             "figure.dpi":           125,
             "savefig.dpi":          300,
             "savefig.bbox":         "tight",
         })
 
-        # ── Creación de figura y ejes (soporte para subplots) ─────────────
+        # ── Figure and axes (subplot support) ───────────────────────────
         if subplot is None:
-            # Comportamiento original: una sola figura y un solo eje
+            # Original behavior: one figure and one axes
             self.fig = plt.figure(*args, **kwargs)
             self.ax = self.fig.add_subplot(111)
             self.axs = self.ax
         else:
-            # Nuevo comportamiento: subplots tipo matplotlib
-            # Ejemplo de uso:
+            # Subplots via matplotlib API
+            # Example:
             #   workspace = SciSubplot(subplot=(2, 2), figsize=(6, 6))
             #   fig, axs = workspace.fig, workspace.axs
             if isinstance(subplot, (tuple, list)):
-                # subplot=(nrows, ncols, ...) + args/kwargs normales de subplots
+                # subplot=(nrows, ncols, ...) + normal subplots args/kwargs
                 self.fig, axs = plt.subplots(*subplot, *args, **kwargs)
             elif isinstance(subplot, dict):
-                # subplot={"nrows": ..., "ncols": ..., ...} + args normales
-                # Ojo: en Python, los args posicionales deben ir antes que los kwargs
+                # subplot={"nrows": ..., "ncols": ..., ...} + args
+                # Positional args must precede keyword-only dict unpacking.
                 self.fig, axs = plt.subplots(*args, **subplot, **kwargs)
             else:
                 raise ValueError(
-                    "El parámetro 'subplot' debe ser una tupla/lista (nrows, ncols, ...) "
-                    "o un dict con argumentos para matplotlib.pyplot.subplots."
+                    "The 'subplot' parameter must be a tuple/list "
+                    "(nrows, ncols, ...) or a dict of keyword arguments for "
+                    "matplotlib.pyplot.subplots."
                 )
 
             self.axs = axs
-            # Eje "principal" para mantener compatibilidad con código existente
+            # Primary axes for backward compatibility
             if hasattr(axs, "flat"):
                 self.ax = axs.flat[0]
             else:
@@ -115,7 +178,7 @@ class SciSubplot:
                 _ax.xaxis.set_minor_locator(AutoMinorLocator())
                 _ax.yaxis.set_minor_locator(AutoMinorLocator())
 
-        # ── Grid (opcional, muy sutil) ────────────────────────────────────
+        # ── Optional subtle grid ──────────────────────────────────────────
         if grid:
             axes_iter = (
                 list(self.axs.flat)
@@ -129,13 +192,52 @@ class SciSubplot:
     # ── Helpers ───────────────────────────────────────────────────────────
 
     def add_grid(self, linestyle="--", color="black", alpha=0.12):
+        """
+        Enable a subtle grid on the primary axes.
+
+        Parameters
+        ----------
+        linestyle : str, default "--"
+            Grid line style (matplotlib linestyle).
+        color : str, default "black"
+            Grid line color.
+        alpha : float, default 0.12
+            Opacity of the grid lines.
+
+        Examples
+        --------
+        >>> ws = SciSubplot()
+        >>> ws.add_grid()
+        """
         self.ax.grid(True, linestyle=linestyle, color=color,
                      alpha=alpha, lw=0.5, zorder=0)
 
     def add_second_scale_horizontal(self, func, label=None):
         """
-        Segunda escala en el eje superior.
-        func: callable o tupla (forward, inverse).
+        Add a synchronized secondary *x* scale on the top spine.
+
+        Tick positions match the primary axes; labels are computed by
+        applying ``func`` to the primary tick values.
+
+        Parameters
+        ----------
+        func : callable or tuple
+            Forward mapping from primary axis values to displayed values.
+            If a tuple ``(forward, inverse)``, only ``forward`` is used.
+        label : str or None, default None
+            Label for the secondary *x* axis (top).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The twin axes created with :meth:`~matplotlib.axes.Axes.twiny`.
+
+        Examples
+        --------
+        >>> ws = SciSubplot()
+        >>> ax2 = ws.add_second_scale_horizontal(lambda x: x * 2, label="2x")
+        >>> isinstance(ax2.xaxis.get_major_formatter(), object)
+        True
         """
         from matplotlib.ticker import FixedLocator, FuncFormatter
         forward = func[0] if isinstance(func, tuple) else func
@@ -163,8 +265,30 @@ class SciSubplot:
 
     def add_second_scale_vertical(self, func, label=None):
         """
-        Segunda escala en el eje derecho.
-        func: callable o tupla (forward, inverse).
+        Add a synchronized secondary *y* scale on the right spine.
+
+        Tick positions match the primary axes; labels are computed by
+        applying ``func`` to the primary tick values.
+
+        Parameters
+        ----------
+        func : callable or tuple
+            Forward mapping from primary axis values to displayed values.
+            If a tuple ``(forward, inverse)``, only ``forward`` is used.
+        label : str or None, default None
+            Label for the secondary *y* axis (right).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The twin axes created with :meth:`~matplotlib.axes.Axes.twinx`.
+
+        Examples
+        --------
+        >>> ws = SciSubplot()
+        >>> ax2 = ws.add_second_scale_vertical(lambda y: y ** 2, label="y²")
+        >>> ax2.get_ylabel() == "y²"
+        True
         """
         from matplotlib.ticker import FixedLocator, FuncFormatter
         forward = func[0] if isinstance(func, tuple) else func
