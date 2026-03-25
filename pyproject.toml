@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "relatipy"
-version = "0.3.4"
+version = "0.3.5"
 description = "Numeric and symbolic tools for Kerr black hole geometry"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -36,3 +36,7 @@ python_functions = ["test_*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Ship C source in sdist; radau_core.so is produced at build time (see setup.py).
+[tool.setuptools.package-data]
+relatipy = ["numeric/geodesic/integrators/radau_core.c"]

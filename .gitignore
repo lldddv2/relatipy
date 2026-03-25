@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 !.github/
 .DS_Store
+**/radau_core.so
+**/radau_core.dll

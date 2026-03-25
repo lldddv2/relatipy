@@ -8,7 +8,8 @@ coordinate singularity at the polar axis. Stored output uses
 energy :math:`E`, :math:`L_z`, and Carter constant :math:`Q`) applied via
 Newton iteration at every stored output point.
 
-The shared library ``radau_core.so`` is loaded from this package directory at
+The shared library ``radau_core`` (e.g. ``radau_core.so`` / ``radau_core.dll``)
+is loaded from this package directory at
 import time; if loading fails, public functions raise ``RuntimeError`` when
 called.
 
@@ -36,13 +37,31 @@ True
 
 import ctypes
 import os
+import sys
 
 import numpy as np
 
-# ---- Load C backend (radau_core.so) ----------------------------------------
+
+def _find_radau_core_path() -> str | None:
+    """Path to the ctypes shared library next to this module, if present."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    if sys.platform == "win32":
+        names = ("radau_core.dll", "radau_core.so")
+    else:
+        names = ("radau_core.so", "radau_core.dylib")
+    for name in names:
+        p = os.path.join(base, name)
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+# ---- Load C backend (radau_core.{so,dll,...}) ------------------------------
 _C_LIB = None
 try:
-    _SO_PATH = os.path.join(os.path.dirname(__file__), "radau_core.so")
+    _SO_PATH = _find_radau_core_path()
+    if _SO_PATH is None:
+        raise FileNotFoundError("radau_core shared library not found next to radau.py")
     _lib = ctypes.CDLL(_SO_PATH)
     _dbl_p = ctypes.POINTER(ctypes.c_double)
     _int_p = ctypes.POINTER(ctypes.c_int)
