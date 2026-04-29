@@ -269,7 +269,7 @@ class Geodesic:
 
         # Grab period before any coordinate conversion
         period = None
-        if integrator.lower() in ("yoshida6", "radau2"):
+        if integrator.lower() in ("yoshida6", "radau2", "mino"):
             if hasattr(initial_conditions, "_get_period"):
                 period = initial_conditions._get_period()
 
@@ -357,7 +357,7 @@ class Geodesic:
         span = t_span[1] - t_span[0]
 
         if integrator.lower() == "yoshida6":
-            from .integrators.yoshida6 import Yoshida6Integrator
+            from .integrators.kerr.yoshida6 import Yoshida6Integrator
 
             if period is not None and period > 0:
                 # steps proportional to the number of orbital periods
@@ -386,7 +386,7 @@ class Geodesic:
                 raise ValueError(
                     "Radau2 requires a Kerr metric (Boyer-Lindquist coordinates)."
                 )
-            from .integrators.radau import _integrate_kerr_radau2
+            from .integrators.kerr.radau import _integrate_kerr_radau2
 
             g0 = self.metric.metric(ys0[:4])
             p0 = g0 @ ys0[4:]
@@ -416,6 +416,46 @@ class Geodesic:
                 return result.y
 
             # Interpolate to requested taus
+            y_out = numpy.zeros((8, len(taus_np)))
+            for i in range(8):
+                f = interp1d(result.t, result.y[i], kind="cubic")
+                y_out[i] = f(taus_np)
+            return y_out
+
+        if integrator.lower() == "mino":
+            if self.valid_coordinate != "BoyerLindquist":
+                raise ValueError(
+                    "Mino requires a Kerr metric (Boyer-Lindquist coordinates)."
+                )
+            from .integrators.kerr.mino import _integrate_kerr_mino
+
+            g0    = self.metric.metric(ys0[:4])
+            p0    = g0 @ ys0[4:]
+            E0    = -p0[0]
+            Lz0   = p0[3]
+            p_th0 = p0[2]
+            theta0 = ys0[2]
+            c2 = numpy.cos(theta0) ** 2
+            s2 = numpy.sin(theta0) ** 2
+            Q0 = p_th0 ** 2 + c2 * (
+                self.metric.a ** 2 * (1.0 - E0 ** 2) + Lz0 ** 2 / s2
+            )
+
+            if period is not None and period > 0:
+                n_periods_float = span / period
+                n_steps = max(int(numpy.ceil(n_periods_float * steps_per_period)), 100)
+            else:
+                n_steps = max(len(taus_np) * steps_per_period, 1000)
+
+            result = _integrate_kerr_mino(
+                self.metric.R_s, self.metric.a,
+                ys0, t_span, n_steps,
+                E0=E0, Lz0=Lz0, Q0=Q0,
+            )
+
+            if adaptative:
+                return result.y
+
             y_out = numpy.zeros((8, len(taus_np)))
             for i in range(8):
                 f = interp1d(result.t, result.y[i], kind="cubic")
@@ -474,7 +514,7 @@ class Geodesic:
         --------
         >>> # path = Geodesic(metric).get_path_periodic(orbital_ic, n_periods=100)  # doctest: +SKIP
         """
-        from .integrators.yoshida6 import Yoshida6Integrator
+        from .integrators.kerr.yoshida6 import Yoshida6Integrator
 
         period = initial_conditions._get_period()
 

@@ -28,10 +28,10 @@ Examples
 >>> metric = Schwarzschild(5.972e24)
 >>> integrator = Yoshida6Integrator(metric)
 >>> integrator  # doctest: +ELLIPSIS
-<relatipy.numeric.geodesic.integrators.yoshida6.Yoshida6Integrator object at ...>
+<relatipy.numeric.geodesic.integrators.kerr.yoshida6.Yoshida6Integrator object at ...>
 """
 
-from .yoshida6 import Yoshida6Integrator, yoshida6_integrate_geodesic
+from .kerr.yoshida6 import Yoshida6Integrator, yoshida6_integrate_geodesic
 
 __all__ = [
     "Yoshida6Integrator",
