@@ -269,7 +269,7 @@ class Geodesic:
 
         # Grab period before any coordinate conversion
         period = None
-        if integrator.lower() in ("yoshida6", "radau2", "mino"):
+        if integrator.lower() in ("yoshida6", "radau2", "fujita"):
             if hasattr(initial_conditions, "_get_period"):
                 period = initial_conditions._get_period()
 
@@ -422,12 +422,12 @@ class Geodesic:
                 y_out[i] = f(taus_np)
             return y_out
 
-        if integrator.lower() == "mino":
+        if integrator.lower() == "fujita":
             if self.valid_coordinate != "BoyerLindquist":
                 raise ValueError(
-                    "Mino requires a Kerr metric (Boyer-Lindquist coordinates)."
+                    "Fujita requires a Kerr metric (Boyer-Lindquist coordinates)."
                 )
-            from .integrators.kerr.mino import _integrate_kerr_mino
+            from .integrators.kerr.fujita import _integrate_kerr_fujita
 
             g0    = self.metric.metric(ys0[:4])
             p0    = g0 @ ys0[4:]
@@ -447,7 +447,7 @@ class Geodesic:
             else:
                 n_steps = max(len(taus_np) * steps_per_period, 1000)
 
-            result = _integrate_kerr_mino(
+            result = _integrate_kerr_fujita(
                 self.metric.R_s, self.metric.a,
                 ys0, t_span, n_steps,
                 E0=E0, Lz0=Lz0, Q0=Q0,

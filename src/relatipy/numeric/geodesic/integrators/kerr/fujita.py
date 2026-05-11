@@ -1,5 +1,5 @@
 """
-Kerr geodesic integrator using Mino time parametrization.
+Kerr geodesic integrator using Mino time parametrization (Fujita method).
 
 This module wraps a compiled C implementation that integrates Kerr geodesics
 in Boyer-Lindquist coordinates using the Mino time parameter :math:`\\lambda`,
@@ -20,7 +20,7 @@ In Mino time the radial and polar equations of motion decouple:
 where :math:`R` and :math:`\\Theta` are the standard Kerr radial and polar
 potentials. The azimuthal and time equations are integrated as quadratures.
 
-The shared library ``mino_core`` (``mino_core.so`` / ``mino_core.dll``) is
+The shared library ``fujita_core`` (``fujita_core.so`` / ``fujita_core.dll``) is
 loaded from this package directory at import time; if loading fails, the
 public functions raise ``RuntimeError`` when called.
 
@@ -35,11 +35,13 @@ References
 .. [1] Mino, Y. (2003). *Perturbative approach to an orbital evolution around
        a supermassive black hole*. Phys. Rev. D, 67, 084027.
 .. [2] Drasco, S. & Hughes, S. A. (2004). Phys. Rev. D, 69, 044708.
+.. [3] Fujita, R. & Hikida, W. (2009). *Analytical solutions of bound timelike
+       geodesic orbits in Kerr spacetime*. Class. Quantum Grav., 26, 135002.
 
 Examples
 --------
->>> from relatipy.numeric.geodesic.integrators.kerr import mino
->>> mino._C_LIB is not None  # doctest: +SKIP
+>>> from relatipy.numeric.geodesic.integrators.kerr import fujita
+>>> fujita._C_LIB is not None  # doctest: +SKIP
 True
 """
 
@@ -50,13 +52,13 @@ import sys
 import numpy as np
 
 
-def _find_mino_core_path() -> str | None:
+def _find_fujita_core_path() -> str | None:
     """Path to the ctypes shared library next to this module, if present."""
     base = os.path.dirname(os.path.abspath(__file__))
     if sys.platform == "win32":
-        names = ("mino_core.dll", "mino_core.so")
+        names = ("fujita_core.dll", "fujita_core.so")
     else:
-        names = ("mino_core.so", "mino_core.dylib")
+        names = ("fujita_core.so", "fujita_core.dylib")
     for name in names:
         p = os.path.join(base, name)
         if os.path.isfile(p):
@@ -64,13 +66,13 @@ def _find_mino_core_path() -> str | None:
     return None
 
 
-# ---- Load C backend (mino_core.{so,dll,...}) --------------------------------
+# ---- Load C backend (fujita_core.{so,dll,...}) --------------------------------
 _C_LIB = None
-_MINO_LOAD_ERROR: str | None = None
+_FUJITA_LOAD_ERROR: str | None = None
 try:
-    _SO_PATH = _find_mino_core_path()
+    _SO_PATH = _find_fujita_core_path()
     if _SO_PATH is None:
-        raise FileNotFoundError("mino_core shared library not found next to mino.py")
+        raise FileNotFoundError("fujita_core shared library not found next to fujita.py")
     _lib = ctypes.CDLL(_SO_PATH)
     _dbl_p = ctypes.POINTER(ctypes.c_double)
     _int_p = ctypes.POINTER(ctypes.c_int)
@@ -94,23 +96,23 @@ try:
     _C_LIB = _lib
 except Exception as _e:
     _C_LIB = None
-    _MINO_LOAD_ERROR = str(_e)
+    _FUJITA_LOAD_ERROR = str(_e)
 
 
-def _mino_backend_error(what: str) -> RuntimeError:
-    detail = f" ({_MINO_LOAD_ERROR})" if _MINO_LOAD_ERROR else ""
+def _fujita_backend_error(what: str) -> RuntimeError:
+    detail = f" ({_FUJITA_LOAD_ERROR})" if _FUJITA_LOAD_ERROR else ""
     return RuntimeError(
         f"C backend not loaded; cannot call {what}.{detail} "
         "Rebuild with: cc -O3 -march=native -shared -fPIC "
-        "-o mino_core.so mino_core.c -lm"
+        "-o fujita_core.so fujita_core.c -lm"
     )
 
 
-def _integrate_kerr_mino(
+def _integrate_kerr_fujita(
     Rs, a, state0, tau_span, n_steps, E0, Lz0, Q0, stride=1
 ):
     """
-    Integrate a Kerr geodesic using Mino-time RK4.
+    Integrate a Kerr geodesic using Mino-time RK4 (Fujita parametrization).
 
     The integration runs in Mino time :math:`\\lambda` and stores output in
     proper time :math:`\\tau`. The output state format matches all other Kerr
@@ -156,14 +158,14 @@ def _integrate_kerr_mino(
     Examples
     --------
     >>> import numpy as np
-    >>> from relatipy.numeric.geodesic.integrators.kerr.mino import _integrate_kerr_mino
+    >>> from relatipy.numeric.geodesic.integrators.kerr.fujita import _integrate_kerr_fujita
     >>> s0 = np.array([0., 10., 1.5708, 0., 1.0, 0., 0., 0.1], dtype=np.float64)
-    >>> out = _integrate_kerr_mino(2.0, 0.5, s0, (0.0, 100.0), 1000, 0.95, 2.0, 1.0)  # doctest: +SKIP
+    >>> out = _integrate_kerr_fujita(2.0, 0.5, s0, (0.0, 100.0), 1000, 0.95, 2.0, 1.0)  # doctest: +SKIP
     >>> out.t.shape == out.y.shape[1:]  # doctest: +SKIP
     True
     """
     if _C_LIB is None:
-        raise _mino_backend_error("_integrate_kerr_mino")
+        raise _fujita_backend_error("_integrate_kerr_fujita")
 
     N_alloc = n_steps // max(stride, 1) + 4
     out_tau = np.zeros(N_alloc, dtype=np.float64)
@@ -193,7 +195,7 @@ def _integrate_kerr_mino(
 
     class _Result:
         """
-        Lightweight holder for Mino integration output.
+        Lightweight holder for Fujita integration output.
 
         Attributes
         ----------

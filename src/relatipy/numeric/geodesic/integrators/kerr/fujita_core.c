@@ -1,7 +1,7 @@
 /*
- * mino_core.c
+ * fujita_core.c
  *
- * Kerr geodesic integrator using Mino time lambda, where
+ * Kerr geodesic integrator using Mino time lambda (Fujita parametrization), where
  *
  *   d tau / d lambda = Sigma(r, theta),   Sigma = r^2 + a^2 cos^2(theta)
  *
@@ -30,7 +30,7 @@
  * reconstructed at each stored step using u^mu = (dx^mu/dlambda) / Sigma.
  *
  * Build:
- *   cc -O3 -march=native -shared -fPIC -o mino_core.so mino_core.c -lm
+ *   cc -O3 -march=native -shared -fPIC -o fujita_core.so fujita_core.c -lm
  *
  * References
  * ----------
