@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Language Rule
+
+**Always respond in English**, regardless of the language used in the user's input. This is a hard rule for this project.
+
 ## Project Overview
 
 **RelatiPy** is a Python library for symbolic, numerical, and visual exploration of relativistic geometry, focused on Kerr black holes. It works in **geometric units** (`G = c = 1`) with solar mass as the default reference mass.
