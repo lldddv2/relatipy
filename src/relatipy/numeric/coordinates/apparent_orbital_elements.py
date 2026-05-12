@@ -1,7 +1,7 @@
 """
 Sky-frame Keplerian orbital elements with explicit BH spin orientation.
 
-This module provides :class:`ProperOrbitalElements`, a subclass of
+This module provides :class:`ApparentOrbitalElements`, a subclass of
 :class:`~relatipy.numeric.coordinates.orbital_elements.OrbitalElements` that
 accepts orbital elements expressed in the **sky frame** — the plane perpendicular
 to the observer's line of sight — as reported by astrometric catalogs (e.g. for
@@ -57,12 +57,12 @@ relatipy.numeric.coordinates.orbital_elements.OrbitalElements :
 Examples
 --------
 >>> import numpy as np
->>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
->>> poe = ProperOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
-...                             zeta=45.0, eta=90.0, mass=1.0)
->>> poe.state_vector.shape
+>>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+>>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
+...                               zeta=45.0, eta=90.0, mass=1.0)
+>>> aoe.state_vector.shape
 (7,)
->>> poe.zeta, poe.eta
+>>> aoe.zeta, aoe.eta
 (45.0, 90.0)
 """
 
@@ -89,7 +89,7 @@ def _build_rotation(zeta_rad, eta_rad):
     Examples
     --------
     >>> import numpy as np
-    >>> from relatipy.numeric.coordinates.proper_orbital_elements import _build_rotation
+    >>> from relatipy.numeric.coordinates.apparent_orbital_elements import _build_rotation
     >>> R = _build_rotation(0.0, 0.0)
     >>> np.allclose(R, np.eye(3))
     True
@@ -103,7 +103,7 @@ def _build_rotation(zeta_rad, eta_rad):
     ])
 
 
-class ProperOrbitalElements(OrbitalElements):
+class ApparentOrbitalElements(OrbitalElements):
     """
     Sky-frame Keplerian orbital elements with explicit BH spin orientation.
 
@@ -119,26 +119,29 @@ class ProperOrbitalElements(OrbitalElements):
 
     Parameters
     ----------
-    t : float or array_like
-        Coordinate time in geometric units :math:`GM/c^3`.
-    a : float or array_like
-        Semi-major axis in geometric length units :math:`GM/c^2`.
-    e : float or array_like
-        Eccentricity.
-    inc : float or array_like
-        Inclination with respect to the sky plane, in degrees.
-    Omega : float or array_like
+    t : float or array_like, optional
+        Coordinate time in geometric units :math:`GM/c^3`. Default ``0.0``.
+    a : float or array_like, optional
+        Semi-major axis in geometric length units :math:`GM/c^2`. Default ``1.0``.
+    e : float or array_like, optional
+        Eccentricity. Default ``0.0``.
+    inc : float or array_like, optional
+        Inclination with respect to the sky plane, in degrees. Default ``0.0``.
+    Omega : float or array_like, optional
         Longitude of the ascending node measured in the sky plane, in degrees.
-    omega : float or array_like
+        Default ``0.0``.
+    omega : float or array_like, optional
         Argument of periapsis measured from the sky-plane node, in degrees.
-    f : float or array_like
-        True anomaly in degrees.
-    zeta : float
+        Default ``0.0``.
+    f : float or array_like, optional
+        True anomaly in degrees. Default ``0.0``.
+    zeta : float, optional
         Polar angle of the BH spin axis from the line of sight, in degrees.
-        Range :math:`[0^\\circ, 180^\\circ]`.
-    eta : float
+        Range :math:`[0^\\circ, 180^\\circ]`. Default ``0.0`` (identity sky/BH map).
+    eta : float, optional
         Position angle of the spin projection on the sky plane, CCW from
         celestial north toward east, in degrees. Range :math:`[0^\\circ, 360^\\circ]`.
+        Default ``0.0``.
     mass : float or astropy.units.Quantity, optional
         Central mass (geometric scalar or astropy quantity). Default ``1``.
 
@@ -149,7 +152,7 @@ class ProperOrbitalElements(OrbitalElements):
     eta : float
         Spin position angle on sky plane, in degrees (scalar).
     name_metric : str
-        ``"ProperOrbitalElements"``.
+        ``"ApparentOrbitalElements"``.
 
     Notes
     -----
@@ -166,22 +169,22 @@ class ProperOrbitalElements(OrbitalElements):
     --------
     >>> import numpy as np
     >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
-    >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
+    >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
     >>> oe  = OrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0, mass=1.0)
-    >>> poe = ProperOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
-    ...                             zeta=0.0, eta=0.0, mass=1.0)
-    >>> np.allclose(oe.convert_to_cartesian().xs, poe.convert_to_cartesian().xs)
+    >>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
+    ...                               zeta=0.0, eta=0.0, mass=1.0)
+    >>> np.allclose(oe.convert_to_cartesian().xs, aoe.convert_to_cartesian().xs)
     True
     """
 
-    def __init__(self, t, a, e, inc, Omega, omega, f, zeta, eta, mass=1):
+    def __init__(self, t=0.0, a=1.0, e=0.0, inc=0.0, Omega=0.0, omega=0.0, f=0.0, zeta=0.0, eta=0.0, mass=1):
         super().__init__(t, a, e, inc, Omega, omega, f, mass=mass)
         self.zeta = float(zeta)
         self.eta = float(eta)
         self._zeta_rad = self.zeta * numpy.pi / 180.0
         self._eta_rad = self.eta * numpy.pi / 180.0
-        self.name_metric = "ProperOrbitalElements"
-        self.kwargs = {"mass": mass, "zeta": zeta, "eta": eta}
+        self.name_metric = "ApparentOrbitalElements"
+        self.kwargs = {"mass": mass, "zeta": self.zeta, "eta": self.eta}
 
     def _rotation_sky_to_bh(self):
         """
@@ -194,11 +197,11 @@ class ProperOrbitalElements(OrbitalElements):
 
         Examples
         --------
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
-        >>> poe = ProperOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
-        ...                             zeta=0.0, eta=0.0, mass=1.0)
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+        >>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ...                              zeta=0.0, eta=0.0, mass=1.0)
         >>> import numpy as np
-        >>> np.allclose(poe._rotation_sky_to_bh(), np.eye(3))
+        >>> np.allclose(aoe._rotation_sky_to_bh(), np.eye(3))
         True
         """
         return _build_rotation(self._zeta_rad, self._eta_rad)
@@ -220,10 +223,10 @@ class ProperOrbitalElements(OrbitalElements):
         Examples
         --------
         >>> import numpy as np
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
-        >>> poe = ProperOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
-        ...                             zeta=0.0, eta=0.0, mass=1.0)
-        >>> r, v = poe._to_cartesian_arrays()
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+        >>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ...                              zeta=0.0, eta=0.0, mass=1.0)
+        >>> r, v = aoe._to_cartesian_arrays()
         >>> r.shape
         (3,)
         """
@@ -246,10 +249,10 @@ class ProperOrbitalElements(OrbitalElements):
 
         Examples
         --------
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
-        >>> poe = ProperOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
-        ...                             zeta=45.0, eta=30.0, mass=1.0)
-        >>> cart = poe.convert_to_cartesian()
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+        >>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ...                              zeta=45.0, eta=30.0, mass=1.0)
+        >>> cart = aoe.convert_to_cartesian()
         >>> cart.name_metric
         'Cartesian'
         >>> cart.zeta
@@ -263,7 +266,7 @@ class ProperOrbitalElements(OrbitalElements):
     @staticmethod
     def from_cartesian(xs, vs, mass, zeta, eta, t=None):
         """
-        Build :class:`ProperOrbitalElements` from a BH-frame Cartesian state.
+        Build :class:`ApparentOrbitalElements` from a BH-frame Cartesian state.
 
         Applies the inverse rotation :math:`R^\\top` to map state vectors from
         the BH frame to the sky frame, then uses SPICE ``oscelt`` to fit the
@@ -286,29 +289,29 @@ class ProperOrbitalElements(OrbitalElements):
 
         Returns
         -------
-        ProperOrbitalElements
+        ApparentOrbitalElements
             Sky-frame osculating elements with the given orientation angles.
 
         Examples
         --------
         >>> import numpy as np
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
-        >>> poe = ProperOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
-        ...                             zeta=45.0, eta=30.0, mass=1.0)
-        >>> cart = poe.convert_to_cartesian()
-        >>> poe2 = ProperOrbitalElements.from_cartesian(
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+        >>> aoe = ApparentOrbitalElements(0.0, 1e7, 0.1, 30.0, 40.0, 50.0, 60.0,
+        ...                              zeta=45.0, eta=30.0, mass=1.0)
+        >>> cart = aoe.convert_to_cartesian()
+        >>> aoe2 = ApparentOrbitalElements.from_cartesian(
         ...     cart.xs, cart.vs, mass=1.0, zeta=45.0, eta=30.0)
-        >>> np.allclose(poe.state_vector, poe2.state_vector, atol=1e-6)
+        >>> np.allclose(aoe.state_vector, aoe2.state_vector, atol=1e-6)
         True
         """
         if isinstance(xs[1], numpy.ndarray):
-            return ProperOrbitalElements.from_cartesian_vector(xs, vs, mass, zeta, eta, t)
-        return ProperOrbitalElements.from_cartesian_scalar(xs, vs, mass, zeta, eta, t)
+            return ApparentOrbitalElements.from_cartesian_vector(xs, vs, mass, zeta, eta, t)
+        return ApparentOrbitalElements.from_cartesian_scalar(xs, vs, mass, zeta, eta, t)
 
     @staticmethod
     def from_cartesian_scalar(xs, vs, mass, zeta, eta, t=None):
         """
-        Build :class:`ProperOrbitalElements` from one BH-frame Cartesian state.
+        Build :class:`ApparentOrbitalElements` from one BH-frame Cartesian state.
 
         Parameters
         ----------
@@ -327,17 +330,17 @@ class ProperOrbitalElements(OrbitalElements):
 
         Returns
         -------
-        ProperOrbitalElements
+        ApparentOrbitalElements
             Sky-frame osculating elements.
 
         Examples
         --------
         >>> import numpy as np
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
         >>> xs = np.array([0.0, 1e7, 0.0, 0.0])
         >>> vs = np.array([0.0, 0.0, 1e-5])
-        >>> poe = ProperOrbitalElements.from_cartesian_scalar(xs, vs, 1.0, 0.0, 0.0)
-        >>> hasattr(poe, "zeta")
+        >>> aoe = ApparentOrbitalElements.from_cartesian_scalar(xs, vs, 1.0, 0.0, 0.0)
+        >>> hasattr(aoe, "zeta")
         True
         """
         R = _build_rotation(
@@ -350,7 +353,7 @@ class ProperOrbitalElements(OrbitalElements):
         v_sky = R.T @ vs
         xs_sky = numpy.array([xs[0], r_sky[0], r_sky[1], r_sky[2]])
         oe = OrbitalElements.from_cartesian_scalar(xs_sky, v_sky, mass, t)
-        return ProperOrbitalElements(
+        return ApparentOrbitalElements(
             oe.t, oe.a, oe.e, oe.inc, oe.Omega, oe.omega, oe.f,
             float(zeta), float(eta), mass,
         )
@@ -358,7 +361,7 @@ class ProperOrbitalElements(OrbitalElements):
     @staticmethod
     def from_cartesian_vector(xs, vs, mass, zeta, eta, t=None):
         """
-        Build :class:`ProperOrbitalElements` for ``N`` BH-frame Cartesian states.
+        Build :class:`ApparentOrbitalElements` for ``N`` BH-frame Cartesian states.
 
         Parameters
         ----------
@@ -377,17 +380,17 @@ class ProperOrbitalElements(OrbitalElements):
 
         Returns
         -------
-        ProperOrbitalElements
+        ApparentOrbitalElements
             Sky-frame elements with array fields of length ``N``.
 
         Examples
         --------
         >>> import numpy as np
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
         >>> xs = np.array([[0.0, 0.0], [1e7, 2e7], [0.0, 0.0], [0.0, 0.0]])
         >>> vs = np.array([[0.0, 0.0], [0.0, 0.0], [1e-5, 1e-5]])
-        >>> poe = ProperOrbitalElements.from_cartesian_vector(xs, vs, 1.0, 0.0, 0.0)
-        >>> np.asarray(poe.a).size
+        >>> aoe = ApparentOrbitalElements.from_cartesian_vector(xs, vs, 1.0, 0.0, 0.0)
+        >>> np.asarray(aoe.a).size
         2
         """
         R = _build_rotation(
@@ -400,7 +403,7 @@ class ProperOrbitalElements(OrbitalElements):
         v_sky = R.T @ vs
         xs_sky = numpy.vstack([xs[0:1, :], r_sky])
         oe = OrbitalElements.from_cartesian_vector(xs_sky, v_sky, mass, t)
-        return ProperOrbitalElements(
+        return ApparentOrbitalElements(
             oe.t, oe.a, oe.e, oe.inc, oe.Omega, oe.omega, oe.f,
             float(zeta), float(eta), mass,
         )
@@ -408,7 +411,7 @@ class ProperOrbitalElements(OrbitalElements):
     @staticmethod
     def _convert_from_cartesian(xs_p, vs_p, **kwargs):
         """
-        Bridge for ``convert_to("ProperOrbitalElements", ...)``.
+        Bridge for ``convert_to("ApparentOrbitalElements", ...)``.
 
         Parameters
         ----------
@@ -421,7 +424,7 @@ class ProperOrbitalElements(OrbitalElements):
 
         Returns
         -------
-        ProperOrbitalElements
+        ApparentOrbitalElements
             Sky-frame elements from :meth:`from_cartesian`.
 
         Raises
@@ -432,19 +435,19 @@ class ProperOrbitalElements(OrbitalElements):
         Examples
         --------
         >>> import numpy as np
-        >>> from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
+        >>> from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
         >>> xs = np.array([0.0, 1e7, 0.0, 0.0])
-        >>> vs = np.zeros(3)
-        >>> poe = ProperOrbitalElements._convert_from_cartesian(
+        >>> vs = np.array([0.0, 0.0, 1e-5])
+        >>> aoe = ApparentOrbitalElements._convert_from_cartesian(
         ...     xs, vs, mass=1.0, zeta=0.0, eta=0.0)
-        >>> poe.name_metric
-        'ProperOrbitalElements'
+        >>> aoe.name_metric
+        'ApparentOrbitalElements'
         """
         mass = kwargs.get("mass")
         zeta = kwargs.get("zeta")
         eta = kwargs.get("eta")
         if mass is None:
-            raise ValueError("mass is required to convert to ProperOrbitalElements.")
+            raise ValueError("mass is required to convert to ApparentOrbitalElements.")
         if zeta is None or eta is None:
-            raise ValueError("zeta and eta are required to convert to ProperOrbitalElements.")
-        return ProperOrbitalElements.from_cartesian(xs_p, vs_p, mass, zeta, eta)
+            raise ValueError("zeta and eta are required to convert to ApparentOrbitalElements.")
+        return ApparentOrbitalElements.from_cartesian(xs_p, vs_p, mass, zeta, eta)

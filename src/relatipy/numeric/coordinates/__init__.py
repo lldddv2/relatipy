@@ -48,7 +48,7 @@ from .spherical import Spherical
 from .boyer_lindquist import BoyerLindquist
 from .cilindrical import Cylindrical
 from .orbital_elements import OrbitalElements
-from .proper_orbital_elements import ProperOrbitalElements
+from .apparent_orbital_elements import ApparentOrbitalElements
 
 coordinate_systems = {
     "CoordinateBase": CoordinateBase,
@@ -57,7 +57,7 @@ coordinate_systems = {
     "BoyerLindquist": BoyerLindquist,
     "Cylindrical": Cylindrical,
     "OrbitalElements": OrbitalElements,
-    "ProperOrbitalElements": ProperOrbitalElements,
+    "ApparentOrbitalElements": ApparentOrbitalElements,
 }
 
 __all__ = [
@@ -67,6 +67,6 @@ __all__ = [
     "BoyerLindquist",
     "Cylindrical",
     "OrbitalElements",
-    "ProperOrbitalElements"
+    "ApparentOrbitalElements",
     "coordinate_systems",
 ]

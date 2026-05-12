@@ -103,7 +103,7 @@ class TestOrbitalElements:
         >>> from relatipy.numeric.coordinates import OrbitalElements
         >>> oe = OrbitalElements(0, 1.0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0)
         >>> oe2 = oe.convert_to("Cartesian").convert_to("OrbitalElements", mass=1.0)
-        >>> np.isclose(oe.a, oe2.a).all()
+        >>> bool(np.isclose(oe.a, oe2.a).all())
         True
         """
         # CI 1

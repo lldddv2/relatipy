@@ -258,7 +258,7 @@ class PlotKerr(BasePlotBlackHole):
 
     def add_path(self, path, color='red', opacity=0.6, size=5, show_start=True, show_end=True, label="orbit") -> None:
         """
-        Append an orbit path; if ``path`` is a ``ProperOrbitalElements`` instance,
+        Append an orbit path; if ``path`` is a ``ApparentOrbitalElements`` instance,
         store its orientation angles to activate the visual-line indicator.
 
         Parameters
@@ -279,8 +279,8 @@ class PlotKerr(BasePlotBlackHole):
         """
         super().add_path(path, color=color, opacity=opacity, size=size,
                          show_start=show_start, show_end=show_end, label=label)
-        from relatipy.numeric.coordinates.proper_orbital_elements import ProperOrbitalElements
-        if isinstance(path, ProperOrbitalElements):
+        from relatipy.numeric.coordinates.apparent_orbital_elements import ApparentOrbitalElements
+        if isinstance(path, ApparentOrbitalElements):
             self._poe_orientation = (path.zeta, path.eta)
 
     def _build_visual_indicator(
@@ -409,7 +409,7 @@ class PlotKerr(BasePlotBlackHole):
     def plot(self, show_center=True, show_visual_indicator=True, show_equatorial_axes=True):
         """
         Build the figure; adds visual-line indicator when a
-        ``ProperOrbitalElements`` path has been registered via :meth:`add_path`.
+        ``ApparentOrbitalElements`` path has been registered via :meth:`add_path`.
 
         Also sets the initial camera to the observer's point of view (looking
         from the line-of-sight direction toward the BH) with Dec north up.
@@ -420,7 +420,7 @@ class PlotKerr(BasePlotBlackHole):
             Draw a marker at the coordinate origin. Default is ``True``.
         show_visual_indicator : bool, optional
             Draw the visual line, sky plane, and Dec = 0 arrow when a
-            ``ProperOrbitalElements`` path is registered. Default is ``True``.
+            ``ApparentOrbitalElements`` path is registered. Default is ``True``.
         show_equatorial_axes : bool, optional
             Draw x and y axis lines on the equatorial plane (opacity 0.2).
             Default is ``True``.

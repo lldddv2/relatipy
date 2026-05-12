@@ -25,7 +25,7 @@ Examples
 --------
 >>> import numpy as np
 >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
->>> oe = OrbitalElements(0.0, 100.0, 0.1, 30.0, 10.0, 20.0, 45.0, mass=1.0)
+>>> oe = OrbitalElements(t=0.0, a=100.0, e=0.1, inc=30.0, Omega=10.0, omega=20.0, f=45.0, mass=1.0)
 >>> oe.state_vector.shape
 (7,)
 """
@@ -65,8 +65,8 @@ def _mass_to_kg(mass):
     Examples
     --------
     >>> from relatipy.numeric.coordinates.orbital_elements import _mass_to_kg
-    >>> _mass_to_kg(1.0)  # doctest: +ELLIPSIS
-    1988920000000000000000000000000.0
+    >>> bool(numpy.isclose(_mass_to_kg(1.0), 1.98892e30))
+    True
     """
     if u is not None and hasattr(mass, "to_value"):
         return float(mass.to_value(u.kg))
@@ -136,21 +136,23 @@ class OrbitalElements:
 
     Parameters
     ----------
-    t : float or array_like
+    t : float or array_like, optional
         Coordinate time in geometric units :math:`GM/c^3`. Scalar or sequence
-        for batch orbits.
-    a : float or array_like
-        Semi-major axis in geometric length units :math:`GM/c^2`.
-    e : float or array_like
+        for batch orbits. Default ``0.0``.
+    a : float or array_like, optional
+        Semi-major axis in geometric length units :math:`GM/c^2`. Default ``1.0``
+        (avoids a degenerate :math:`a=0` conic with SPICE).
+    e : float or array_like, optional
         Eccentricity; for bound orbits typically :math:`0 \\leq e < 1`.
-    inc : float or array_like
-        Inclination in degrees.
-    Omega : float or array_like
-        Longitude of the ascending node (RAAN) in degrees.
-    omega : float or array_like
-        Argument of periapsis in degrees.
-    f : float or array_like
-        True anomaly in degrees.
+        Default ``0.0``.
+    inc : float or array_like, optional
+        Inclination in degrees. Default ``0.0``.
+    Omega : float or array_like, optional
+        Longitude of the ascending node (RAAN) in degrees. Default ``0.0``.
+    omega : float or array_like, optional
+        Argument of periapsis in degrees. Default ``0.0``.
+    f : float or array_like, optional
+        True anomaly in degrees. Default ``0.0``.
     mass : float or astropy.units.Quantity, optional
         Central mass: geometric scalar (default ``1`` = one solar mass in kg) or
         an ``astropy`` mass quantity converted to kg.
@@ -174,12 +176,15 @@ class OrbitalElements:
     --------
     >>> import numpy as np
     >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
+    >>> oe0 = OrbitalElements()
+    >>> oe0.a, oe0.e
+    (1.0, 0.0)
     >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
     >>> len(oe.state_vector)
     7
     """
 
-    def __init__(self, t, a, e, inc, Omega, omega, f, mass=1):
+    def __init__(self, t=0.0, a=1.0, e=0.0, inc=0.0, Omega=0.0, omega=0.0, f=0.0, mass=1):
         def _as_array_or_scalar(value):
             """
             Normalize an element to a float, or to a float ndarray if sequence-like.
@@ -246,7 +251,7 @@ class OrbitalElements:
         --------
         >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
         >>> oe = OrbitalElements(0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-        >>> oe[1]
+        >>> float(oe[1])
         10.0
         """
         return self.state_vector[index]
@@ -273,7 +278,7 @@ class OrbitalElements:
         >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
         >>> oe = OrbitalElements(0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         >>> oe[1] = 20.0
-        >>> oe[1]
+        >>> float(oe[1])
         20.0
         """
         self.state_vector[index] = value
@@ -692,7 +697,7 @@ class OrbitalElements:
         >>> import numpy as np
         >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
         >>> xs = np.array([0.0, 1e6, 0.0, 0.0], dtype=float)
-        >>> vs = np.zeros(3, dtype=float)
+        >>> vs = np.array([0.0, 0.0, 1e-4], dtype=float)
         >>> oe = OrbitalElements._convert_from_cartesian(xs, vs, mass=1.0)
         >>> oe.name_metric
         'OrbitalElements'
@@ -720,7 +725,7 @@ class OrbitalElements:
         >>> from relatipy.numeric.coordinates.orbital_elements import OrbitalElements
         >>> oe = OrbitalElements(0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, mass=1.0)
         >>> T = oe._get_period()
-        >>> T > 0
+        >>> bool(T > 0)
         True
         """
         L = _G_SI * self.mass / _c_SI**2
