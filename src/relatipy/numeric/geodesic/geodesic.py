@@ -209,7 +209,8 @@ class Geodesic:
         return numpy.concatenate([q, u])
 
     def get_path(self, initial_conditions, taus, integrator="Radau",
-                 adaptative=True, steps_per_period=100):
+                 adaptative=True, steps_per_period=100,
+                 rtol=1e-12, atol=1e-13):
         """
         Compute a geodesic and return it as a coordinate object.
 
@@ -283,6 +284,7 @@ class Geodesic:
         sol = self._get_path_from_4state_vector(
             ys0, taus, integrator=integrator, adaptative=adaptative,
             steps_per_period=steps_per_period, period=period,
+            rtol=rtol, atol=atol,
         )
 
         dxs_dt = self.metric.get_dxs_dt_from_4velocity(sol[4:])
@@ -299,6 +301,7 @@ class Geodesic:
     def _get_path_from_4state_vector(
         self, ys0, taus, integrator="Radau", adaptative=True,
         steps_per_period=100, period=None,
+        rtol=1e-12, atol=1e-13,
     ):
         """
         Integrate the 8-dimensional geodesic state from a four-state vector.
@@ -464,10 +467,14 @@ class Geodesic:
 
         # scipy integrators
         if adaptative:
-            sol = solve_ivp(self.model_geodesic, t_span, ys0, method=integrator)
+            sol = solve_ivp(
+                self.model_geodesic, t_span, ys0, method=integrator,
+                rtol=rtol, atol=atol,
+            )
         else:
             sol = solve_ivp(
-                self.model_geodesic, t_span, ys0, t_eval=taus_np, method=integrator
+                self.model_geodesic, t_span, ys0, t_eval=taus_np, method=integrator,
+                rtol=rtol, atol=atol,
             )
 
         if sol.status == -1:
