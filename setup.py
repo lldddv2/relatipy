@@ -19,9 +19,10 @@ RADAU_SRC = (
     / "numeric"
     / "geodesic"
     / "integrators"
+    / "kerr"
     / "radau_core.c"
 )
-INTEGRATORS_REL = Path("relatipy") / "numeric" / "geodesic" / "integrators"
+INTEGRATORS_REL = Path("relatipy") / "numeric" / "geodesic" / "integrators" / "kerr"
 
 
 def _lib_name() -> str:
@@ -38,7 +39,7 @@ def _compile_radau_core(out_dir: Path) -> None:
         cmd = [cc, "-O3", "-shared", "-o", str(out), str(RADAU_SRC)]
     else:
         cc = os.environ.get("CC", "cc")
-        cmd = [cc, "-O3", "-fPIC", "-shared", "-o", str(out), str(RADAU_SRC), "-lm"]
+        cmd = [cc, "-std=c11", "-O3", "-fPIC", "-shared", "-o", str(out), str(RADAU_SRC), "-lm"]
     subprocess.check_call(cmd)
 
 

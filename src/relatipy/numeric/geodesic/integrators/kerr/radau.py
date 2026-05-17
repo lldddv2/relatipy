@@ -105,9 +105,34 @@ try:
         ctypes.c_double,  # E0
         ctypes.c_double,  # Lz0
         ctypes.c_double,  # Q0
-        _dbl_p,  # out_t  [n_steps+2]
-        _dbl_p,  # out_y  [(n_steps+2)*8], row-major (N,8)
+        _dbl_p,  # out_t
+        _dbl_p,  # out_y
         _int_p,  # n_out
+    ]
+    _lib.kerr_radau2_adaptive.restype = ctypes.c_int
+    _lib.kerr_radau2_adaptive.argtypes = [
+        ctypes.c_double,   # Rs
+        ctypes.c_double,   # a
+        _dbl_p,            # y0 [8]
+        ctypes.c_double,   # t0
+        ctypes.c_double,   # t_bound
+        ctypes.c_double,   # rtol
+        ctypes.c_double,   # atol
+        ctypes.c_double,   # max_step
+        ctypes.c_double,   # E0
+        ctypes.c_double,   # Lz0
+        ctypes.c_double,   # Q0
+        ctypes.c_double,   # tol_proj
+        ctypes.c_int,      # max_iter_proj
+        _dbl_p,            # t_eval (NULL if not used)
+        ctypes.c_int,      # n_eval
+        _dbl_p,            # t_out
+        _dbl_p,            # y_out
+        ctypes.c_int,      # step_cap
+        _int_p,            # n_out
+        _int_p,            # n_steps_taken
+        _int_p,            # n_jac
+        _int_p,            # n_lu
     ]
     _C_LIB = _lib
 except Exception as _e:
@@ -301,4 +326,106 @@ def _integrate_kerr_radau2(
     result.t = out_t[:N].copy()
     result.t[-1] = float(tau_span[1])  # correct float-accumulation error
     result.y = out_y[: N * 8].reshape(N, 8).T.copy()  # (8, N)
+    return result
+
+
+def _integrate_kerr_radau2_adaptive(
+    Rs, a, state0, tau_span, E0, Lz0, Q0,
+    rtol=1e-9, atol=1e-12, t_eval=None, max_step=0.0,
+    tol_proj=1e-12, max_iter_proj=20,
+):
+    """Adaptive Radau IIA integration for Kerr geodesics (C backend).
+
+    Parameters
+    ----------
+    Rs, a : float
+        Metric parameters.
+    state0 : array_like, shape (8,)
+        Initial state [q, u] (contravariant).
+    tau_span : (float, float)
+        Integration interval.
+    E0, Lz0, Q0 : float
+        Conserved quantities for projection.
+    rtol, atol : float
+        Tolerances.
+    t_eval : array_like or None
+        If given, output is sampled at these proper times via dense interpolation.
+        Otherwise every accepted step is stored.
+    max_step : float
+        Maximum step size (0 = unbounded).
+    tol_proj, max_iter_proj : float, int
+        Newton projection parameters.
+
+    Returns
+    -------
+    result : namespace with `.t` (N,) and `.y` (8, N).
+    """
+    if _C_LIB is None:
+        raise _radau_backend_error("_integrate_kerr_radau2_adaptive")
+
+    _ptr = lambda arr: arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    s0 = np.ascontiguousarray(state0, dtype=np.float64)
+
+    if t_eval is not None:
+        t_eval_np = np.ascontiguousarray(t_eval, dtype=np.float64)
+        n_eval = len(t_eval_np)
+        N_alloc = n_eval
+        t_out = np.zeros(N_alloc, dtype=np.float64)
+        y_out = np.zeros(N_alloc * 8, dtype=np.float64)
+        t_eval_ptr = _ptr(t_eval_np)
+        step_cap = N_alloc
+    else:
+        n_eval = 0
+        N_alloc = 100_000
+        t_out = np.zeros(N_alloc, dtype=np.float64)
+        y_out = np.zeros(N_alloc * 8, dtype=np.float64)
+        t_eval_ptr = ctypes.cast(None, ctypes.POINTER(ctypes.c_double))
+        step_cap = N_alloc
+
+    n_out = ctypes.c_int(0)
+    nst   = ctypes.c_int(0)
+    njac  = ctypes.c_int(0)
+    nlu   = ctypes.c_int(0)
+
+    ret = _C_LIB.kerr_radau2_adaptive(
+        ctypes.c_double(Rs),
+        ctypes.c_double(a),
+        _ptr(s0),
+        ctypes.c_double(tau_span[0]),
+        ctypes.c_double(tau_span[1]),
+        ctypes.c_double(rtol),
+        ctypes.c_double(atol),
+        ctypes.c_double(max_step),
+        ctypes.c_double(E0),
+        ctypes.c_double(Lz0),
+        ctypes.c_double(Q0),
+        ctypes.c_double(tol_proj),
+        ctypes.c_int(max_iter_proj),
+        t_eval_ptr,
+        ctypes.c_int(n_eval),
+        _ptr(t_out),
+        _ptr(y_out),
+        ctypes.c_int(step_cap),
+        ctypes.byref(n_out),
+        ctypes.byref(nst),
+        ctypes.byref(njac),
+        ctypes.byref(nlu),
+    )
+
+    if ret not in (0,):
+        msg = {-1: "max steps exceeded", -2: "Newton/LU failure",
+               -4: "step underflow"}.get(ret, f"error {ret}")
+        raise RuntimeError(f"kerr_radau2_adaptive: {msg}")
+
+    N = n_out.value
+
+    class _Result:
+        pass
+
+    result = _Result()
+    result.t = t_out[:N].copy()
+    result.y = y_out[:N * 8].reshape(N, 8).T.copy()  # (8, N)
+    result.nsteps = nst.value
+    result.njac   = njac.value
+    result.nlu    = nlu.value
     return result

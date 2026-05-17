@@ -389,7 +389,7 @@ class Geodesic:
                 raise ValueError(
                     "Radau2 requires a Kerr metric (Boyer-Lindquist coordinates)."
                 )
-            from .integrators.kerr.radau import _integrate_kerr_radau2
+            from .integrators.kerr.radau import _integrate_kerr_radau2_adaptive
 
             g0 = self.metric.metric(ys0[:4])
             p0 = g0 @ ys0[4:]
@@ -403,27 +403,19 @@ class Geodesic:
                 self.metric.a ** 2 * (1.0 - E0 ** 2) + Lz0 ** 2 / s2
             )
 
-            if period is not None and period > 0:
-                n_periods_float = span / period
-                n_steps = max(int(numpy.ceil(n_periods_float * steps_per_period)), 100)
-            else:
-                n_steps = max(len(taus_np) * steps_per_period, 1000)
-
-            result = _integrate_kerr_radau2(
+            t_eval_arg = None if adaptative else taus_np
+            result = _integrate_kerr_radau2_adaptive(
                 self.metric.R_s, self.metric.a,
-                ys0, t_span, n_steps,
+                ys0, t_span,
                 E0=E0, Lz0=Lz0, Q0=Q0,
+                rtol=rtol, atol=atol,
+                t_eval=t_eval_arg,
             )
 
             if adaptative:
                 return result.y
 
-            # Interpolate to requested taus
-            y_out = numpy.zeros((8, len(taus_np)))
-            for i in range(8):
-                f = interp1d(result.t, result.y[i], kind="cubic")
-                y_out[i] = f(taus_np)
-            return y_out
+            return result.y
 
         if integrator.lower() == "fujita":
             if self.valid_coordinate != "BoyerLindquist":
