@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Active Work (remove on merge)
+
+- Branch: `feature/paths-bank`
+- Tasks: `.project/tasks/paths_bank/tasks.md`
+- Goal: `PathsBank` caching for `Geodesic.get_path` under `src/relatipy/numeric/utils/banks/paths_bank/`.
+- Resuming a fresh chat: read `tasks.md`, then open the first `stage_N_*.md` whose box is unchecked and continue from there. Each stage file contains goal, files, acceptance criteria, and commit template.
+
 ## Language Rule
 
 **Always respond in English**, regardless of the language used in the user's input. This is a hard rule for this project.

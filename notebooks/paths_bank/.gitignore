@@ -1,0 +1,4 @@
+# PathsBank data directory: keep the folder, ignore cached artifacts.
+manifest.json
+manifest.json.*
+paths/
