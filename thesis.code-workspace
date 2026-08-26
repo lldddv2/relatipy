@@ -8,6 +8,16 @@
 		},
 		{
 			"path": "../thesis_page"
+		},
+		{
+			"path": "../brain"
 		}
-	]
+	],
+	"settings": {
+		"cSpell.words": [
+			"einsteinpy",
+			"Lindquist",
+			"Timelike"
+		]
+	}
 }

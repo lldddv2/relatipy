@@ -7,7 +7,7 @@ name = "relatipy"
 version = "0.4.2"
 description = "Numeric and symbolic tools for Kerr black hole geometry"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "lldddv2"}]
 
@@ -23,6 +23,8 @@ dependencies = [
     "matplotlib>=3.10.8",
     "nbformat>=4.2.0",
     "pandas>=2.3.3",
+    "xy>=0.0.4",
+    "orbitize>=3.4.0",
 ]
 
 [project.optional-dependencies]
@@ -40,3 +42,8 @@ where = ["src"]
 # Ship C source in sdist; radau_core.so is produced at build time (see setup.py).
 [tool.setuptools.package-data]
 relatipy = ["numeric/geodesic/integrators/radau_core.c"]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+]

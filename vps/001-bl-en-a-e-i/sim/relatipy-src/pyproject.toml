@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "relatipy"
+version = "0.4.2"
+description = "Numeric and symbolic tools for Kerr black hole geometry"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "lldddv2"}]
+
+# Build context for the VPS job only: the dependency list is trimmed to what
+# `import relatipy` actually pulls in (see the grep over src/relatipy). The
+# extras of the upstream pyproject.toml (pytest, pandas, nbformat, xy) are not
+# imported anywhere and would only slow down the aarch64 resolve.
+dependencies = [
+    "numpy",
+    "scipy",
+    "sympy",
+    "astropy",
+    "spiceypy",
+    "einsteinpy",
+    "matplotlib",
+    "plotly",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+relatipy = ["numeric/geodesic/integrators/radau_core.c"]
