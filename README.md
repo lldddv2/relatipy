@@ -13,7 +13,7 @@ inputs, handles physical units, exposes immutable result objects, and performs
 post-integration interpolation. A private Cython binding connects the two
 layers; the integration loop makes no Python callbacks.
 
-> **Status:** research software under active development (version 1.0.0).
+> **Status:** research software under active development (version 1.0.1).
 > The first public interface covers scalar timelike orbits around a Kerr black
 > hole. See [scope and limits](docs/integration-roadmap.rst) before relying on
 > results.
@@ -165,12 +165,11 @@ examples/          Minimal runnable example
 
 ## Testing
 
-The repository configures pytest in `pyproject.toml` but does not declare it as a
-dependency. With pytest available in your environment, run from the repository
-root:
+pytest is a development-only dependency declared in the `dev` dependency group
+(never installed by `pip install relatipy`). Run from the repository root:
 
 ```console
-uv run --with pytest pytest
+uv run --group dev pytest
 ```
 
 The layout and placement rules are described in [tests/README.md](tests/README.md).

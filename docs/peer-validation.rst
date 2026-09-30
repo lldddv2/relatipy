@@ -196,7 +196,7 @@ From the repository root, with the package built in the environment:
 
 .. code-block:: console
 
-   $ uv run --with pytest pytest tests/reference
+   $ uv run --group dev pytest tests/reference
 
 The public-orbit, invariant, projection, and domain tests need only RelatiPy
 and its runtime dependencies. The oracle tests skip when KerrGeoPy or PyGRO
