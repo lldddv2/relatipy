@@ -13,7 +13,7 @@ inputs, handles physical units, exposes immutable result objects, and performs
 post-integration interpolation. A private Cython binding connects the two
 layers; the integration loop makes no Python callbacks.
 
-> **Status:** research software under active development (version 1.0.1).
+> **Status:** research software under active development (version 1.1.0).
 > The first public interface covers scalar timelike orbits around a Kerr black
 > hole. See [scope and limits](docs/integration-roadmap.rst) before relying on
 > results.
