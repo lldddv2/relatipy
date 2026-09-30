@@ -93,8 +93,11 @@ elements = mid.orbital_elements()   # instantaneous Kepler conic
 unchanged. `Orbit.integrate` advances the orbit's current point to an absolute
 proper time; `reset` and `copy` restore or duplicate it.
 
-Numerical controls shared by both methods: `method`, `rtol` (default `1e-3`),
-`atol` (default `1e-6`, scalar or shape `(8,)`), `first_step`, and `max_step`.
+Numerical controls shared by both methods: `method`, `rtol`, `atol` (scalar or
+shape `(8,)`), `first_step`, and `max_step`. When omitted, `rtol` is `1e-10`
+and `atol` is `rtol` times a characteristic scale of each native state
+component at the starting state. Explicit tolerances that are unfit for the
+orbit (for example `rtol=1e-3`) issue an `IntegrationWarning`.
 Tolerances control local error in the normalized native state; they do not
 bound global trajectory error.
 

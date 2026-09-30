@@ -47,7 +47,7 @@ def test_failure_before_every_tau_eval_sample_raises() -> None:
     metric, orbit = _plunging_orbit()
     full = orbit.solve(tau_span=(0 * u.s, 1e5 * u.s))
     assert full.status == -1
-    assert "right-hand side evaluation failed; native status 4" in full.message
+    assert "Kerr integration failed before the target time" in full.message
     late = full.tau[-1] + np.array([1.0, 2.0]) * metric._time_scale
     with pytest.raises(IntegrationError, match="no tau_eval sample was reached"):
         orbit.solve(tau_eval=late)

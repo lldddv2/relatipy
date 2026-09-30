@@ -49,9 +49,12 @@ class IntegrationInfo:
     Notes
     -----
     Orbit integrates the normalized eight-component Boyer--Lindquist state
-    ``(t, r, theta, phi, u^t, u^r, u^theta, u^phi)``. A vector ``atol``
-    therefore has eight entries. The default is ``1e-6`` and the local
-    error scale is ``atol + rtol * abs(y)`` for each component of ``y``.
+    ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``. A vector
+    ``atol`` therefore has eight entries. This container stores the
+    effective tolerances used, including the automatic ones chosen by
+    :meth:`Orbit.solve <relatipy.geodesic.Orbit.solve>` when ``rtol`` or
+    ``atol`` is omitted; it sets no defaults itself. The local error scale
+    is ``atol + rtol * abs(y)`` for each component of ``y``.
 
     Examples
     --------

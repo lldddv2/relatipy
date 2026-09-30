@@ -41,10 +41,15 @@ returns a read-only :class:`~relatipy.geodesic.Solution`.
 Both accept ``method``, ``rtol``, ``atol``, ``first_step``, and ``max_step``.
 The default method is ``"radau"``; ``"dop853"``, ``"dp45"``, and
 ``"projection_radau"`` are supported alternatives.  Defaults are
-``rtol=1e-3``, ``atol=1e-6``, and ``None`` for both step controls.  A supplied
+``rtol=None``, ``atol=None``, and ``None`` for both step controls.  An omitted
+``rtol`` selects ``1e-10``; an omitted ``atol`` selects ``rtol`` times a
+characteristic scale of each native component at the starting state
+(see :ref:`integration-tolerances`).  Explicit tolerances are used as given,
+but an unfit value issues :class:`~relatipy.geodesic.IntegrationWarning`
+before integration.  A supplied
 step control is a finite, positive proper-time quantity.  ``atol`` is a
 finite, non-negative scalar or a read-only numeric vector of shape ``(8,)``;
-the native order is ``(t/T0, r/L0, theta, phi, u^t, u^r, u^theta, u^phi)``.
+the native order is ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
 These controls scale local error estimates and do not guarantee global error.
 
 The outer horizon is an internal terminal event.  ``solve`` records it as

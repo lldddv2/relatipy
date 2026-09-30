@@ -517,3 +517,36 @@ def test_explicit_3d_is_interactive_and_planes_keep_their_types(solution, orbit,
     assert isinstance(solution.plot(projection="yz", interactive=True), graph_objects.Figure)
     with pytest.raises(ValueError):
         solution.plot(projection="views", interactive=True)
+
+
+@pytest.mark.parametrize("width_factor", [0.8, 1.1, 1.6])
+@pytest.mark.parametrize("failed", [False, True])
+def test_views_corner_legend_and_note_cover_no_panel(width_factor, failed, pyplot,
+                                                     tmp_path):
+    """Regression: the spin note fell under the legend onto the flat z panel."""
+    import dataclasses
+
+    from relatipy.plotting import plot_solution
+
+    metric = Kerr(mass=1 * u.Msun, spin=0.01)
+    flat = metric.orbit(x=1 * u.au, vy=30 * u.km / u.s).solve(
+        tau_eval=np.linspace(0, 1, 40) * u.yr, rtol=1e-8, atol=1e-10)
+    if failed:
+        flat = Solution(state=flat._state, integration=flat.integration, status=-1,
+                        message="numerical failure after stored samples")
+    style = Style()
+    style = dataclasses.replace(
+        style, views=dataclasses.replace(style.views, width_factor=width_factor))
+    fig, axes = plot_solution(flat, style=style)
+    fig.savefig(tmp_path / "views.png")  # default savefig, no bbox cropping
+    renderer = fig.canvas.get_renderer()
+    (corner,) = [ax for ax in fig.axes if ax not in axes]
+    texts = list(corner.texts) + list(corner.get_legend().texts)
+    note = "partial" if failed else "spin = 0.01"
+    assert any(note in text.get_text() for text in texts)
+    panels = [ax.get_window_extent(renderer) for ax in axes]
+    for text in texts:
+        box = text.get_window_extent(renderer)
+        assert not any(box.overlaps(panel) for panel in panels), text.get_text()
+        assert fig.bbox.x0 <= box.x0 and box.x1 <= fig.bbox.x1, text.get_text()
+        assert fig.bbox.y0 <= box.y0 and box.y1 <= fig.bbox.y1, text.get_text()

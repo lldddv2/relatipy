@@ -113,18 +113,47 @@ def render_views(scene: Scene, style: Style):
         handles.append(black_hole_handle(style))
         names.append(style.bh_name)
 
-    def corner_legend() -> None:
-        """Replace the free-corner legend using current scene candidates."""
-        if corner.get_legend() is not None:
-            corner.get_legend().remove()
-        if handles and len(handles) >= style.legend_min_entries:
-            legend = corner.legend(handles, names, loc="center left",
-                                   bbox_to_anchor=(0.0, 0.5), borderaxespad=0.0,
-                                   **legend_properties(style))
-            for text in legend.texts:
-                text.set_math_fontfamily(style.math_fontset)
+    target = style.target
+    if handles and len(handles) >= style.legend_min_entries:
+        corner.legend(handles, names, loc="lower left", bbox_to_anchor=(0.0, 0.0),
+                      borderaxespad=0.0, **legend_properties(style))
+        for text in corner.get_legend().texts:
+            text.set_math_fontfamily(style.math_fontset)
+    legend = corner.get_legend()
+    note_text = corner_note(style, scene)
+    note = None
+    if note_text:
+        note = corner.text(0.0, 0.0, note_text, transform=corner.transAxes, ha="left",
+                           va="top", fontsize=target.small_size,
+                           fontfamily=style.text_font)
 
-    corner_legend()
+    def place_corner() -> None:
+        """Stack the legend over the note inside the free corner.
+
+        The block is centred in the corner when it fits; otherwise its bottom
+        rests on the right panel and it grows upwards into the free margin,
+        so neither the legend nor the note can cover a panel.
+        """
+        if legend is None and note is None:
+            return
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        cell = corner.get_window_extent(renderer)
+        borderpad = legend.borderpad if legend is not None else 0.4
+        inner = borderpad * target.small_size * fig.dpi / 72  # pixels
+        legend_height = (legend.get_window_extent(renderer).height
+                         if legend is not None else 0.0)
+        note_height = note.get_window_extent(renderer).height if note is not None else 0.0
+        floor = inner if note is not None else 0.0  # keep the note off the spine
+        split = cell.y0 + max((cell.height - legend_height - note_height) / 2, floor) \
+            + note_height  # display y of the legend bottom and the note top
+        to_axes = corner.transAxes.inverted()
+        x_left, y_split = to_axes.transform((cell.x0, split))
+        if legend is not None:
+            legend.set_bbox_to_anchor((x_left, y_split), transform=corner.transAxes)
+        if note is not None:
+            note.set_position((to_axes.transform((cell.x0 + inner, split))[0], y_split))
+
     gap = style.views.gap_mm * MM
 
     def layout(left: float, bottom: float, top_pad: float, right_pad: float) -> None:
@@ -146,6 +175,7 @@ def render_views(scene: Scene, style: Style):
     left, bottom, top_pad, right_pad = 0.6, 0.45, pad, pad
     for _ in range(4):
         layout(left, bottom, top_pad, right_pad)
+        place_corner()
         fig.canvas.draw()
         tight = fig.get_tightbbox(fig.canvas.get_renderer())
         current_width, current_height = fig.get_size_inches()
@@ -165,19 +195,5 @@ def render_views(scene: Scene, style: Style):
         if {h_axis, v_axis} == {"x", "y"}:
             annotate_iscos(ax, style, write_names=False)
         place_bh_name(ax)
-    text = corner_note(style, scene)
-    if text:
-        target = style.target
-        legend = corner.get_legend()
-        options = {"ha": "left", "fontsize": target.small_size,
-                   "fontfamily": style.text_font}
-        if legend is not None:
-            fig.canvas.draw()
-            box = legend.get_window_extent(fig.canvas.get_renderer())
-            inner = legend.borderpad * target.small_size * fig.dpi / 72
-            x, y = corner.transAxes.inverted().transform((box.x0 + inner, box.y0))
-            corner.text(x, y, text, transform=corner.transAxes, va="top", **options)
-        else:
-            corner.text(0.0, 0.5, text, transform=corner.transAxes, va="center",
-                        **options)
+    place_corner()
     return fig, (main, top, right)

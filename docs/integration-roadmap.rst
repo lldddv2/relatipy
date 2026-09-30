@@ -29,8 +29,11 @@ native integration state.
 The general methods are ``"radau"`` (default), ``"dop853"``, ``"dp45"``,
 and ``"projection_radau"``. These method names are case-sensitive. The common
 controls are ``method``, ``rtol``, ``atol``,
-``first_step``, and ``max_step``. The default tolerances are ``1e-3`` and
-``1e-6``. An ``atol`` array has shape ``(8,)`` in the native state order.
+``first_step``, and ``max_step``. Omitted tolerances are automatic:
+``rtol`` becomes ``1e-10`` and ``atol`` becomes ``rtol`` times a
+characteristic scale of each native component at the starting state (see
+:ref:`integration-tolerances`). An ``atol`` array has shape ``(8,)`` in the
+native state order.
 The native controller scales local error componentwise; this is no guarantee
 of global trajectory error. The native integrators and their standalone
 tests are described in :doc:`developer-architecture`. The output solution holds
@@ -139,11 +142,12 @@ with ``status == -1`` on an integration failure when its stored states can
 be reconstructed. Invalid arguments and units raise Python validation errors
 before native integration.
 
-Both operations issue :class:`~relatipy.geodesic.IntegrationWarning` when a
-numerical failure occurs with the default ``rtol=1e-3`` and scalar
-``atol=1e-6``. ``Orbit.solve`` also warns when adjacent requested proper-time
-samples are farther apart than one tenth of the initial osculating Kepler
-period, provided that the initial elements describe a finite bound conic.
+Both operations issue :class:`~relatipy.geodesic.IntegrationWarning` before
+integration when an explicit ``rtol`` or ``atol`` is unfit for the starting
+state; omitted tolerances never trigger it. ``Orbit.solve`` also warns
+when adjacent requested proper-time samples are farther apart than one
+tenth of the initial osculating Kepler period, provided that the initial
+elements describe a finite bound conic.
 This period is a Newtonian sampling estimate, not an error bound for a Kerr
 trajectory. Warnings leave the return status and exceptions unchanged.
 

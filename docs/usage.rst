@@ -65,13 +65,88 @@ Numerical controls and outcomes
 ``atol``, ``first_step``, and ``max_step``. The default method is
 ``"radau"``; ``"dop853"``, ``"dp45"``, and ``"projection_radau"``
 are explicit alternatives. Method names are case-sensitive.
-The defaults are ``rtol=1e-3``, ``atol=1e-6``, and ``None`` for both
+The defaults are ``rtol=None`` and ``atol=None``, which select tolerances
+automatically (see :ref:`integration-tolerances`), and ``None`` for both
 step controls. Supplied step controls are positive proper-time quantities.
 ``atol`` is a nonnegative number or a numeric array of shape ``(8,)``,
 ordered as the native state
 ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
 These tolerances weight local error in the normalized state; they do not
 bound the global trajectory error.
+
+.. _integration-tolerances:
+
+Automatic and explicit tolerances
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Omitted tolerances are chosen automatically for every method.
+``rtol=None`` selects ``1e-10``. ``atol=None`` selects the shape ``(8,)``
+array ``rtol * s``, where ``rtol`` is the effective relative tolerance
+(automatic or supplied) and ``s`` holds one characteristic scale per native
+component of the starting state: ``s_i = max(abs(y0_i), floor_i)``. With
+``R0`` the starting radius in units of ``r_g``, the floors are Newtonian
+orders of magnitude:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Component
+     - ``t/T0``
+     - ``R/r_g``
+     - ``Theta``
+     - ``Phi``
+     - ``u^t``
+     - ``u^R``
+     - ``u^Theta``
+     - ``u^Phi``
+   * - Floor
+     - ``R0**1.5``
+     - ``R0``
+     - ``1``
+     - ``1``
+     - ``1``
+     - ``R0**-0.5``
+     - ``R0**-1.5``
+     - ``R0**-1.5``
+
+``rtol`` and ``atol`` are resolved independently, so supplying only
+``rtol`` still scales the automatic ``atol``. A solution records the
+effective values in the ``rtol`` and ``atol`` fields of its
+:class:`~relatipy.geodesic.IntegrationInfo` (``Solution.integration``); an
+automatic ``atol`` is a read-only array of shape ``(8,)``.
+
+Explicit tolerances are used as given. Before integrating, both
+:meth:`~relatipy.geodesic.Orbit.integrate` and
+:meth:`~relatipy.geodesic.Orbit.solve` issue
+:class:`~relatipy.geodesic.IntegrationWarning` when an explicit tolerance is
+unfit for the starting state:
+
+* ``rtol > 1e-6``;
+* ``0 < rtol < 100 * eps``, which double precision cannot attain;
+* ``atol_i > 1e-6 * s_i`` for any of ``t/T0``, ``R/r_g``, ``Theta``,
+  ``Phi``, or ``u^t``.
+
+The message names each cause and suggests omitting ``rtol`` and ``atol``.
+The warning does not change the tolerances used, the returned status, or
+the exceptions raised.
+
+.. code-block:: python
+
+   import numpy as np
+   from astropy import units as u
+   from relatipy import Kerr
+
+   orbit = Kerr(mass=1 * u.Msun, spin=0.01).orbit(x=1 * u.au, vy=30 * u.km / u.s)
+   taus = np.linspace(0, 1, 300) * u.yr
+
+   solution = orbit.solve(tau_eval=taus)    # automatic tolerances
+   solution.integration.rtol                # 1e-10
+   orbit.solve(tau_eval=taus, rtol=1e-3)    # IntegrationWarning: unfit tolerances
+
+The automatic choice is a heuristic based on the starting state. It does
+not guarantee the global trajectory error, for example on unbound
+trajectories that travel far from their starting radius or near the
+horizon.
 
 ``"projection_radau"`` uses the Radau integrator and projects each accepted
 native step outside the horizon toward the initial timelike norm

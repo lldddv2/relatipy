@@ -9,7 +9,7 @@ import numpy as np
 from astropy import units as u
 from astropy.constants import G, c
 
-from .._validation import dimensionless_scalar, readonly_quantity
+from .._validation import dimensionless_scalar, immutable_array, readonly_quantity
 from ..coordinates import KerrOrbitalElements, OrbitalElements
 from . import _native as native
 from ._deferred import DeferredInitialState, DeferredState
@@ -32,8 +32,14 @@ _FAMILIES = {
 }
 _METHODS = ("radau", "dop853", "dp45", "projection_radau")
 _BOUND_KEYS = ("p", "e", "x", "q_r0", "q_theta0", "q_phi0")
-_DEFAULT_RTOL = 1e-3
-_DEFAULT_ATOL = 1e-6
+# Automatic relative tolerance used when ``rtol`` is omitted.
+_AUTO_RTOL = 1e-10
+# Loosest relative tolerance, and loosest atol per characteristic scale of the
+# t, R, Theta, Phi and u^t components, before warning about unfit tolerances.
+_MAX_FIT_TOL = 1e-6
+# Tightest relative tolerance attainable in double precision.
+_MIN_FIT_RTOL = 100 * np.finfo(float).eps
+_STATE_NAMES = ("t", "R", "Theta", "Phi", "u^t", "u^R", "u^Theta", "u^Phi")
 # Largest tau_eval spacing, as a fraction of the Kepler period, before warning.
 _SAMPLES_PER_PERIOD = 10
 
@@ -322,19 +328,75 @@ def _failure_message(stats: dict) -> str:
     return f"Kerr integration failed before the target time ({reason})"
 
 
-def _warn_default_tolerance_failure(options: IntegrationOptions, message: str) -> None:
-    """Suggest tighter tolerances after a failure that used the defaults."""
-    if options.rtol != _DEFAULT_RTOL or np.ndim(options.atol) != 0:
-        return
-    if options.atol != _DEFAULT_ATOL:
-        return
-    warnings.warn(
-        f"{message} with the default tolerances rtol={_DEFAULT_RTOL:g}, "
-        f"atol={_DEFAULT_ATOL:g}; tighter values such as rtol=1e-10, "
-        "atol=1e-12 may let the integration proceed",
-        IntegrationWarning,
-        stacklevel=3,
+def _state_scales(y0: np.ndarray) -> np.ndarray:
+    """Characteristic magnitude of each normalized native state component.
+
+    Uses the initial radius ``R0`` (in ``r_g``) and Newtonian orders of
+    magnitude: dynamical time ``R0**1.5`` for ``t``, ``R0`` for ``R``, one
+    radian for the angles, one for ``u^t``, circular speed ``R0**-0.5`` for
+    ``u^R`` and angular rate ``R0**-1.5`` for ``u^Theta`` and ``u^Phi``. Each
+    scale is at least the magnitude of the initial component.
+    """
+    radius = float(y0[1])
+    floor = np.array([
+        radius**1.5, radius, 1.0, 1.0, 1.0,
+        radius**-0.5, radius**-1.5, radius**-1.5,
+    ])
+    return np.maximum(np.abs(np.asarray(y0, dtype=float)), floor)
+
+
+def _resolve_options(
+    y0: np.ndarray,
+    *,
+    method: object,
+    rtol: object,
+    atol: object,
+    first_step: object,
+    max_step: object,
+) -> IntegrationOptions:
+    """Validate settings and fill omitted tolerances automatically.
+
+    An omitted ``rtol`` becomes ``1e-10``. An omitted ``atol`` becomes the
+    shape ``(8,)`` array ``rtol * _state_scales(y0)``, so each component is
+    controlled relative to its own characteristic magnitude. Explicit values
+    that are unfit for the state emit :class:`IntegrationWarning`.
+    """
+    options = _integration_options(
+        method=method,
+        rtol=_AUTO_RTOL if rtol is None else rtol,
+        atol=0.0 if atol is None else atol,
+        first_step=first_step,
+        max_step=max_step,
     )
+    scales = _state_scales(y0)
+    if atol is None:
+        options = options._replace(atol=immutable_array(options.rtol * scales))
+    problems = []
+    if rtol is not None and options.rtol > _MAX_FIT_TOL:
+        problems.append(f"rtol={options.rtol:g} is looser than {_MAX_FIT_TOL:g}")
+    if rtol is not None and 0.0 < options.rtol < _MIN_FIT_RTOL:
+        problems.append(
+            f"rtol={options.rtol:g} is below {_MIN_FIT_RTOL:.1g}, "
+            "unattainable in double precision"
+        )
+    if atol is not None:
+        ratio = np.broadcast_to(options.atol, (8,))[:5] / scales[:5]
+        loose = [_STATE_NAMES[i] for i in np.flatnonzero(ratio > _MAX_FIT_TOL)]
+        if loose:
+            problems.append(
+                f"atol exceeds {_MAX_FIT_TOL:g} times the characteristic "
+                f"scale of {', '.join(loose)}"
+            )
+    if problems:
+        warnings.warn(
+            "unfit integration tolerances for this orbit: "
+            + "; ".join(problems)
+            + ". The trajectory may be inaccurate or the integration may "
+            "fail; omit rtol and atol to choose them automatically",
+            IntegrationWarning,
+            stacklevel=3,
+        )
+    return options
 
 
 def _warn_sparse_sampling(
@@ -539,8 +601,8 @@ class Orbit:
         tau: u.Quantity,
         *,
         method: str = "radau",
-        rtol: float = 1e-3,
-        atol: float | np.ndarray = 1e-6,
+        rtol: float | None = None,
+        atol: float | np.ndarray | None = None,
         first_step: u.Quantity | None = None,
         max_step: u.Quantity | None = None,
     ) -> None:
@@ -552,13 +614,15 @@ class Orbit:
             Scalar absolute proper time at or after the saved initial time.
         method : {"radau", "dop853", "dp45", "projection_radau"}, optional
             Native integration method, default ``"radau"``.
-        rtol : float, optional
-            Relative local-error tolerance for the normalized native state,
-            default ``1e-3``.
-        atol : float or array_like, optional
-            Non-negative absolute tolerance, default ``1e-6``: a scalar or a
-            shape ``(8,)`` array in native state order
-            ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
+        rtol : float or None, optional
+            Relative local-error tolerance for the normalized native state.
+            The default ``None`` selects ``1e-10``.
+        atol : float, array_like or None, optional
+            Non-negative absolute tolerance: a scalar or a shape ``(8,)``
+            array in native state order
+            ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``. The
+            default ``None`` selects ``rtol`` times the characteristic scale
+            of each component at the starting state.
         first_step, max_step : astropy.units.Quantity or None, optional
             Positive proper-time initial and maximum step sizes. The default
             ``None`` lets the native integrator choose.
@@ -581,8 +645,10 @@ class Orbit:
         Warns
         -----
         IntegrationWarning
-            Numerical failure occurred with the default ``rtol`` and
-            ``atol``; the warning suggests tighter tolerances.
+            An explicit ``rtol`` is looser than ``1e-6`` or below
+            ``100 * eps``, or an explicit ``atol`` exceeds ``1e-6`` times the
+            characteristic scale of ``t``, ``R``, ``Theta``, ``Phi`` or
+            ``u^t``.
 
         Notes
         -----
@@ -590,20 +656,21 @@ class Orbit:
         conditions and integrates forward; it does not reverse the solver.
         """
         target = _scalar_quantity(tau, u.s, "tau")
-        options = _integration_options(
+        if target < self._initial.tau:
+            raise ValueError("tau precedes the saved initial proper time")
+        restart = target < self._current.tau
+        source = self._initial if restart else self._current
+        y0 = self._initial_y if restart else self._current_y
+        options = _resolve_options(
+            y0,
             method=method,
             rtol=rtol,
             atol=atol,
             first_step=first_step,
             max_step=max_step,
         )
-        if target < self._initial.tau:
-            raise ValueError("tau precedes the saved initial proper time")
         if target == self._current.tau:
             return None
-        restart = target < self._current.tau
-        source = self._initial if restart else self._current
-        y0 = self._initial_y if restart else self._current_y
         scale = self._metric._time_scale
         tau0 = float((source.tau / scale).to_value(u.one))
         tau1 = float((target / scale).to_value(u.one))
@@ -634,9 +701,7 @@ class Orbit:
                 if horizon else "integration reached an internal terminal event",
             )
         if status == -1:
-            message = _failure_message(stats)
-            _warn_default_tolerance_failure(options, message)
-            raise IntegrationError(message)
+            raise IntegrationError(_failure_message(stats))
         return None
 
     def solve(
@@ -645,8 +710,8 @@ class Orbit:
         tau_span: tuple[u.Quantity, u.Quantity] | None = None,
         tau_eval: u.Quantity | None = None,
         method: str = "radau",
-        rtol: float = 1e-3,
-        atol: float | np.ndarray = 1e-6,
+        rtol: float | None = None,
+        atol: float | np.ndarray | None = None,
         first_step: u.Quantity | None = None,
         max_step: u.Quantity | None = None,
     ) -> Solution:
@@ -662,13 +727,15 @@ class Orbit:
             times within the span. Either this or ``tau_span`` is required.
         method : {"radau", "dop853", "dp45", "projection_radau"}, optional
             Native integration method, default ``"radau"``.
-        rtol : float, optional
-            Relative local-error tolerance for the normalized native state,
-            default ``1e-3``.
-        atol : float or array_like, optional
-            Non-negative absolute tolerance, default ``1e-6``: a scalar or a
-            shape ``(8,)`` array in native state order
-            ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
+        rtol : float or None, optional
+            Relative local-error tolerance for the normalized native state.
+            The default ``None`` selects ``1e-10``.
+        atol : float, array_like or None, optional
+            Non-negative absolute tolerance: a scalar or a shape ``(8,)``
+            array in native state order
+            ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``. The
+            default ``None`` selects ``rtol`` times the characteristic scale
+            of each component at the starting state.
         first_step, max_step : astropy.units.Quantity or None, optional
             Positive proper-time initial and maximum step sizes. The default
             ``None`` lets the native integrator choose.
@@ -696,8 +763,8 @@ class Orbit:
         IntegrationWarning
             The largest ``tau_eval`` spacing exceeds one tenth of the Kepler
             period estimated from the initial osculating elements (bound
-            orbits only), or numerical failure occurred with the default
-            ``rtol`` and ``atol``.
+            orbits only), or an explicit ``rtol`` or ``atol`` is unfit for
+            the initial state (see :meth:`integrate`).
 
         Notes
         -----
@@ -732,7 +799,8 @@ class Orbit:
         >>> len(sampled)
         3
         """
-        options = _integration_options(
+        options = _resolve_options(
+            self._initial_y,
             method=method,
             rtol=rtol,
             atol=atol,
@@ -811,8 +879,6 @@ class Orbit:
             1: ("Kerr integration reached the outer horizon" if horizon
                 else "Kerr integration reached an internal terminal event"),
         }[status]
-        if status == -1:
-            _warn_default_tolerance_failure(options, message)
         terminal = None
         reason = "outer_horizon" if horizon else "internal_terminal_event"
         if status == 1:
