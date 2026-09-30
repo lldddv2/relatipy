@@ -1,0 +1,5 @@
+include bindings/cython/_mcmc_core.pyx
+include bindings/cython/_core.pyx
+recursive-include native/src *.c *.h
+recursive-include native/include *.h
+recursive-include native/vendor/scipy-dop853 *.h *.md LICENSE-*

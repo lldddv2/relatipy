@@ -12,6 +12,9 @@ __pycache__/
 # Build artifacts
 build/
 dist/
+docs/_build/
+*.so
+bindings/cython/*.c
 
 # Editors and operating systems
 .DS_Store

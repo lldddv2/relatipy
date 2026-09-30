@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "review_status": "pending",
+  "conventions": {
+    "units": "Geometric units G = c = M = 1 inside the independent peer harness",
+    "coordinates": "Boyer-Lindquist (t, r, theta, phi)",
+    "parameter": "Timelike proper time tau",
+    "velocity": "Contravariant four-velocity dx^mu/dtau",
+    "signature": "(-,+,+,+)",
+    "azimuth_comparison": "Equivalent 2*pi branches are aligned before subtraction"
+  },
+  "provenance": [
+    {
+      "record_id": "INF-006",
+      "manual_review": "pending",
+      "path": "thesis_apply/brain/006-kerrgeopy-como-referencia-analitica-para-validar-radau/record.json",
+      "claim_ids": ["C001", "C002", "C004"]
+    },
+    {
+      "record_id": "INF-007",
+      "manual_review": "pending",
+      "path": "thesis_apply/brain/007-pruebas-y-benchmarks-de-pygro/record.json",
+      "claim_ids": ["C002", "C003", "C007"]
+    }
+  ],
+  "libraries": {
+    "kerrgeopy": {"tested_version": "0.9.3"},
+    "pygro": {"minimum_version": "1.0.3", "tested_version": "1.0.3"}
+  },
+  "mapping": {
+    "mino_to_proper_time": "d tau / d lambda = r(lambda)^2 + a^2 cos(theta(lambda))^2",
+    "tau_mapping_method": "DOP853",
+    "tau_mapping_rtol": 2.3e-14,
+    "tau_mapping_atol": 1e-13,
+    "pygro_integrator": "dp853",
+    "pygro_initial_step_M": 0.05
+  },
+  "cases": [
+    {
+      "id": "schwarzschild_circular_r10",
+      "kind": "circular",
+      "a_over_M": 0.0,
+      "radius_over_M": 10.0,
+      "radial_periods": 0,
+      "circular_periods": 1,
+      "kerrgeopy_applicable": true,
+      "pygro_goal": 10,
+      "tolerances": {
+        "coordinate_max_abs": 2e-6,
+        "trajectory_coordinate_max_abs": 2e-6,
+        "normalization_max_abs": 1e-10
+      }
+    },
+    {
+      "id": "schwarzschild_isco_r6",
+      "kind": "circular",
+      "a_over_M": 0.0,
+      "radius_over_M": 6.0,
+      "radial_periods": 0,
+      "circular_periods": 1,
+      "kerrgeopy_applicable": false,
+      "kerrgeopy_exclusion": "StableOrbit rejects the marginally stable separatrix; compare PyGRO with the exact circular state instead.",
+      "pygro_goal": 11,
+      "tolerances": {
+        "coordinate_max_abs": 5e-9,
+        "trajectory_coordinate_max_abs": 5e-9,
+        "radius_max_abs": 5e-10,
+        "normalization_max_abs": 5e-12
+      }
+    },
+    {
+      "id": "schwarzschild_eccentric",
+      "kind": "stable_bound",
+      "a_over_M": 0.0,
+      "p_over_M": 10.0,
+      "eccentricity": 0.2,
+      "x": 1.0,
+      "initial_phases": [0.0, 0.4, 0.0, 0.2],
+      "radial_periods": 1,
+      "samples": 1001,
+      "pygro_goal": 9,
+      "tolerances": {
+        "coordinate_max_abs": 5e-7,
+        "trajectory_coordinate_max_abs": 1e-4,
+        "normalization_max_abs": 5e-9,
+        "minimum_periapsis_advance_rad": 0.1
+      }
+    },
+    {
+      "id": "kerr_stable_bound",
+      "kind": "stable_bound",
+      "a_over_M": 0.5,
+      "p_over_M": 8.0,
+      "eccentricity": 0.2,
+      "x": 0.8,
+      "initial_phases": [0.0, 0.4, 1.1, 0.2],
+      "radial_periods": 1,
+      "samples": 1001,
+      "pygro_goal": 9,
+      "convergence_goals": [6, 10],
+      "tolerances": {
+        "coordinate_max_abs": 5e-6,
+        "trajectory_coordinate_max_abs": 2e-5,
+        "normalization_max_abs": 5e-8,
+        "fine_to_coarse_error_ratio_max": 0.1
+      }
+    }
+  ]
+}

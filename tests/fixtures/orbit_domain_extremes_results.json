@@ -1,0 +1,2837 @@
+{
+  "acceptance_limits": {
+    "cross_method_endpoint_difference": 2e-08,
+    "exact_infall_radial_tangent_error": 2e-10,
+    "exact_infall_radius_error": 2e-11,
+    "exact_infall_time_tangent_error": 2e-08,
+    "horizon_conditioning_failure": "finite exterior partial state and structured outcome; no invariant accuracy guarantee",
+    "successful_case_invariant_drift": "2e-9 * max(1, abs(initial invariant)); norm uses its fixed target",
+    "successful_case_norm_error": 2e-09
+  },
+  "accepted_guard_adjacent_initial_count": 8,
+  "cases": {
+    "exact_schwarzschild_infall": [
+      {
+        "endpoint_normalized": [
+          1.038379253327073,
+          2.0301975090091466,
+          1.1,
+          0.2,
+          67.2306284731577,
+          -0.992535050757328,
+          0.0,
+          0.0
+        ],
+        "exact_max_abs_error": {
+          "radial_tangent": 2.1616042289451798e-13,
+          "radius": 1.7763568394002505e-15,
+          "time_tangent": 1.5518253349000588e-11
+        },
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 4.0523140398818214e-14,
+          "norm": 4.163780431554187e-12
+        },
+        "max_metric_condition_number": 4519.957404897473,
+        "max_norm_absolute_term_sum": 133.4612569462866,
+        "max_norm_error": 4.192202140984591e-12,
+        "method": "Radau",
+        "min_horizon_distance": 0.03019750900914664,
+        "min_polar_distance": 1.1,
+        "nfev": 1288,
+        "status": 0,
+        "steps": 41
+      },
+      {
+        "endpoint_normalized": [
+          1.0383792533271077,
+          2.0301975090091484,
+          1.1,
+          0.2,
+          67.23062847315553,
+          -0.9925350507573886,
+          0.0,
+          0.0
+        ],
+        "exact_max_abs_error": {
+          "radial_tangent": 1.5543122344752192e-13,
+          "radius": 3.1086244689504383e-15,
+          "time_tangent": 1.7678303265711293e-11
+        },
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 2.2093438190040615e-14,
+          "norm": 2.5508484213787597e-12
+        },
+        "max_metric_condition_number": 4519.957404896963,
+        "max_norm_absolute_term_sum": 133.4612569462904,
+        "max_norm_error": 2.5224267119483557e-12,
+        "method": "DOP853",
+        "min_horizon_distance": 0.030197509009148416,
+        "min_polar_distance": 1.1,
+        "nfev": 493,
+        "status": 0,
+        "steps": 41
+      },
+      {
+        "endpoint_normalized": [
+          1.0383792533279668,
+          2.0301975090091413,
+          1.1,
+          0.2,
+          67.23062847314853,
+          -0.9925350507578465,
+          0.0,
+          0.0
+        ],
+        "exact_max_abs_error": {
+          "radial_tangent": 3.0819791163594346e-13,
+          "radius": 3.9968028886505635e-15,
+          "time_tangent": 2.4868995751603507e-11
+        },
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 3.4938718584953676e-13,
+          "norm": 1.0732037480920553e-10
+        },
+        "max_metric_condition_number": 4519.957404898997,
+        "max_norm_absolute_term_sum": 133.4612569463373,
+        "max_norm_error": 1.0729195309977513e-10,
+        "method": "DP45",
+        "min_horizon_distance": 0.03019750900914131,
+        "min_polar_distance": 1.1,
+        "nfev": 247,
+        "status": 0,
+        "steps": 41
+      }
+    ],
+    "horizon_conditioning_failure": [
+      {
+        "endpoint_normalized": [
+          54.690316339152204,
+          2.0000000000005813,
+          1.1,
+          0.0,
+          14345328351185.273,
+          -2.4435251723301277,
+          0.0,
+          0.0
+        ],
+        "final_tau": 0.050311209973547925,
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 3.169561321030475,
+          "norm": 39271204141026.05
+        },
+        "max_metric_condition_number": 1.1836962069421988e+25,
+        "max_norm_absolute_term_sum": 80356248320136.64,
+        "max_norm_error": 39271204141026.05,
+        "method": "Radau",
+        "min_horizon_distance": 5.81312775693732e-13,
+        "min_polar_distance": 1.1,
+        "nfev": 167818,
+        "physical_accuracy": "not_claimed_at_the_chart_conditioning_floor",
+        "status": -1,
+        "steps": 6160,
+        "termination": null
+      },
+      {
+        "endpoint_normalized": [
+          53.90655007904282,
+          2.0000000000010854,
+          1.1,
+          0.0,
+          8913075923017.855,
+          -2.815086384413197,
+          0.0,
+          0.0
+        ],
+        "final_tau": 0.05031120997424998,
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 3.8369214313465463,
+          "norm": 28508849960012.785
+        },
+        "max_metric_condition_number": 3.3956048554219584e+24,
+        "max_norm_absolute_term_sum": 57714845942511.47,
+        "max_norm_error": 28508849960012.785,
+        "method": "DOP853",
+        "min_horizon_distance": 1.085354028873553e-12,
+        "min_polar_distance": 1.1,
+        "nfev": 779605,
+        "physical_accuracy": "not_claimed_at_the_chart_conditioning_floor",
+        "status": -1,
+        "steps": 33498,
+        "termination": null
+      },
+      {
+        "endpoint_normalized": [
+          54.34010476747126,
+          2.0000000000004423,
+          1.1,
+          0.0,
+          14240636861931.18,
+          -1.9015004104783841,
+          0.0,
+          0.0
+        ],
+        "final_tau": 0.05031120996693238,
+        "initial_invariants": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 0.9999999999998499,
+          "norm": -1.0000000000000284
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 0.0,
+          "Lz": 0.0,
+          "energy": 2.1494083595435507,
+          "norm": 28500502127452.367
+        },
+        "max_metric_condition_number": 2.0445647654543483e+25,
+        "max_norm_absolute_term_sum": 61198659428922.54,
+        "max_norm_error": 28500502127452.367,
+        "method": "DP45",
+        "min_horizon_distance": 4.4231285301066237e-13,
+        "min_polar_distance": 1.1,
+        "nfev": 114043,
+        "physical_accuracy": "not_claimed_at_the_chart_conditioning_floor",
+        "status": -1,
+        "steps": 8774,
+        "termination": null
+      }
+    ],
+    "initial_rejections": [
+      {
+        "angle": "0",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "1.4210854715202004e-14",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "-0.01",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "3.141592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "3.141592653589779",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "3.151592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "nan",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "inf",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 2.0,
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.98,
+        "rejected": true,
+        "spin": 0.0
+      },
+      {
+        "angle": "0",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "1.4210854715202004e-14",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "-0.01",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "3.141592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "3.141592653589779",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "3.151592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "nan",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "inf",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.8660254037844386,
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.8473651497465942,
+        "rejected": true,
+        "spin": 0.5
+      },
+      {
+        "angle": "0",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "1.4210854715202004e-14",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "-0.01",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "3.141592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "3.141592653589779",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "3.151592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "nan",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "inf",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.141067359796659,
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.1296566861986925,
+        "rejected": true,
+        "spin": 0.99
+      },
+      {
+        "angle": "0",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "1.4210854715202004e-14",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "-0.01",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "3.141592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "3.141592653589779",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "3.151592653589793",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "nan",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "angle": "inf",
+        "kind": "polar",
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 1.0,
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "kind": "horizon",
+        "radius_over_M": 0.99,
+        "rejected": true,
+        "spin": 1.0
+      },
+      {
+        "kind": "spin",
+        "rejected": true,
+        "spin": "-0.01"
+      },
+      {
+        "kind": "spin",
+        "rejected": true,
+        "spin": "1.01"
+      },
+      {
+        "kind": "spin",
+        "rejected": true,
+        "spin": "nan"
+      },
+      {
+        "kind": "spin",
+        "rejected": true,
+        "spin": "inf"
+      },
+      {
+        "kind": "spin",
+        "rejected": true,
+        "spin": "-inf"
+      }
+    ],
+    "near_horizon": [
+      {
+        "endpoint_normalized": [
+          0.024817485346856027,
+          2.0299622544228964,
+          0.7000002480270529,
+          0.0,
+          8.27767731247353,
+          -0.012945866159400217,
+          8.267723634182353e-05,
+          0.0
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 1.1607100705482813e-07,
+          "Lz": 0.0,
+          "energy": 0.12217856422038458,
+          "norm": -1.0000000000000009
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.2499312661442353e-22,
+          "Lz": 0.0,
+          "energy": 2.9976021664879227e-15,
+          "norm": 2.5091040356528538e-14
+        },
+        "max_metric_condition_number": 4590.150764487348,
+        "max_norm_absolute_term_sum": 1.022709458235345,
+        "max_norm_error": 2.5979218776228663e-14,
+        "method": "Radau",
+        "min_horizon_distance": 0.02996225442289635,
+        "min_polar_distance": 0.7,
+        "nfev": 166,
+        "spin": 0.0,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.024817485346856023,
+          2.029962254422896,
+          0.7000002480270527,
+          0.0,
+          8.277677312473529,
+          -0.012945866159400214,
+          8.267723634182353e-05,
+          0.0
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 1.1607100705482813e-07,
+          "Lz": 0.0,
+          "energy": 0.12217856422038458,
+          "norm": -1.0000000000000009
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 7.940933880509066e-23,
+          "Lz": 0.0,
+          "energy": 1.2351231148954867e-15,
+          "norm": 9.992007221626409e-15
+        },
+        "max_metric_condition_number": 4590.150764487477,
+        "max_norm_absolute_term_sum": 1.0227094582353302,
+        "max_norm_error": 1.0880185641326534e-14,
+        "method": "DOP853",
+        "min_horizon_distance": 0.029962254422895906,
+        "min_polar_distance": 0.7,
+        "nfev": 85,
+        "spin": 0.0,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.024817485346856027,
+          2.029962254422896,
+          0.7000002480270527,
+          0.0,
+          8.277677312473529,
+          -0.012945866159400209,
+          8.267723634182353e-05,
+          0.0
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 1.1607100705482813e-07,
+          "Lz": 0.0,
+          "energy": 0.12217856422038458,
+          "norm": -1.0000000000000009
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 7.940933880509066e-23,
+          "Lz": 0.0,
+          "energy": 1.2351231148954867e-15,
+          "norm": 9.992007221626409e-15
+        },
+        "max_metric_condition_number": 4590.150764487477,
+        "max_norm_absolute_term_sum": 1.0227094582353302,
+        "max_norm_error": 1.0880185641326534e-14,
+        "method": "DP45",
+        "min_horizon_distance": 0.029962254422895906,
+        "min_polar_distance": 0.7,
+        "nfev": 43,
+        "spin": 0.0,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.026079387755607464,
+          1.8959885226007995,
+          0.7000002997123113,
+          0.0033461174772621257,
+          8.69846758720037,
+          -0.012642963833265611,
+          0.00011292977689027732,
+          1.1160871989753405
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.14426911583242757,
+          "Lz": 2.220446049250313e-16,
+          "energy": 0.1162648962339949,
+          "norm": -1.000000000000008
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.551115123125783e-17,
+          "Lz": 1.3322676295501878e-15,
+          "energy": 1.2073675392798577e-15,
+          "norm": 1.0436096431476471e-14
+        },
+        "max_metric_condition_number": 5387.946048583633,
+        "max_norm_absolute_term_sum": 7.167936210326246,
+        "max_norm_error": 9.547918011776346e-15,
+        "method": "Radau",
+        "min_horizon_distance": 0.029963118816360934,
+        "min_polar_distance": 0.7,
+        "nfev": 166,
+        "spin": 0.5,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.026079387755607464,
+          1.8959885226007998,
+          0.7000002997123113,
+          0.0033461174772621257,
+          8.698467587200367,
+          -0.012642963833265616,
+          0.00011292977689027779,
+          1.1160871989753405
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.14426911583242757,
+          "Lz": 2.220446049250313e-16,
+          "energy": 0.1162648962339949,
+          "norm": -1.000000000000008
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.551115123125783e-17,
+          "Lz": 1.1102230246251565e-15,
+          "energy": 1.1379786002407855e-15,
+          "norm": 8.881784197001252e-15
+        },
+        "max_metric_condition_number": 5387.946048583558,
+        "max_norm_absolute_term_sum": 7.167936210326231,
+        "max_norm_error": 1.687538997430238e-14,
+        "method": "DOP853",
+        "min_horizon_distance": 0.029963118816361156,
+        "min_polar_distance": 0.7,
+        "nfev": 85,
+        "spin": 0.5,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.026079387755607464,
+          1.8959885226007998,
+          0.7000002997123113,
+          0.0033461174772621257,
+          8.698467587200367,
+          -0.012642963833265615,
+          0.00011292977689027783,
+          1.1160871989753405
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.14426911583242757,
+          "Lz": 2.220446049250313e-16,
+          "energy": 0.1162648962339949,
+          "norm": -1.000000000000008
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.551115123125783e-17,
+          "Lz": 1.1102230246251565e-15,
+          "energy": 1.1379786002407855e-15,
+          "norm": 8.881784197001252e-15
+        },
+        "max_metric_condition_number": 5387.946048583558,
+        "max_norm_absolute_term_sum": 7.167936210326231,
+        "max_norm_error": 1.687538997430238e-14,
+        "method": "DP45",
+        "min_horizon_distance": 0.029963118816361156,
+        "min_polar_distance": 0.7,
+        "nfev": 43,
+        "spin": 0.5,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.052541121013507976,
+          1.171046057410959,
+          0.7000010979186115,
+          0.022047597574854985,
+          17.520430115382993,
+          -0.007229994713878241,
+          0.0005568801614888955,
+          7.352108165126436
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5714339325936394,
+          "Lz": 1.7763568394002505e-15,
+          "energy": 0.057696351193297524,
+          "norm": -0.9999999999999584
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 3.552713678800501e-15,
+          "energy": 1.7763568394002505e-15,
+          "norm": 8.215650382226158e-15
+        },
+        "max_metric_condition_number": 74200.70205768057,
+        "max_norm_absolute_term_sum": 253.95985479638443,
+        "max_norm_error": 4.984901380566953e-14,
+        "method": "Radau",
+        "min_horizon_distance": 0.029978697614299943,
+        "min_polar_distance": 0.7,
+        "nfev": 166,
+        "spin": 0.99,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.05254112101350802,
+          1.171046057410959,
+          0.7000010979186115,
+          0.022047597574854985,
+          17.52043011538299,
+          -0.0072299947138782395,
+          0.0005568801614887474,
+          7.3521081651264355
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5714339325936394,
+          "Lz": 1.7763568394002505e-15,
+          "energy": 0.057696351193297524,
+          "norm": -0.9999999999999584
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.7763568394002505e-15,
+          "energy": 1.7763568394002505e-15,
+          "norm": 1.8207657603852567e-14
+        },
+        "max_metric_condition_number": 74200.70205768057,
+        "max_norm_absolute_term_sum": 253.95985479638438,
+        "max_norm_error": 5.984102102729594e-14,
+        "method": "DOP853",
+        "min_horizon_distance": 0.029978697614299943,
+        "min_polar_distance": 0.7,
+        "nfev": 85,
+        "spin": 0.99,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.05254112101350799,
+          1.171046057410959,
+          0.7000010979186115,
+          0.02204759757485498,
+          17.52043011538299,
+          -0.007229994713878243,
+          0.0005568801614888967,
+          7.3521081651264355
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5714339325936394,
+          "Lz": 1.7763568394002505e-15,
+          "energy": 0.057696351193297524,
+          "norm": -0.9999999999999584
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.7763568394002505e-15,
+          "energy": 1.7763568394002505e-15,
+          "norm": 1.8207657603852567e-14
+        },
+        "max_metric_condition_number": 74200.70205768057,
+        "max_norm_absolute_term_sum": 253.95985479638438,
+        "max_norm_error": 5.984102102729594e-14,
+        "method": "DP45",
+        "min_horizon_distance": 0.029978697614299943,
+        "min_polar_distance": 0.7,
+        "nfev": 43,
+        "spin": 0.99,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.16148142560579928,
+          1.0299928686079993,
+          0.7000024326636025,
+          0.07832776392804211,
+          53.839889499899,
+          -0.002404167476799093,
+          0.0010836337831050644,
+          26.11553355754459
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5847782577226105,
+          "Lz": 0.0,
+          "energy": 0.01877004444783026,
+          "norm": -1.0000000000000784
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.0658141036401503e-14,
+          "energy": 5.329070518200751e-15,
+          "norm": 2.886579864025407e-13
+        },
+        "max_metric_condition_number": 6482490.910711575,
+        "max_norm_absolute_term_sum": 2920.463494042586,
+        "max_norm_error": 3.6703973194107675e-13,
+        "method": "Radau",
+        "min_horizon_distance": 0.029992868607999323,
+        "min_polar_distance": 0.7,
+        "nfev": 163,
+        "spin": 1.0,
+        "status": 0,
+        "steps": 7
+      },
+      {
+        "endpoint_normalized": [
+          0.1614814256057993,
+          1.0299928686079993,
+          0.7000024326636027,
+          0.07832776392804211,
+          53.839889499898995,
+          -0.002404167476799099,
+          0.0010836337831047686,
+          26.115533557544587
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5847782577226105,
+          "Lz": 0.0,
+          "energy": 0.01877004444783026,
+          "norm": -1.0000000000000784
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.0658141036401503e-14,
+          "energy": 7.105427357601002e-15,
+          "norm": 2.893241202173158e-13
+        },
+        "max_metric_condition_number": 6482490.910712377,
+        "max_norm_absolute_term_sum": 2920.4634940429405,
+        "max_norm_error": 3.6770586575585185e-13,
+        "method": "DOP853",
+        "min_horizon_distance": 0.029992868607999323,
+        "min_polar_distance": 0.7,
+        "nfev": 97,
+        "spin": 1.0,
+        "status": 0,
+        "steps": 8
+      },
+      {
+        "endpoint_normalized": [
+          0.16148142560579928,
+          1.0299928686079993,
+          0.7000024326636028,
+          0.07832776392804211,
+          53.839889499899,
+          -0.002404167476799093,
+          0.0010836337831049813,
+          26.115533557544587
+        ],
+        "initial_horizon_distance": 0.03,
+        "initial_invariants": {
+          "CarterQ": 0.5847782577226105,
+          "Lz": 0.0,
+          "energy": 0.01877004444783026,
+          "norm": -1.0000000000000784
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.4210854715202004e-14,
+          "energy": 8.881784197001252e-15,
+          "norm": 2.886579864025407e-13
+        },
+        "max_metric_condition_number": 6482490.910711572,
+        "max_norm_absolute_term_sum": 2920.463494042586,
+        "max_norm_error": 3.6703973194107675e-13,
+        "method": "DP45",
+        "min_horizon_distance": 0.029992868607999323,
+        "min_polar_distance": 0.7,
+        "nfev": 43,
+        "spin": 1.0,
+        "status": 0,
+        "steps": 7
+      }
+    ],
+    "near_polar": [
+      {
+        "endpoint_normalized": [
+          0.1154741347964535,
+          7.999344507887848,
+          0.0001011550807419212,
+          0.2022832626136404,
+          1.1547577458965281,
+          -0.007336253901534567,
+          1.1554398402525834e-05,
+          0.02257380593074649
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160347318e-07,
+          "Lz": 1.478049536667682e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.293955920339377e-22,
+          "Lz": 8.271806125530277e-24,
+          "energy": 2.220446049250313e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 100000000.33333333,
+        "max_norm_absolute_term_sum": 1.0001435433301686,
+        "max_norm_error": 3.3306690738754696e-16,
+        "method": "Radau",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.0001,
+        "nfev": 499,
+        "polar_angle_change": 1.1550807419211903e-06,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413479645353,
+          7.999344507887848,
+          0.0001011550807419212,
+          0.20228326261364052,
+          1.1547577458965277,
+          -0.007336253901534569,
+          1.1554398402525834e-05,
+          0.02257380593074649
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160347318e-07,
+          "Lz": 1.478049536667682e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.293955920339377e-22,
+          "Lz": 8.271806125530277e-24,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 100000000.33333333,
+        "max_norm_absolute_term_sum": 1.000143543330168,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.0001,
+        "nfev": 253,
+        "polar_angle_change": 1.1550807419211903e-06,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413479645344,
+          7.999344507887848,
+          0.0001011550807419212,
+          0.20228326261364052,
+          1.1547577458965277,
+          -0.007336253901534569,
+          1.1554398402525834e-05,
+          0.02257380593074649
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160347318e-07,
+          "Lz": 1.478049536667682e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 5.293955920339377e-22,
+          "Lz": 8.271806125530277e-24,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 100000000.33333333,
+        "max_norm_absolute_term_sum": 1.000143543330168,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "DP45",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.0001,
+        "nfev": 127,
+        "polar_angle_change": 1.1550807419211903e-06,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403296,
+          7.999344507886942,
+          1.0115508073679599e-08,
+          0.2022832626035362,
+          1.154757740772299,
+          -0.007336253945256817,
+          1.155439835126753e-09,
+          0.02257380583111876
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.68003911284946e-15,
+          "Lz": 1.478049535035624e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.4199496293978212e-29,
+          "Lz": 1.4791141972893971e-31,
+          "energy": 4.440892098500626e-16,
+          "norm": 7.771561172376096e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001435255788482,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "Radau",
+        "min_horizon_distance": 5.999344507886942,
+        "min_polar_distance": 1e-08,
+        "nfev": 499,
+        "polar_angle_change": 1.1550807367959884e-10,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403291,
+          7.999344507886942,
+          1.0115508073679597e-08,
+          0.2022832626035361,
+          1.154757740772299,
+          -0.007336253945256821,
+          1.1554398351267537e-09,
+          0.02257380583111876
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.68003911284946e-15,
+          "Lz": 1.478049535035624e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.733165431326071e-30,
+          "Lz": 2.2186712959340957e-31,
+          "energy": 2.220446049250313e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001435255788482,
+        "max_norm_error": 4.440892098500626e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 5.999344507886942,
+        "min_polar_distance": 1e-08,
+        "nfev": 253,
+        "polar_angle_change": 1.1550807367959718e-10,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403289,
+          7.999344507886942,
+          1.0115508073679597e-08,
+          0.20228326260353613,
+          1.154757740772299,
+          -0.007336253945256819,
+          1.1554398351267537e-09,
+          0.02257380583111876
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.68003911284946e-15,
+          "Lz": 1.478049535035624e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.733165431326071e-30,
+          "Lz": 2.2186712959340957e-31,
+          "energy": 2.220446049250313e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001435255788482,
+        "max_norm_error": 4.440892098500626e-16,
+        "method": "DP45",
+        "min_horizon_distance": 5.999344507886942,
+        "min_polar_distance": 1e-08,
+        "nfev": 127,
+        "polar_angle_change": 1.1550807367959718e-10,
+        "pole": "north",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.1154741347964535,
+          7.999344507887848,
+          3.141491498509051,
+          0.20228326261364052,
+          1.1547577458965281,
+          -0.007336253901534567,
+          -1.155439840252584e-05,
+          0.02257380593074752
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160348775e-07,
+          "Lz": 1.4780495366775404e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.237225771935421e-19,
+          "Lz": 1.5364052697559936e-19,
+          "energy": 2.220446049250313e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 100000000.33266634,
+        "max_norm_absolute_term_sum": 1.0001435433301686,
+        "max_norm_error": 3.3306690738754696e-16,
+        "method": "Radau",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 499,
+        "polar_angle_change": -1.155080741721548e-06,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413479645353,
+          7.999344507887848,
+          3.14149149850905,
+          0.20228326261364063,
+          1.1547577458965277,
+          -0.007336253901534569,
+          -1.1554398402525878e-05,
+          0.022573805930751034
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160348775e-07,
+          "Lz": 1.4780495366775404e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.857733952503412e-19,
+          "Lz": 3.328458979627626e-19,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 100000000.33266634,
+        "max_norm_absolute_term_sum": 1.000143543330168,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 253,
+        "polar_angle_change": -1.1550807430538157e-06,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413479645344,
+          7.999344507887848,
+          3.14149149850905,
+          0.20228326261364057,
+          1.1547577458965277,
+          -0.007336253901534569,
+          -1.1554398402525866e-05,
+          0.022573805930749636
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 5.680039160348775e-07,
+          "Lz": 1.4780495366775404e-08,
+          "energy": 0.8660446532780354,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.820676261061037e-19,
+          "Lz": 3.3193103620527895e-19,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 100000000.33266634,
+        "max_norm_absolute_term_sum": 1.000143543330168,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "DP45",
+        "min_horizon_distance": 5.999344507887848,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 127,
+        "polar_angle_change": -1.1550807430538157e-06,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403296,
+          7.999344507886942,
+          3.141592643474285,
+          0.2022832626035838,
+          1.154757740772299,
+          -0.007336253945256817,
+          -1.1554398351272604e-09,
+          0.022573805831591496
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.680039115544856e-15,
+          "Lz": 1.47804955327179e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.2731701461817832e-23,
+          "Lz": 8.776582614126421e-24,
+          "energy": 4.440892098500626e-16,
+          "norm": 7.771561172376096e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.0001435255788482,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "Radau",
+        "min_horizon_distance": 5.999344507886942,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 493,
+        "polar_angle_change": -1.1550804757121114e-10,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403291,
+          7.999344507886944,
+          3.1415926434742847,
+          0.20228326260358434,
+          1.1547577407722993,
+          -0.007336253945256821,
+          -1.1554398351394127e-09,
+          0.022573805843750683
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.680039115544856e-15,
+          "Lz": 1.47804955327179e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.1019655570077983e-23,
+          "Lz": 1.446346584220369e-23,
+          "energy": 3.3306690738754696e-16,
+          "norm": 7.771561172376096e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.0001435255788487,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 5.999344507886944,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 253,
+        "polar_angle_change": -1.1550849166042099e-10,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11547413428403289,
+          7.999344507886942,
+          3.1415926434742856,
+          0.20228326260291243,
+          1.154757740772299,
+          -0.007336253945256819,
+          -1.1554398351138536e-09,
+          0.02257380581864724
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 5.680039115544856e-15,
+          "Lz": 1.47804955327179e-16,
+          "energy": 0.8660446494349356,
+          "norm": -0.9999999999999999
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.0297652993157167e-23,
+          "Lz": 1.3843272075988887e-23,
+          "energy": 2.220446049250313e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.0001435255788482,
+        "max_norm_error": 4.440892098500626e-16,
+        "method": "DP45",
+        "min_horizon_distance": 5.999344507886942,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 127,
+        "polar_angle_change": -1.1550760348200129e-10,
+        "pole": "south",
+        "spin": 0.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671472,
+          7.999345791679818,
+          0.00010115429066970249,
+          0.20228436333621178,
+          1.1540090687002467,
+          -0.007314317931959157,
+          1.1546083446985403e-05,
+          0.022610508108602684
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757673964564e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.942890293094024e-16,
+          "Lz": 1.1580528575742387e-23,
+          "energy": 4.440892098500626e-16,
+          "norm": 7.771561172376096e-16
+        },
+        "max_metric_condition_number": 100000000.32815197,
+        "max_norm_absolute_term_sum": 1.0001425014932965,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.133320387895379,
+        "min_polar_distance": 0.0001,
+        "nfev": 499,
+        "polar_angle_change": 1.1542906697024826e-06,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671461,
+          7.999345791679815,
+          0.00010115429066970249,
+          0.2022843633362118,
+          1.1540090687002464,
+          -0.007314317931959155,
+          1.1546083446985398e-05,
+          0.022610508108602687
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757673964564e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.0816681711721685e-16,
+          "Lz": 6.617444900424222e-24,
+          "energy": 5.551115123125783e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 100000000.32815197,
+        "max_norm_absolute_term_sum": 1.000142501493296,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.133320387895377,
+        "min_polar_distance": 0.0001,
+        "nfev": 253,
+        "polar_angle_change": 1.1542906697024826e-06,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671466,
+          7.999345791679815,
+          0.00010115429066970249,
+          0.2022843633362118,
+          1.1540090687002464,
+          -0.007314317931959156,
+          1.1546083446985398e-05,
+          0.022610508108602684
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757673964564e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.0816681711721685e-16,
+          "Lz": 6.617444900424222e-24,
+          "energy": 5.551115123125783e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 100000000.32815197,
+        "max_norm_absolute_term_sum": 1.000142501493296,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.133320387895377,
+        "min_polar_distance": 0.0001,
+        "nfev": 127,
+        "polar_angle_change": 1.1542906697024826e-06,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636164,
+          7.999345791678888,
+          1.0115429066459794e-08,
+          0.20228436332613414,
+          1.1540090635965672,
+          -0.007314317976054399,
+          1.1546083395931626e-09,
+          0.022610508009096444
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757659292502e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 1.4791141972893971e-31,
+          "energy": 5.551115123125783e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.000142483695132,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.133320387894449,
+        "min_polar_distance": 1e-08,
+        "nfev": 499,
+        "polar_angle_change": 1.1542906645979403e-10,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636168,
+          7.999345791678886,
+          1.0115429066459793e-08,
+          0.20228436332613414,
+          1.1540090635965674,
+          -0.0073143179760544,
+          1.1546083395931629e-09,
+          0.022610508009096437
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757659292502e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3877787807814457e-16,
+          "Lz": 9.860761315262648e-32,
+          "energy": 3.3306690738754696e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.0001424836951323,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.133320387894448,
+        "min_polar_distance": 1e-08,
+        "nfev": 253,
+        "polar_angle_change": 1.1542906645979238e-10,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636164,
+          7.999345791678886,
+          1.0115429066459793e-08,
+          0.20228436332613414,
+          1.1540090635965674,
+          -0.0073143179760544,
+          1.1546083395931629e-09,
+          0.022610508009096437
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757659292502e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3877787807814457e-16,
+          "Lz": 9.860761315262648e-32,
+          "energy": 3.3306690738754696e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.0001424836951323,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.133320387894448,
+        "min_polar_distance": 1e-08,
+        "nfev": 127,
+        "polar_angle_change": 1.1542906645979238e-10,
+        "pole": "north",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671472,
+          7.999345791679818,
+          3.1414914992991223,
+          0.202284363336212,
+          1.1540090687002467,
+          -0.007314317931959157,
+          -1.154608344698545e-05,
+          0.022610508108607298
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757674053888e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.942890293094024e-16,
+          "Lz": 3.118388191263659e-19,
+          "energy": 4.440892098500626e-16,
+          "norm": 7.771561172376096e-16
+        },
+        "max_metric_condition_number": 100000000.32748498,
+        "max_norm_absolute_term_sum": 1.0001425014932965,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.133320387895379,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 499,
+        "polar_angle_change": -1.1542906706019096e-06,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671461,
+          7.999345791679815,
+          3.141491499299123,
+          0.20228436333621183,
+          1.1540090687002464,
+          -0.007314317931959155,
+          -1.154608344698541e-05,
+          0.02261050810860359
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757674053888e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.0816681711721685e-16,
+          "Lz": 8.349726539232772e-20,
+          "energy": 5.551115123125783e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 100000000.32748498,
+        "max_norm_absolute_term_sum": 1.000142501493296,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.133320387895377,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 253,
+        "polar_angle_change": -1.1542906697137312e-06,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929308671466,
+          7.999345791679815,
+          3.141491499299123,
+          0.20228436333621186,
+          1.1540090687002464,
+          -0.007314317931959156,
+          -1.1546083446985418e-05,
+          0.022610508108604356
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.062249051793662274,
+          "Lz": 1.3391757674053888e-08,
+          "energy": 0.8666060586852895,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.0816681711721685e-16,
+          "Lz": 8.375700010466937e-20,
+          "energy": 5.551115123125783e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 100000000.32748498,
+        "max_norm_absolute_term_sum": 1.000142501493296,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.133320387895377,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 127,
+        "polar_angle_change": -1.1542906697137312e-06,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636164,
+          7.999345791678888,
+          3.1415926434743633,
+          0.20228436332768596,
+          1.1540090635965672,
+          -0.007314317976054399,
+          -1.1546083396228435e-09,
+          0.022610508039792622
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757824519929e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 2.220446049250313e-16,
+          "Lz": 2.4131133285656604e-23,
+          "energy": 5.551115123125783e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.000142483695132,
+        "max_norm_error": 7.771561172376096e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.133320387894449,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 496,
+        "polar_angle_change": -1.1542988787027753e-10,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636172,
+          7.999345791678888,
+          3.141592643474364,
+          0.202284363325939,
+          1.1540090635965679,
+          -0.007314317976054399,
+          -1.154608339590586e-09,
+          0.02261050800647189
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757824519929e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3877787807814457e-16,
+          "Lz": 5.124875546408729e-24,
+          "energy": 3.3306690738754696e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.0001424836951331,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.133320387894449,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 253,
+        "polar_angle_change": -1.1542899969185783e-10,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11539929257636164,
+          7.999345791678886,
+          3.141592643474364,
+          0.20228436332602778,
+          1.1540090635965674,
+          -0.0073143179760544,
+          -1.1546083395903763e-09,
+          0.022610508006187986
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.062248486430717606,
+          "Lz": 1.3391757824519929e-16,
+          "energy": 0.8666060548352708,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3877787807814457e-16,
+          "Lz": 9.256897610735406e-24,
+          "energy": 3.3306690738754696e-16,
+          "norm": 6.661338147750939e-16
+        },
+        "max_metric_condition_number": 9999999876620060.0,
+        "max_norm_absolute_term_sum": 1.0001424836951323,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.133320387894448,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 127,
+        "polar_angle_change": -1.1542899969185783e-10,
+        "pole": "south",
+        "spin": 0.5,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.1151848315161697,
+          7.999349453891729,
+          0.00010115212463398767,
+          0.20228254969103637,
+          1.1518637216183942,
+          -0.007251790553277384,
+          1.1524204578199487e-05,
+          0.022616839854280563
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659725635e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.8041124150158794e-15,
+          "Lz": 9.926167350636332e-24,
+          "energy": 1.1102230246251565e-15,
+          "norm": 1.6653345369377348e-15
+        },
+        "max_metric_condition_number": 100000000.31332314,
+        "max_norm_absolute_term_sum": 1.0001395559059887,
+        "max_norm_error": 1.4432899320127035e-15,
+        "method": "Radau",
+        "min_horizon_distance": 6.85828209409507,
+        "min_polar_distance": 0.0001,
+        "nfev": 451,
+        "polar_angle_change": 1.1521246339876652e-06,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483151616975,
+          7.999349453891734,
+          0.00010115212463398763,
+          0.20228254969103635,
+          1.1518637216183953,
+          -0.007251790553277382,
+          1.1524204578199487e-05,
+          0.022616839854280552
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659725635e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.1379786002407855e-15,
+          "Lz": 1.1580528575742387e-23,
+          "energy": 6.661338147750939e-16,
+          "norm": 1.3322676295501878e-15
+        },
+        "max_metric_condition_number": 100000000.31332314,
+        "max_norm_absolute_term_sum": 1.000139555905991,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "DOP853",
+        "min_horizon_distance": 6.858282094095075,
+        "min_polar_distance": 0.0001,
+        "nfev": 253,
+        "polar_angle_change": 1.1521246339876246e-06,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.1151848315161697,
+          7.999349453891734,
+          0.00010115212463398763,
+          0.20228254969103637,
+          1.1518637216183953,
+          -0.007251790553277384,
+          1.1524204578199487e-05,
+          0.022616839854280552
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659725635e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.1379786002407855e-15,
+          "Lz": 1.1580528575742387e-23,
+          "energy": 6.661338147750939e-16,
+          "norm": 1.3322676295501878e-15
+        },
+        "max_metric_condition_number": 100000000.31332314,
+        "max_norm_absolute_term_sum": 1.000139555905991,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "DP45",
+        "min_horizon_distance": 6.858282094095075,
+        "min_polar_distance": 0.0001,
+        "nfev": 127,
+        "polar_angle_change": 1.1521246339876246e-06,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436551,
+          7.999349453890807,
+          1.0115212462886823e-08,
+          0.2022825496809172,
+          1.151863716499837,
+          -0.007251790597293517,
+          1.1524204526989406e-09,
+          0.022616839754230136
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.2161467646099265e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 6.38378239159465e-16,
+          "Lz": 1.4791141972893971e-31,
+          "energy": 3.3306690738754696e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.0001395379707356,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.8582820940941485,
+        "min_polar_distance": 1e-08,
+        "nfev": 451,
+        "polar_angle_change": 1.1521246288682255e-10,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436555,
+          7.99934945389081,
+          1.011521246288683e-08,
+          0.2022825496809172,
+          1.1518637164998373,
+          -0.00725179059729352,
+          1.1524204526989408e-09,
+          0.022616839754230143
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.2161467646099265e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 6.38378239159465e-16,
+          "Lz": 1.9721522630525295e-31,
+          "energy": 3.3306690738754696e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.0001395379707365,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.858282094094151,
+        "min_polar_distance": 1e-08,
+        "nfev": 253,
+        "polar_angle_change": 1.1521246288682917e-10,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436545,
+          7.99934945389081,
+          1.011521246288683e-08,
+          0.2022825496809172,
+          1.1518637164998373,
+          -0.007251790597293517,
+          1.1524204526989408e-09,
+          0.022616839754230143
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.2161467646099265e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 6.38378239159465e-16,
+          "Lz": 1.9721522630525295e-31,
+          "energy": 3.3306690738754696e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 1e+16,
+        "max_norm_absolute_term_sum": 1.0001395379707365,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.858282094094151,
+        "min_polar_distance": 1e-08,
+        "nfev": 127,
+        "polar_angle_change": 1.1521246288682917e-10,
+        "pole": "north",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.1151848315161697,
+          7.999349453891729,
+          3.1414915014651603,
+          0.20228254969103635,
+          1.1518637216183942,
+          -0.007251790553277384,
+          -1.1524204578199477e-05,
+          0.022616839854279695
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659806745e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.8041124150158794e-15,
+          "Lz": 3.3845583687709723e-19,
+          "energy": 1.1102230246251565e-15,
+          "norm": 1.6653345369377348e-15
+        },
+        "max_metric_condition_number": 100000000.3126562,
+        "max_norm_absolute_term_sum": 1.0001395559059887,
+        "max_norm_error": 1.4432899320127035e-15,
+        "method": "Radau",
+        "min_horizon_distance": 6.85828209409507,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 451,
+        "polar_angle_change": -1.1521246325862933e-06,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483151616975,
+          7.999349453891734,
+          3.14149150146516,
+          0.2022825496910364,
+          1.1518637216183953,
+          -0.007251790553277382,
+          -1.1524204578199487e-05,
+          0.022616839854280292
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659806745e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.1379786002407855e-15,
+          "Lz": 2.3125819257390016e-19,
+          "energy": 6.661338147750939e-16,
+          "norm": 1.3322676295501878e-15
+        },
+        "max_metric_condition_number": 100000000.3126562,
+        "max_norm_absolute_term_sum": 1.000139555905991,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "DOP853",
+        "min_horizon_distance": 6.858282094095075,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 253,
+        "polar_angle_change": -1.1521246330303825e-06,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.1151848315161697,
+          7.999349453891734,
+          3.14149150146516,
+          0.2022825496910364,
+          1.1518637216183953,
+          -0.007251790553277384,
+          -1.152420457819949e-05,
+          0.02261683985428101
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.24129732648806,
+          "Lz": 1.2161467659806745e-08,
+          "energy": 0.8682188345014394,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.1379786002407855e-15,
+          "Lz": 2.307784278186194e-19,
+          "energy": 6.661338147750939e-16,
+          "norm": 1.3322676295501878e-15
+        },
+        "max_metric_condition_number": 100000000.3126562,
+        "max_norm_absolute_term_sum": 1.000139555905991,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "DP45",
+        "min_horizon_distance": 6.858282094095075,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 127,
+        "polar_angle_change": -1.1521246330303825e-06,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436551,
+          7.999349453890807,
+          3.141592643474581,
+          0.20228254968168116,
+          1.151863716499837,
+          -0.007251790597293517,
+          -1.1524204527119784e-09,
+          0.02261683976751326
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.216146779614738e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 6.38378239159465e-16,
+          "Lz": 1.600987677724136e-23,
+          "energy": 3.3306690738754696e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 9999999876620062.0,
+        "max_norm_absolute_term_sum": 1.0001395379707356,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.8582820940941485,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 484,
+        "polar_angle_change": -1.15212284157451e-10,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436555,
+          7.99934945389081,
+          3.141592643474581,
+          0.20228254968014997,
+          1.151863716499837,
+          -0.00725179059729352,
+          -1.1524204526864407e-09,
+          0.022616839741514023
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.216146779614738e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.163336342344337e-16,
+          "Lz": 1.2038607013243583e-23,
+          "energy": 2.220446049250313e-16,
+          "norm": 4.440892098500626e-16
+        },
+        "max_metric_condition_number": 9999999876620062.0,
+        "max_norm_absolute_term_sum": 1.000139537970736,
+        "max_norm_error": 4.440892098500626e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.858282094094151,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 253,
+        "polar_angle_change": -1.15212284157451e-10,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11518483100436545,
+          7.99934945389081,
+          3.1415926434745813,
+          0.2022825496804062,
+          1.1518637164998373,
+          -0.007251790597293517,
+          -1.1524204526844813e-09,
+          0.022616839739308614
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24129676050179222,
+          "Lz": 1.216146779614738e-16,
+          "energy": 0.8682188306306542,
+          "norm": -1.0000000000000002
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 6.38378239159465e-16,
+          "Lz": 1.7997709499677903e-23,
+          "energy": 3.3306690738754696e-16,
+          "norm": 5.551115123125783e-16
+        },
+        "max_metric_condition_number": 9999999876620062.0,
+        "max_norm_absolute_term_sum": 1.0001395379707365,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.858282094094151,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 127,
+        "polar_angle_change": -1.1521184006824114e-10,
+        "pole": "south",
+        "spin": 0.99,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153435,
+          7.999349551934922,
+          0.00010115206677501353,
+          0.20228248338756946,
+          1.151806087406941,
+          -0.0072501175992843135,
+          1.1523623395521203e-05,
+          0.022616660194546622
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.2137951745400571e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3322676295501878e-15,
+          "Lz": 9.926167350636332e-24,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.5543122344752192e-15
+        },
+        "max_metric_condition_number": 100000000.31292515,
+        "max_norm_absolute_term_sum": 1.0001394775841674,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "Radau",
+        "min_horizon_distance": 6.999349551934922,
+        "min_polar_distance": 0.0001,
+        "nfev": 448,
+        "polar_angle_change": 1.1520667750135295e-06,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153428,
+          7.9993495519349205,
+          0.00010115206677501355,
+          0.20228248338756954,
+          1.15180608740694,
+          -0.007250117599284312,
+          1.1523623395521203e-05,
+          0.02261666019454662
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.2137951745400571e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.4432899320127035e-15,
+          "Lz": 1.3234889800848443e-23,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.1102230246251565e-15
+        },
+        "max_metric_condition_number": 100000000.31292515,
+        "max_norm_absolute_term_sum": 1.0001394775841659,
+        "max_norm_error": 1.1102230246251565e-15,
+        "method": "DOP853",
+        "min_horizon_distance": 6.9993495519349205,
+        "min_polar_distance": 0.0001,
+        "nfev": 253,
+        "polar_angle_change": 1.152066775013543e-06,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153428,
+          7.9993495519349205,
+          0.00010115206677501355,
+          0.20228248338756954,
+          1.15180608740694,
+          -0.007250117599284308,
+          1.1523623395521203e-05,
+          0.02261666019454662
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.2137951745400571e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.4432899320127035e-15,
+          "Lz": 1.3234889800848443e-23,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.1102230246251565e-15
+        },
+        "max_metric_condition_number": 100000000.31292515,
+        "max_norm_absolute_term_sum": 1.0001394775841659,
+        "max_norm_error": 1.1102230246251565e-15,
+        "method": "DP45",
+        "min_horizon_distance": 6.9993495519349205,
+        "min_polar_distance": 0.0001,
+        "nfev": 127,
+        "polar_angle_change": 1.152066775013543e-06,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.115179069519665,
+          7.999349551934,
+          1.0115206676989349e-08,
+          0.20228248337744886,
+          1.1518060822877212,
+          -0.00725011764329464,
+          1.152362334430429e-09,
+          0.022616660094478196
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.213795173179242e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.440892098500626e-16,
+          "Lz": 1.4791141972893971e-31,
+          "energy": 2.220446049250313e-16,
+          "norm": 4.440892098500626e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001394596451705,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.999349551934,
+        "min_polar_distance": 1e-08,
+        "nfev": 448,
+        "polar_angle_change": 1.1520667698934852e-10,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517906951966493,
+          7.9993495519339985,
+          1.0115206676989349e-08,
+          0.20228248337744886,
+          1.1518060822877212,
+          -0.00725011764329464,
+          1.152362334430429e-09,
+          0.022616660094478203
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.213795173179242e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 7.771561172376096e-16,
+          "Lz": 1.9721522630525295e-31,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001394596451703,
+        "max_norm_error": 5.551115123125783e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.9993495519339985,
+        "min_polar_distance": 1e-08,
+        "nfev": 253,
+        "polar_angle_change": 1.1520667698934852e-10,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517906951966492,
+          7.9993495519339985,
+          1.0115206676989349e-08,
+          0.20228248337744886,
+          1.1518060822877212,
+          -0.007250117643294643,
+          1.152362334430429e-09,
+          0.022616660094478203
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.213795173179242e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 7.771561172376096e-16,
+          "Lz": 1.9721522630525295e-31,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 9999999999999998.0,
+        "max_norm_absolute_term_sum": 1.0001394596451703,
+        "max_norm_error": 5.551115123125783e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.9993495519339985,
+        "min_polar_distance": 1e-08,
+        "nfev": 127,
+        "polar_angle_change": 1.1520667698934852e-10,
+        "pole": "north",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153435,
+          7.999349551934922,
+          3.141491501523018,
+          0.20228248338756952,
+          1.151806087406941,
+          -0.0072501175992843135,
+          -1.1523623395521219e-05,
+          0.022616660194547354
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.213795174548153e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.3322676295501878e-15,
+          "Lz": 1.5967894544723646e-19,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.5543122344752192e-15
+        },
+        "max_metric_condition_number": 100000000.31225818,
+        "max_norm_absolute_term_sum": 1.0001394775841674,
+        "max_norm_error": 1.5543122344752192e-15,
+        "method": "Radau",
+        "min_horizon_distance": 6.999349551934922,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 448,
+        "polar_angle_change": -1.1520667748676772e-06,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153428,
+          7.9993495519349205,
+          3.141491501523017,
+          0.20228248338756963,
+          1.15180608740694,
+          -0.007250117599284312,
+          -1.1523623395521219e-05,
+          0.022616660194548336
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.213795174548153e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.4432899320127035e-15,
+          "Lz": 2.054766272418474e-19,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.1102230246251565e-15
+        },
+        "max_metric_condition_number": 100000000.31225818,
+        "max_norm_absolute_term_sum": 1.0001394775841659,
+        "max_norm_error": 1.1102230246251565e-15,
+        "method": "DOP853",
+        "min_horizon_distance": 6.9993495519349205,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 253,
+        "polar_angle_change": -1.1520667757558556e-06,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517907003153428,
+          7.9993495519349205,
+          3.141491501523017,
+          0.20228248338756963,
+          1.15180608740694,
+          -0.007250117599284308,
+          -1.152362339552123e-05,
+          0.022616660194549013
+        ],
+        "initial_distance": 0.0001,
+        "initial_invariants": {
+          "CarterQ": 0.2461212474624645,
+          "Lz": 1.213795174548153e-08,
+          "energy": 0.868262244539725,
+          "norm": -1.0
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 1.4432899320127035e-15,
+          "Lz": 2.0592330477262603e-19,
+          "energy": 7.771561172376096e-16,
+          "norm": 1.1102230246251565e-15
+        },
+        "max_metric_condition_number": 100000000.31225818,
+        "max_norm_absolute_term_sum": 1.0001394775841659,
+        "max_norm_error": 1.1102230246251565e-15,
+        "method": "DP45",
+        "min_horizon_distance": 6.9993495519349205,
+        "min_polar_distance": 0.00010000000000021103,
+        "nfev": 127,
+        "polar_angle_change": -1.1520667757558556e-06,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.115179069519665,
+          7.999349551934,
+          3.1415926434745867,
+          0.20228248337797244,
+          1.1518060822877212,
+          -0.00725011764329464,
+          -1.1523623344386803e-09,
+          0.022616660102851883
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.2137951881550395e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 4.440892098500626e-16,
+          "Lz": 1.2348348736380312e-23,
+          "energy": 2.220446049250313e-16,
+          "norm": 4.440892098500626e-16
+        },
+        "max_metric_condition_number": 9999999876620058.0,
+        "max_norm_absolute_term_sum": 1.0001394596451705,
+        "max_norm_error": 8.881784197001252e-16,
+        "method": "Radau",
+        "min_horizon_distance": 6.999349551934,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 478,
+        "polar_angle_change": -1.1520651099772294e-10,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517906951966488,
+          7.999349551934,
+          3.141592643474587,
+          0.20228248337663618,
+          1.1518060822877207,
+          -0.007250117643294641,
+          -1.1523623344083838e-09,
+          0.022616660071775704
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.2137951881550395e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 9.992007221626409e-16,
+          "Lz": 1.92933549389293e-23,
+          "energy": 5.551115123125783e-16,
+          "norm": 1.1102230246251565e-15
+        },
+        "max_metric_condition_number": 9999999876620058.0,
+        "max_norm_absolute_term_sum": 1.0001394596451696,
+        "max_norm_error": 6.661338147750939e-16,
+        "method": "DOP853",
+        "min_horizon_distance": 6.999349551934,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 253,
+        "polar_angle_change": -1.152060669085131e-10,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      },
+      {
+        "endpoint_normalized": [
+          0.11517906951966492,
+          7.9993495519339985,
+          3.141592643474587,
+          0.20228248337678406,
+          1.1518060822877212,
+          -0.007250117643294643,
+          -1.1523623344126345e-09,
+          0.022616660076158274
+        ],
+        "initial_distance": 1e-08,
+        "initial_invariants": {
+          "CarterQ": 0.24612068142955998,
+          "Lz": 1.2137951881550395e-16,
+          "energy": 0.8682622406683627,
+          "norm": -1.0000000000000004
+        },
+        "invariant_max_abs_drift": {
+          "CarterQ": 7.771561172376096e-16,
+          "Lz": 2.0979415454827916e-23,
+          "energy": 4.440892098500626e-16,
+          "norm": 9.992007221626409e-16
+        },
+        "max_metric_condition_number": 9999999876620058.0,
+        "max_norm_absolute_term_sum": 1.0001394596451703,
+        "max_norm_error": 5.551115123125783e-16,
+        "method": "DP45",
+        "min_horizon_distance": 6.9993495519339985,
+        "min_polar_distance": 9.99999993922529e-09,
+        "nfev": 127,
+        "polar_angle_change": -1.152060669085131e-10,
+        "pole": "south",
+        "spin": 1.0,
+        "status": 0,
+        "steps": 21
+      }
+    ],
+    "polar_stage_failure": [
+      {
+        "method": "Radau",
+        "n_steps": 0,
+        "nfev": 4,
+        "retained_initial_state": true,
+        "status": -1,
+        "termination": null
+      },
+      {
+        "method": "DOP853",
+        "n_steps": 0,
+        "nfev": 9,
+        "retained_initial_state": true,
+        "status": -1,
+        "termination": null
+      },
+      {
+        "method": "DP45",
+        "n_steps": 0,
+        "nfev": 4,
+        "retained_initial_state": true,
+        "status": -1,
+        "termination": null
+      }
+    ]
+  },
+  "claim_locators": {
+    "DOM001": {
+      "kind": "derived",
+      "locator": "cases.near_polar; moving near-axis invariant conservation",
+      "source_ids": [
+        "SCHMIDT_2002"
+      ]
+    },
+    "DOM002": {
+      "kind": "derived",
+      "locator": "cases.near_horizon; short exterior corotating invariant checks",
+      "source_ids": [
+        "SCHMIDT_2002",
+        "INF012_C001"
+      ]
+    },
+    "DOM003": {
+      "kind": "derived",
+      "locator": "cases.exact_schwarzschild_infall; integrated a=0 radial first integral",
+      "source_ids": [
+        "SCHMIDT_2002"
+      ]
+    },
+    "DOM004": {
+      "kind": "derived",
+      "locator": "cases.polar_stage_failure and cases.horizon_conditioning_failure; runtime contracts",
+      "source_ids": [
+        "LOCAL_TEST"
+      ]
+    },
+    "DOM005": {
+      "kind": "derived",
+      "locator": "cases.initial_rejections; approved public bounds and chart guards",
+      "source_ids": [
+        "LOCAL_TEST",
+        "INF012_C001",
+        "INF021_C001"
+      ]
+    }
+  },
+  "cross_method_endpoint_max_abs_difference": 3.3604636434647617e-11,
+  "elapsed_seconds": 0.5567988970005899,
+  "local_test_source": "tests/reference/run_orbit_domain_extremes.py; output is generated numerical evidence, manual review pending",
+  "numerical_options": {
+    "common": {
+      "atol": 1e-12,
+      "rtol": 1e-09
+    },
+    "exact_schwarzschild_infall": {
+      "first_step": 0.00025,
+      "max_step": 0.0005,
+      "tau_end": 0.02
+    },
+    "horizon_conditioning_failure": {
+      "first_step": 0.001,
+      "max_step": 0.001,
+      "tau_end": 0.1
+    },
+    "near_horizon": {
+      "first_step": 0.0001,
+      "max_step": 0.0005,
+      "tau_end": 0.003
+    },
+    "near_polar": {
+      "first_step": 0.002,
+      "max_step": 0.005,
+      "tau_end": 0.1
+    },
+    "polar_stage_failure": {
+      "first_step": 0.02,
+      "max_step": 0.02,
+      "tau_end": 0.02
+    }
+  },
+  "platform": "Linux-7.2.6-arch2-1-x86_64-with-glibc2.44",
+  "python": "3.11.15 (main, Jul 23 2026, 14:43:45) [Clang 22.1.3 ]",
+  "reference_limits": [
+    "Cross-method differences use the same production RHS and only test numerical consistency.",
+    "Independent metric invariants constrain conservation, not uniqueness of a full trajectory.",
+    "Large metric condition numbers near the axis do not alone measure norm cancellation.",
+    "Short valid near-horizon intervals do not establish successful horizon crossing.",
+    "BL chart conditioning can cause numerical failure before an accepted crossing; no alternate chart is used.",
+    "Local tolerance controls do not guarantee normalization or global accuracy near a singular chart."
+  ],
+  "schema_version": "1.0",
+  "scientific_manual_review": "pending",
+  "source_ids": [
+    "SCHMIDT_2002",
+    "INF012_C001",
+    "INF021_C001"
+  ],
+  "source_locators": {
+    "INF012_C001": "brain/012 record.json C001, S001 section II Eq. (2.6), p.349",
+    "INF021_C001": "brain/021 record.json C001, S001 section II.1 Eq. (1) and following paragraphs",
+    "SCHMIDT_2002": "timelike_invariants.py; Schmidt (2002), Eqs. (3),(4),(6),(8),(17),(18); arXiv:gr-qc/0202090"
+  },
+  "status": "pass",
+  "units": "G=c=M=mu=1; BL (x,u) order; angles rad",
+  "versions": {
+    "astropy": "8.0.1",
+    "numpy": "2.4.6",
+    "relatipy": "1.0.0",
+    "scipy": "1.17.1"
+  }
+}

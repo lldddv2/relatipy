@@ -1,0 +1,937 @@
+{
+  "schema_version": "1.0",
+  "manual_review": "pending",
+  "status": "pass",
+  "generated_at_utc": "2026-09-26T23:08:47.518422+00:00",
+  "purpose": "Selected-domain production Orbit invariant drift and tolerance convergence",
+  "conventions": {
+    "units": "G=c=M=mu=1",
+    "state": "(t,r,theta,phi,ut,ur,utheta,uphi)",
+    "signature": "(-,+,+,+)",
+    "CarterQ": "Fixed mu squared one, not K"
+  },
+  "formula_source": {
+    "record_id": "INF-022",
+    "claim_ids": [
+      "C001",
+      "C002",
+      "C003",
+      "C004"
+    ],
+    "source_id": "S001",
+    "url": "https://arxiv.org/pdf/gr-qc/0202090",
+    "locator": "Schmidt 2002 Eq.(3),(4),(8),(17),(18); pp.2-5",
+    "operation": "Invert printed inverse metric; lower u; algebraically solve theta potential for Q"
+  },
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Linux-7.2.6-arch2-1-x86_64-with-glibc2.44",
+    "python_compiler": "Clang 22.1.3 ",
+    "python_build_CC": "cc -pthread",
+    "python_build_CFLAGS": "-Wsign-compare -Wunreachable-code -DNDEBUG -g -fwrapv -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC",
+    "declared_extension_compile_args": [
+      "-std=c11",
+      "-O2"
+    ],
+    "compile_args_provenance": "setup.py declaration; actual build invocation is not introspectable",
+    "native_extension_sha256": "b1a5560b6afd73c000d428c442096aa505fc56e415be77a1fbe6da42fa7fcdb0",
+    "numpy": "2.4.6",
+    "astropy": "8.0.1",
+    "scipy": "1.17.1",
+    "relatipy": "1.0.0"
+  },
+  "cases": [
+    {
+      "id": "kerr_inclined_eccentric_five_radial_periods",
+      "spin": 0.5,
+      "parameters": {
+        "p": 8.0,
+        "e": 0.2,
+        "x": 0.8,
+        "initial_phases": [
+          0.0,
+          0.4,
+          1.1,
+          0.2
+        ]
+      },
+      "radial_periods": 5,
+      "circular_periods": 0,
+      "initial": [
+        0.0,
+        6.747729739587268,
+        1.2951155714852487,
+        0.2,
+        1.331910837833271,
+        0.019334179047186116,
+        0.041179703326295995,
+        0.06784624037067309
+      ],
+      "tau_final": 977.489445558449,
+      "expected_initial": {
+        "norm": -1.0,
+        "energy": 0.9466042517710911,
+        "Lz": 2.6976027753892358,
+        "CarterQ": 4.102701297903183
+      },
+      "reference": "KerrGeoPy 0.9.3 analytic trajectory, independent initial x,u and proper-time mapping"
+    },
+    {
+      "id": "schwarzschild_circular_r10_five_revolutions",
+      "spin": 0.0,
+      "parameters": {
+        "radius": 10.0
+      },
+      "radial_periods": 0,
+      "circular_periods": 5,
+      "initial": [
+        0.0,
+        10.0,
+        1.5707963267948966,
+        0.0,
+        1.1952286093343936,
+        0.0,
+        0.0,
+        0.03779644730092272
+      ],
+      "tau_final": 831.1872882066082,
+      "expected_initial": {
+        "norm": -1.0,
+        "energy": 0.9561828874675149,
+        "Lz": 3.779644730092272,
+        "CarterQ": 0.0
+      },
+      "reference": "Exact equatorial circular Schwarzschild x,u and proper period 2*pi/uphi"
+    }
+  ],
+  "results": [
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "Radau",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.004520763000073202,
+      "accepted_steps": 131,
+      "rhs_evaluations": 8488,
+      "stored_samples": 132,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999995654547563,
+          "max_abs_drift": 4.626056366863196e-07,
+          "endpoint_signed_drift": 4.345452434550978e-07,
+          "endpoint_abs_drift": 4.345452434550978e-07,
+          "max_scaled_drift": 4.626056366863196e-07,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.946604296357957,
+          "max_abs_drift": 4.458686608810325e-08,
+          "endpoint_signed_drift": 4.458686608810325e-08,
+          "endpoint_abs_drift": 4.458686608810325e-08,
+          "max_scaled_drift": 4.458686608810325e-08,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.697612205794508,
+          "max_abs_drift": 9.430405272681242e-06,
+          "endpoint_signed_drift": 9.430405272681242e-06,
+          "endpoint_abs_drift": 9.430405272681242e-06,
+          "max_scaled_drift": 3.4958465192565404e-06,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.1026788423298255,
+          "max_abs_drift": 2.2462533043388078e-05,
+          "endpoint_signed_drift": -2.245557335456283e-05,
+          "endpoint_abs_drift": 2.245557335456283e-05,
+          "max_scaled_drift": 5.475059335874218e-06,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 4.626056369083642e-07,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.08787252451209,
+      "domain": {
+        "radius_min": 6.6678100499866035,
+        "radius_max": 9.99937498884399,
+        "theta_min": 0.9273227360468933,
+        "theta_max": 2.2141492556608218,
+        "minimum_abs_sin_theta": 0.8000165105242695,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "Radau",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.013618183999824396,
+      "accepted_steps": 539,
+      "rhs_evaluations": 30058,
+      "stored_samples": 540,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999999998360518,
+          "max_abs_drift": 1.7606083257959426e-10,
+          "endpoint_signed_drift": 1.6394796631402642e-10,
+          "endpoint_abs_drift": 1.6394796631402642e-10,
+          "max_scaled_drift": 1.7606083257959426e-10,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.9466042517901577,
+          "max_abs_drift": 1.90670812472149e-11,
+          "endpoint_signed_drift": 1.9066859202609976e-11,
+          "endpoint_abs_drift": 1.9066859202609976e-11,
+          "max_scaled_drift": 1.90670812472149e-11,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.6976027784838807,
+          "max_abs_drift": 3.094645428802778e-09,
+          "endpoint_signed_drift": 3.094645428802778e-09,
+          "endpoint_abs_drift": 3.094645428802778e-09,
+          "max_scaled_drift": 1.147183513093863e-09,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.102701297172423,
+          "max_abs_drift": 2.8559830056451574e-09,
+          "endpoint_signed_drift": -7.307567884140553e-10,
+          "endpoint_abs_drift": 7.307567884140553e-10,
+          "max_scaled_drift": 6.961225783375458e-10,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 1.7606105462419919e-10,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.087947264195988,
+      "domain": {
+        "radius_min": 6.666667251865194,
+        "radius_max": 9.999999416960533,
+        "theta_min": 0.9272965507513224,
+        "theta_max": 2.2142961576728295,
+        "minimum_abs_sin_theta": 0.8000007667485577,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DOP853",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.0009909260006679688,
+      "accepted_steps": 125,
+      "rhs_evaluations": 2042,
+      "stored_samples": 126,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999999358426874,
+          "max_abs_drift": 6.449979927936056e-08,
+          "endpoint_signed_drift": 6.415731235165367e-08,
+          "endpoint_abs_drift": 6.415731235165367e-08,
+          "max_scaled_drift": 6.449979927936056e-08,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.9466042529415989,
+          "max_abs_drift": 1.3747964988652939e-09,
+          "endpoint_signed_drift": 1.17050802384e-09,
+          "endpoint_abs_drift": 1.17050802384e-09,
+          "max_scaled_drift": 1.3747964988652939e-09,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.697603015794278,
+          "max_abs_drift": 3.176073555266612e-07,
+          "endpoint_signed_drift": 2.404050425397486e-07,
+          "endpoint_abs_drift": 2.404050425397486e-07,
+          "max_scaled_drift": 1.1773688788588744e-07,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.102703365671569,
+          "max_abs_drift": 2.076959909835807e-06,
+          "endpoint_signed_drift": 2.0677683885139686e-06,
+          "endpoint_abs_drift": 2.0677683885139686e-06,
+          "max_scaled_drift": 5.062420485979093e-07,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 6.449979950140516e-08,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.087940913995489,
+      "domain": {
+        "radius_min": 6.6666693482961366,
+        "radius_max": 9.99996145087129,
+        "theta_min": 0.9278460396612055,
+        "theta_max": 2.2142912137204203,
+        "minimum_abs_sin_theta": 0.8000037331051718,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DOP853",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.0013513150006474461,
+      "accepted_steps": 313,
+      "rhs_evaluations": 4586,
+      "stored_samples": 314,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999999999882383,
+          "max_abs_drift": 1.1888157125383714e-11,
+          "endpoint_signed_drift": 1.1761480678273983e-11,
+          "endpoint_abs_drift": 1.1761480678273983e-11,
+          "max_scaled_drift": 1.1888157125383714e-11,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.9466042517712282,
+          "max_abs_drift": 1.3811174426336947e-13,
+          "endpoint_signed_drift": 1.3733458814613186e-13,
+          "endpoint_abs_drift": 1.3733458814613186e-13,
+          "max_scaled_drift": 1.3811174426336947e-13,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.6976027754093774,
+          "max_abs_drift": 2.382005703793766e-11,
+          "endpoint_signed_drift": 2.014211020195944e-11,
+          "endpoint_abs_drift": 2.014211020195944e-11,
+          "max_scaled_drift": 8.83008323362237e-12,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.102701298603458,
+          "max_abs_drift": 7.243237121201673e-10,
+          "endpoint_signed_drift": 7.002780577636258e-10,
+          "endpoint_abs_drift": 7.002780577636258e-10,
+          "max_scaled_drift": 1.765480008233494e-10,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 1.1888379169988639e-11,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.087947289761122,
+      "domain": {
+        "radius_min": 6.666700228914198,
+        "radius_max": 9.999909603004038,
+        "theta_min": 0.9274053068564304,
+        "theta_max": 2.214292492962918,
+        "minimum_abs_sin_theta": 0.800002965565386,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DP45",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.0009834709999267943,
+      "accepted_steps": 307,
+      "rhs_evaluations": 2228,
+      "stored_samples": 308,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999996075261591,
+          "max_abs_drift": 3.980430554051395e-07,
+          "endpoint_signed_drift": 3.9247384064911017e-07,
+          "endpoint_abs_drift": 3.9247384064911017e-07,
+          "max_scaled_drift": 3.980430554051395e-07,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.946604358278421,
+          "max_abs_drift": 1.0893110535814543e-07,
+          "endpoint_signed_drift": 1.065073301775854e-07,
+          "endpoint_abs_drift": 1.065073301775854e-07,
+          "max_scaled_drift": 1.0893110535814543e-07,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.697616206918225,
+          "max_abs_drift": 1.343152898947153e-05,
+          "endpoint_signed_drift": 1.343152898947153e-05,
+          "endpoint_abs_drift": 1.343152898947153e-05,
+          "max_scaled_drift": 4.979061080456334e-06,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.102664680418121,
+          "max_abs_drift": 3.70572050405471e-05,
+          "endpoint_signed_drift": -3.661748505923157e-05,
+          "endpoint_abs_drift": 3.661748505923157e-05,
+          "max_scaled_drift": 9.032391673136526e-06,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 3.980430556271841e-07,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.087886213317043,
+      "domain": {
+        "radius_min": 6.666707530203505,
+        "radius_max": 10.000024934516205,
+        "theta_min": 0.9273102573392584,
+        "theta_max": 2.2142905046122716,
+        "minimum_abs_sin_theta": 0.8000041585663302,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DP45",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 977.489445558449,
+      "tau_reached": 977.489445558449,
+      "runtime_seconds": 0.0032380580005337833,
+      "accepted_steps": 1875,
+      "rhs_evaluations": 11426,
+      "stored_samples": 1876,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -0.9999999999999998,
+          "final": -0.9999999999938631,
+          "max_abs_drift": 7.579492589115944e-12,
+          "endpoint_signed_drift": 6.13664674631309e-12,
+          "endpoint_abs_drift": 6.13664674631309e-12,
+          "max_scaled_drift": 7.579492589115944e-12,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9466042517710909,
+          "final": 0.946604251776797,
+          "max_abs_drift": 5.7874816050684785e-12,
+          "endpoint_signed_drift": 5.7061022573634546e-12,
+          "endpoint_abs_drift": 5.7061022573634546e-12,
+          "max_scaled_drift": 5.7874816050684785e-12,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 2.6976027753892353,
+          "final": 2.697602776253134,
+          "max_abs_drift": 8.638987303299928e-10,
+          "endpoint_signed_drift": 8.638987303299928e-10,
+          "endpoint_abs_drift": 8.638987303299928e-10,
+          "max_scaled_drift": 3.202468273726258e-10,
+          "scale": 2.6976027753892353
+        },
+        "CarterQ": {
+          "initial": 4.10270129790318,
+          "final": 4.102701293965878,
+          "max_abs_drift": 3.937308257206951e-09,
+          "endpoint_signed_drift": -3.937302039958013e-09,
+          "endpoint_abs_drift": 3.937302039958013e-09,
+          "max_scaled_drift": 9.596867944588706e-10,
+          "scale": 4.10270129790318
+        }
+      },
+      "max_abs_norm_plus_one": 7.579714633720869e-12,
+      "max_abs_initial_canonical_roundtrip_error": 4.440892098500626e-16,
+      "observed_periapsis_crossings": 5,
+      "observed_azimuthal_revolutions": 8.087947289209955,
+      "domain": {
+        "radius_min": 6.6666671263849215,
+        "radius_max": 9.999999674343504,
+        "theta_min": 0.927295433926633,
+        "theta_max": 2.214297299189974,
+        "minimum_abs_sin_theta": 0.8000000818389168,
+        "outer_horizon": 1.8660254037844386
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "Radau",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0007579369994346052,
+      "accepted_steps": 11,
+      "rhs_evaluations": 133,
+      "stored_samples": 12,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -0.9999999999999997,
+          "max_abs_drift": 4.440892098500626e-16,
+          "endpoint_signed_drift": 3.3306690738754696e-16,
+          "endpoint_abs_drift": 3.3306690738754696e-16,
+          "max_scaled_drift": 4.440892098500626e-16,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.9561828874675147,
+          "max_abs_drift": 3.3306690738754696e-16,
+          "endpoint_signed_drift": -2.220446049250313e-16,
+          "endpoint_abs_drift": 2.220446049250313e-16,
+          "max_scaled_drift": 3.3306690738754696e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.7796447300922704,
+          "max_abs_drift": 1.7763568394002505e-15,
+          "endpoint_signed_drift": -1.7763568394002505e-15,
+          "endpoint_abs_drift": 1.7763568394002505e-15,
+          "max_scaled_drift": 4.699798436761765e-16,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 5.879219321460907e-32,
+          "max_abs_drift": 9.989825417324085e-32,
+          "endpoint_signed_drift": 5.229343833828441e-33,
+          "endpoint_abs_drift": 5.229343833828441e-33,
+          "max_scaled_drift": 9.989825417324085e-32,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 4.440892098500626e-16,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 5.000000000000006,
+      "domain": {
+        "radius_min": 9.999999999999986,
+        "radius_max": 10.0,
+        "theta_min": 1.5707963267948966,
+        "theta_max": 1.5707963267948966,
+        "minimum_abs_sin_theta": 1.0,
+        "outer_horizon": 2.0
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "Radau",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0006334230001812102,
+      "accepted_steps": 11,
+      "rhs_evaluations": 157,
+      "stored_samples": 12,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -0.9999999999999996,
+          "max_abs_drift": 5.551115123125783e-16,
+          "endpoint_signed_drift": 4.440892098500626e-16,
+          "endpoint_abs_drift": 4.440892098500626e-16,
+          "max_scaled_drift": 5.551115123125783e-16,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.9561828874675147,
+          "max_abs_drift": 3.3306690738754696e-16,
+          "endpoint_signed_drift": -2.220446049250313e-16,
+          "endpoint_abs_drift": 2.220446049250313e-16,
+          "max_scaled_drift": 3.3306690738754696e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.779644730092271,
+          "max_abs_drift": 1.3322676295501878e-15,
+          "endpoint_signed_drift": -1.3322676295501878e-15,
+          "endpoint_abs_drift": 1.3322676295501878e-15,
+          "max_scaled_drift": 3.524848827571324e-16,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 5.879219321460946e-32,
+          "max_abs_drift": 9.989825417324085e-32,
+          "endpoint_signed_drift": 5.2293438338288354e-33,
+          "endpoint_abs_drift": 5.2293438338288354e-33,
+          "max_scaled_drift": 9.989825417324085e-32,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 5.551115123125783e-16,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 5.0000000000000036,
+      "domain": {
+        "radius_min": 9.99999999999999,
+        "radius_max": 10.0,
+        "theta_min": 1.5707963267948966,
+        "theta_max": 1.5707963267948966,
+        "minimum_abs_sin_theta": 1.0,
+        "outer_horizon": 2.0
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DOP853",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0005560469999181805,
+      "accepted_steps": 6,
+      "rhs_evaluations": 74,
+      "stored_samples": 7,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -1.00000000000001,
+          "max_abs_drift": 9.992007221626409e-15,
+          "endpoint_signed_drift": -9.992007221626409e-15,
+          "endpoint_abs_drift": 9.992007221626409e-15,
+          "max_scaled_drift": 9.992007221626409e-15,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.9561828874675149,
+          "max_abs_drift": 2.220446049250313e-16,
+          "endpoint_signed_drift": 0.0,
+          "endpoint_abs_drift": 0.0,
+          "max_scaled_drift": 2.220446049250313e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.779644730092053,
+          "max_abs_drift": 2.1938006966593093e-13,
+          "endpoint_signed_drift": -2.1938006966593093e-13,
+          "endpoint_abs_drift": 2.1938006966593093e-13,
+          "max_scaled_drift": 5.80425106940078e-14,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 6.437495039063833e-13,
+          "max_abs_drift": 6.437495039063833e-13,
+          "endpoint_signed_drift": 6.437495039063833e-13,
+          "endpoint_abs_drift": 6.437495039063833e-13,
+          "max_scaled_drift": 6.437495039063833e-13,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 9.992007221626409e-15,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 5.000000000261138,
+      "domain": {
+        "radius_min": 9.999999999999975,
+        "radius_max": 10.000000014361845,
+        "theta_min": 1.5707963267948966,
+        "theta_max": 1.5707964890931967,
+        "minimum_abs_sin_theta": 0.9999999999999868,
+        "outer_horizon": 2.0
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DOP853",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0005226040002526133,
+      "accepted_steps": 11,
+      "rhs_evaluations": 146,
+      "stored_samples": 12,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -0.9999999999999998,
+          "max_abs_drift": 4.440892098500626e-16,
+          "endpoint_signed_drift": 2.220446049250313e-16,
+          "endpoint_abs_drift": 2.220446049250313e-16,
+          "max_scaled_drift": 4.440892098500626e-16,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.9561828874675148,
+          "max_abs_drift": 2.220446049250313e-16,
+          "endpoint_signed_drift": -1.1102230246251565e-16,
+          "endpoint_abs_drift": 1.1102230246251565e-16,
+          "max_scaled_drift": 2.220446049250313e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.7796447300922735,
+          "max_abs_drift": 1.7763568394002505e-15,
+          "endpoint_signed_drift": 1.3322676295501878e-15,
+          "endpoint_abs_drift": 1.3322676295501878e-15,
+          "max_scaled_drift": 4.699798436761765e-16,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 4.501242062903867e-21,
+          "max_abs_drift": 8.807648087812759e-21,
+          "endpoint_signed_drift": 4.501242062850304e-21,
+          "endpoint_abs_drift": 4.501242062850304e-21,
+          "max_scaled_drift": 8.807648087812759e-21,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 4.440892098500626e-16,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 5.000000000000265,
+      "domain": {
+        "radius_min": 9.999999999997979,
+        "radius_max": 10.000000000002462,
+        "theta_min": 1.5707963267948881,
+        "theta_max": 1.5707963268157892,
+        "minimum_abs_sin_theta": 1.0,
+        "outer_horizon": 2.0
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DP45",
+      "tolerance": "coarse",
+      "rtol": 1e-06,
+      "atol": 1e-08,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0005659359994751867,
+      "accepted_steps": 6,
+      "rhs_evaluations": 38,
+      "stored_samples": 7,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -1.0,
+          "max_abs_drift": 3.3306690738754696e-16,
+          "endpoint_signed_drift": 0.0,
+          "endpoint_abs_drift": 0.0,
+          "max_scaled_drift": 3.3306690738754696e-16,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.956182887467515,
+          "max_abs_drift": 1.1102230246251565e-16,
+          "endpoint_signed_drift": 1.1102230246251565e-16,
+          "endpoint_abs_drift": 1.1102230246251565e-16,
+          "max_scaled_drift": 1.1102230246251565e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.779644730092273,
+          "max_abs_drift": 8.881784197001252e-16,
+          "endpoint_signed_drift": 8.881784197001252e-16,
+          "endpoint_abs_drift": 8.881784197001252e-16,
+          "max_scaled_drift": 2.3498992183808827e-16,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 2.775414183809809e-20,
+          "max_abs_drift": 2.775414183804453e-20,
+          "endpoint_signed_drift": 2.775414183804453e-20,
+          "endpoint_abs_drift": 2.775414183804453e-20,
+          "max_scaled_drift": 2.775414183804453e-20,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 3.3306690738754696e-16,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 5.0000000000501545,
+      "domain": {
+        "radius_min": 9.999999999999993,
+        "radius_max": 10.00000000033537,
+        "theta_min": 1.5707963267948966,
+        "theta_max": 1.5707963268273308,
+        "minimum_abs_sin_theta": 1.0,
+        "outer_horizon": 2.0
+      }
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DP45",
+      "tolerance": "fine",
+      "rtol": 1e-10,
+      "atol": 1e-12,
+      "status": 0,
+      "tau_requested": 831.1872882066082,
+      "tau_reached": 831.1872882066081,
+      "runtime_seconds": 0.0004988089995094924,
+      "accepted_steps": 12,
+      "rhs_evaluations": 92,
+      "stored_samples": 13,
+      "sampling": "native accepted steps plus initial state; tau_eval omitted; no postprocessing interpolation",
+      "invariants": {
+        "norm": {
+          "initial": -1.0,
+          "final": -0.9999999999999997,
+          "max_abs_drift": 6.661338147750939e-16,
+          "endpoint_signed_drift": 3.3306690738754696e-16,
+          "endpoint_abs_drift": 3.3306690738754696e-16,
+          "max_scaled_drift": 6.661338147750939e-16,
+          "scale": 1.0
+        },
+        "energy": {
+          "initial": 0.9561828874675149,
+          "final": 0.9561828874675147,
+          "max_abs_drift": 4.440892098500626e-16,
+          "endpoint_signed_drift": -2.220446049250313e-16,
+          "endpoint_abs_drift": 2.220446049250313e-16,
+          "max_scaled_drift": 4.440892098500626e-16,
+          "scale": 1.0
+        },
+        "Lz": {
+          "initial": 3.779644730092272,
+          "final": 3.779644730092271,
+          "max_abs_drift": 1.3322676295501878e-15,
+          "endpoint_signed_drift": -1.3322676295501878e-15,
+          "endpoint_abs_drift": 1.3322676295501878e-15,
+          "max_scaled_drift": 3.524848827571324e-16,
+          "scale": 3.779644730092272
+        },
+        "CarterQ": {
+          "initial": 5.356284938078063e-32,
+          "final": 1.0422603656703981e-18,
+          "max_abs_drift": 1.0422606095022867e-18,
+          "endpoint_signed_drift": 1.0422603656703446e-18,
+          "endpoint_abs_drift": 1.0422603656703446e-18,
+          "max_scaled_drift": 1.0422606095022867e-18,
+          "scale": 1.0
+        }
+      },
+      "max_abs_norm_plus_one": 6.661338147750939e-16,
+      "max_abs_initial_canonical_roundtrip_error": 0.0,
+      "observed_periapsis_crossings": null,
+      "observed_azimuthal_revolutions": 4.999999999999893,
+      "domain": {
+        "radius_min": 9.99999999999725,
+        "radius_max": 10.000000000003068,
+        "theta_min": 1.5707963267242724,
+        "theta_max": 1.5707963270000322,
+        "minimum_abs_sin_theta": 1.0,
+        "outer_horizon": 2.0
+      }
+    }
+  ],
+  "validations": [
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "Radau",
+      "errors": []
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DOP853",
+      "errors": []
+    },
+    {
+      "case_id": "kerr_inclined_eccentric_five_radial_periods",
+      "method": "DP45",
+      "errors": []
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "Radau",
+      "errors": []
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DOP853",
+      "errors": []
+    },
+    {
+      "case_id": "schwarzschild_circular_r10_five_revolutions",
+      "method": "DP45",
+      "errors": []
+    }
+  ],
+  "gates": {
+    "fine_max_scaled_drift": 2e-08,
+    "fine_max_abs_norm_plus_one": 2e-08,
+    "kerr_fine_to_coarse_drift_ratio_max": 0.05,
+    "convergence_roundoff_floor": 3e-13,
+    "initial_canonical_roundtrip_max_abs": 5e-13,
+    "cycle_coverage": "Five periapsis crossings for eccentric Kerr; five azimuthal revolutions for circular Schwarzschild",
+    "scope": "Fixed cases only; no strict circular convergence gate at roundoff"
+  },
+  "limitations": [
+    "Selected spins and regular bound BL orbits only; excludes horizon, axis and separatrix.",
+    "Invariant conservation alone does not bound phase or coordinate error.",
+    "Runtime is one execution including public output reconstruction, not a benchmark guarantee.",
+    "n_steps and nfev are available publicly; rejected-step and Jacobian counts are not exposed.",
+    "Scientific source and computed results remain pending human review."
+  ]
+}

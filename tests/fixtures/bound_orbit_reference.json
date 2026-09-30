@@ -1,0 +1,264 @@
+{
+  "schema_version": "1.0",
+  "manual_review": "pending",
+  "reference": "KerrGeoPy StableOrbit.trajectory and four_velocity at Mino lambda=0",
+  "kerrgeopy_version": "0.9.3",
+  "generation_command": "MPLCONFIGDIR=/tmp/relatipy-matplotlib thesis_apply/.venv/bin/python relatipy/tests/reference/export_bound_references.py --output relatipy/tests/fixtures/bound_orbit_reference.json",
+  "conventions": {
+    "units": "G = c = M = 1; p is measured in gravitational radii GM/c^2",
+    "coordinates": "Boyer-Lindquist (t, r, theta, phi)",
+    "state_order": [
+      "t",
+      "r",
+      "theta",
+      "phi",
+      "ut",
+      "ur",
+      "utheta",
+      "uphi"
+    ],
+    "velocity": "contravariant four-velocity dx^mu/dtau",
+    "phase_order": [
+      "q_t0",
+      "q_r0",
+      "q_theta0",
+      "q_phi0"
+    ],
+    "phase_origin": "q_t0=0; KerrGeoPy subtracts radial and polar periodic offsets so t(0)=0 and phi(0)=q_phi0",
+    "x": "cosine of inclination; sign selects prograde or retrograde branch"
+  },
+  "provenance": {
+    "record_id": "INF-010",
+    "claim_ids": [
+      "C002",
+      "C003",
+      "C005"
+    ],
+    "source_ids": [
+      "S004",
+      "S005"
+    ],
+    "manual_review": "pending",
+    "source_url": "https://kerrgeopy.readthedocs.io/en/latest/notebooks/Trajectory.html",
+    "locator": "KerrGeoPy 0.9.3 stable.py stable_trajectory: initial phases and t/phi normalization; StableOrbit.trajectory/four_velocity; INF-010 record.json claims C002/C003/C005"
+  },
+  "independence": "Exporter imports KerrGeoPy and NumPy only; no RelatiPy production implementation is used.",
+  "cases": [
+    {
+      "id": "inclined_prograde",
+      "parameters": {
+        "spin": 0.7,
+        "p_over_M": 12.0,
+        "e": 0.3,
+        "x": 0.7,
+        "q_r0_rad": 0.4,
+        "q_theta0_rad": 1.2,
+        "q_phi0_rad": 0.2
+      },
+      "initial_x_u": [
+        0.0,
+        9.39220826870586,
+        1.3089738577673553,
+        0.20000000000000004,
+        1.2187963818786427,
+        0.02798361172568786,
+        0.030187560204457845,
+        0.03467338768705769
+      ],
+      "constants": {
+        "energy": 0.9641797597180061,
+        "Lz": 2.7032979494320064,
+        "CarterQ": 7.623680474724312
+      }
+    },
+    {
+      "id": "inclined_retrograde",
+      "parameters": {
+        "spin": 0.7,
+        "p_over_M": 12.0,
+        "e": 0.2,
+        "x": -0.6,
+        "q_r0_rad": 1.0,
+        "q_theta0_rad": 0.7,
+        "q_phi0_rad": -0.5
+      },
+      "initial_x_u": [
+        0.0,
+        10.764585716091608,
+        0.9122680357674626,
+        -0.5,
+        1.1878945109708285,
+        0.03494623716156536,
+        0.023292243449849887,
+        -0.032839765107025284
+      ],
+      "constants": {
+        "energy": 0.9648719348891532,
+        "Lz": -2.488013619058401,
+        "CarterQ": 11.026466268000222
+      }
+    },
+    {
+      "id": "inward_southbound",
+      "parameters": {
+        "spin": 0.6,
+        "p_over_M": 13.0,
+        "e": 0.35,
+        "x": 0.65,
+        "q_r0_rad": 4.2,
+        "q_theta0_rad": 4.0,
+        "q_phi0_rad": 1.7
+      },
+      "initial_x_u": [
+        0.0,
+        15.51815767537371,
+        2.0906851258252717,
+        1.7,
+        1.1102324614677408,
+        -0.07697197470144616,
+        -0.011061356350503601,
+        0.014735944190482308
+      ],
+      "constants": {
+        "energy": 0.9680550251476341,
+        "Lz": 2.612576897572653,
+        "CarterQ": 9.34267948886923
+      }
+    },
+    {
+      "id": "near_separatrix",
+      "parameters": {
+        "spin": 0.7,
+        "p_over_M": 4.8,
+        "e": 0.3,
+        "x": 0.7,
+        "q_r0_rad": 0.8,
+        "q_theta0_rad": 0.9,
+        "q_phi0_rad": 0.4
+      },
+      "initial_x_u": [
+        0.0,
+        3.8478173614623103,
+        1.11051187831116,
+        0.39999999999999997,
+        1.7879730609497457,
+        0.02981040626704955,
+        0.12332070418848982,
+        0.20683423083192537
+      ],
+      "constants": {
+        "energy": 0.924672647486268,
+        "Lz": 2.054359606989032,
+        "CarterQ": 4.42888497541726
+      }
+    },
+    {
+      "id": "circular_inclined",
+      "parameters": {
+        "spin": 0.5,
+        "p_over_M": 10.0,
+        "e": 0.0,
+        "x": 0.8,
+        "q_r0_rad": 0.0,
+        "q_theta0_rad": 0.6,
+        "q_phi0_rad": 0.3
+      },
+      "initial_x_u": [
+        0.0,
+        10.0,
+        1.052701875808728,
+        0.3,
+        1.1888319984239948,
+        1.347872743399159e-08,
+        0.014126278271633336,
+        0.03947381742358555
+      ],
+      "constants": {
+        "energy": 0.95418875625883,
+        "Lz": 2.8981923900186644,
+        "CarterQ": 4.732786653947307
+      }
+    },
+    {
+      "id": "eccentric_equatorial",
+      "parameters": {
+        "spin": 0.5,
+        "p_over_M": 12.0,
+        "e": 0.3,
+        "x": 1.0,
+        "q_r0_rad": 0.6,
+        "q_theta0_rad": 0.0,
+        "q_phi0_rad": -0.2
+      },
+      "initial_x_u": [
+        0.0,
+        9.596080558673119,
+        1.5707963267948966,
+        -0.2,
+        1.2123591471693471,
+        0.04068730711262029,
+        2.5705734576105603e-18,
+        0.04318624254714914
+      ],
+      "constants": {
+        "energy": 0.9641815670385644,
+        "Lz": 3.8635026410237896,
+        "CarterQ": 0.0
+      }
+    },
+    {
+      "id": "schwarzschild_inclined",
+      "parameters": {
+        "spin": 0.0,
+        "p_over_M": 20.0,
+        "e": 0.1,
+        "x": 0.5,
+        "q_r0_rad": 0.3,
+        "q_theta0_rad": 0.9,
+        "q_phi0_rad": 0.4
+      },
+      "initial_x_u": [
+        0.0,
+        18.25490893885041,
+        1.0023420914720005,
+        0.4,
+        1.0965517640313298,
+        0.005916758207983805,
+        0.011720794946452177,
+        0.010250919439212273
+      ],
+      "constants": {
+        "energy": 0.9764140227032831,
+        "Lz": 2.426069905300193,
+        "CarterQ": 17.65744555620985
+      }
+    },
+    {
+      "id": "weak_field",
+      "parameters": {
+        "spin": 0.5,
+        "p_over_M": 10000.0,
+        "e": 0.3,
+        "x": 0.8,
+        "q_r0_rad": 0.4,
+        "q_theta0_rad": 0.5,
+        "q_phi0_rad": 0.6
+      },
+      "initial_x_u": [
+        0.0,
+        7835.027829701819,
+        1.0162595651948338,
+        0.6,
+        1.0002098203972378,
+        0.001168022263481726,
+        5.51271038601796e-07,
+        1.80339360156241e-06
+      ],
+      "constants": {
+        "energy": 0.9999545030737231,
+        "Lz": 80.01226406593992,
+        "CarterQ": 3601.103858727964
+      }
+    }
+  ]
+}
