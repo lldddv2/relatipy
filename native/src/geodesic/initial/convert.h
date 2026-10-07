@@ -12,6 +12,20 @@
 #define RP_INITIAL_CANONICAL_DIM 8U
 
 /**
+ * Convert oblate Cartesian (t,x,y,z,vx,vy,vz) to BL
+ * (t,r,theta,phi,dr/dt,dtheta/dt,dphi/dt), without tangent normalization.
+ * Uses the same kinematics and domain guards as the canonical conversion;
+ * velocities may be zero, null, or timelike. G = c = M = 1, spin in [0,1].
+ * phi is the principal atan2 value. Buffers are caller-owned and disjoint;
+ * no allocation occurs, and a non-null output is cleared on every error.
+ */
+rp_kerr_status rp_initial_cartesian_to_bl(
+    double spin,
+    const double cartesian[RP_INITIAL_CARTESIAN_DIM],
+    double bl[RP_INITIAL_CARTESIAN_DIM]
+);
+
+/**
  * Convert (t,x,y,z,vx,vy,vz) in spin-aligned oblate Cartesian coordinates
  * to (t,r,theta,phi,u^t,u^r,u^theta,u^phi) in Boyer--Lindquist coordinates.
  * Velocities are derivatives with respect to coordinate time. Spin is the

@@ -10,7 +10,7 @@ from __future__ import annotations
 from . import coordinates, geodesic, metrics, observables, plotting
 from .geodesic import (
     InitialState, IntegrationError, IntegrationInfo, IntegrationTerminated,
-    IntegrationWarning,
+    IntegrationWarning, Null, NullSolution,
     Orbit, Solution, State, Termination,
 )
 from .metrics import Kerr
@@ -24,6 +24,8 @@ __all__ = [
     "plotting",
     "Kerr",
     "KerrMcmcModel",
+    "Null",
+    "NullSolution",
     "Orbit",
     "State",
     "InitialState",

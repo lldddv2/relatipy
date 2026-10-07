@@ -37,6 +37,8 @@ SOLUTION_SOURCES = [
     NATIVE / "geodesic" / "solution" / "reconstruct.c",
     NATIVE / "geodesic" / "solution" / "solve.c",
     NATIVE / "geodesic" / "solution" / "preview.c",
+    NATIVE / "geodesic" / "null" / "initial.c",
+    NATIVE / "geodesic" / "null" / "solve.c",
     NATIVE / "geodesic" / "initial" / "convert.c",
     NATIVE / "geodesic" / "initial" / "bound.c",
     NATIVE / "geodesic" / "integrators" / "integrator.c",

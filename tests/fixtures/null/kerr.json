@@ -1,0 +1,387 @@
+{
+  "schema_version": "1.0",
+  "manual_review": "pending",
+  "generated_at": "2026-09-30",
+  "units": "G=c=M=1; radii and b in M, eta in M^2, coordinate time in M, angles in radians",
+  "provenance": {
+    "record_id": "INF-030",
+    "brain_record_path": "thesis_apply/brain/030-referencias-analiticas-para-validar-geodesicas-nulas-de-kerr",
+    "manual_review": "pending",
+    "dataset_id": "D005",
+    "source_csv_path": "thesis_apply/brain/030-referencias-analiticas-para-validar-geodesicas-nulas-de-kerr/data/derived/kerr_spherical_photon_orbits.csv",
+    "source_csv_sha256": "1d3cc56fa27e880fdcd99e0c1568f66d5caa0c10771897527f19b2fb2a4e24fd",
+    "source_csv_generated_at": "2026-09-30",
+    "accessed_at": "2026-09-30",
+    "claim_ids": [
+      "C010",
+      "C011",
+      "C013"
+    ],
+    "source_ids": [
+      "S005",
+      "S006",
+      "S007"
+    ],
+    "evidence": {
+      "C010": [
+        {
+          "source_id": "S005",
+          "locator": "p. 1, sec. II, Eqs. (3)\u2013(5)",
+          "excerpt_note": "Definiciones de E, L, Q, \u03bb y \u03b7."
+        },
+        {
+          "source_id": "S006",
+          "locator": "p. 350, Eq. (2.8), \u03bc=0",
+          "excerpt_note": "Definici\u00f3n general de Q especializada a fotones."
+        }
+      ],
+      "C011": [
+        {
+          "source_id": "S005",
+          "locator": "p. 2, Eqs. (6a,b)\u2013(8)",
+          "excerpt_note": "Ecuaciones separadas y potenciales nulos reescalados."
+        },
+        {
+          "source_id": "S006",
+          "locator": "p. 350, Eqs. (2.9)\u2013(2.10), \u03bc=0",
+          "excerpt_note": "Potenciales V_r y V_\u03b8 para el movimiento separado."
+        }
+      ],
+      "C013": [
+        {
+          "source_id": "S007",
+          "locator": "p. 36, ap\u00e9ndice B, Eqs. (B.1a)\u2013(B.1b)",
+          "excerpt_note": "Constantes de \u00f3rbitas fot\u00f3nicas esf\u00e9ricas; atribuci\u00f3n a su referencia [24], S008."
+        },
+        {
+          "source_id": "S005",
+          "locator": "p. 8, Eqs. (107)\u2013(108)",
+          "excerpt_note": "Constantes equivalentes para ra\u00edces dobles de R."
+        },
+        {
+          "source_id": "S005",
+          "locator": "p. 8, Eqs. (110) y (115)",
+          "excerpt_note": "\u03b7=0 en los extremos e intervalo exterior de existencia."
+        },
+        {
+          "source_id": "S007",
+          "locator": "p. 9, sec. 3, Eq. (3.7)",
+          "excerpt_note": "Polinomio \u039e que determina los extremos ecuatoriales."
+        }
+      ]
+    },
+    "origin": "Selected rows copied as decimal strings from INF-030 D005; values are calculations, not measured literature data. BPT Eq. (2.18) prograde/retrograde convention is used by the source generator."
+  },
+  "measurement": {
+    "date": "2026-09-30",
+    "script_sha256": "6475b5f2e57b5af7b366957d67e11598c10e59f44414e89b28bee95e278136d2",
+    "rtol": 1e-10,
+    "atol": 1e-12,
+    "methods": [
+      "radau",
+      "dop853",
+      "dp45"
+    ],
+    "sampling": "No t_eval. Exclude the final time-cut interpolant: canonical(solution)[:-1]. Initial row and accepted native steps are retained.",
+    "safety_factor": 10,
+    "limitations": "Bounds describe these finite trajectories only; spherical photon orbits are unstable. Time 40M covers at least two polar turning points while limiting radial amplification. Constants are rounded to float64 on input.",
+    "theta_bounds_derivation": "INF-030:C011 gives Theta=eta+a^2*cos(theta)^2-b^2*cot(theta)^2. For z=cos(theta)^2 solve a^2*z^2-(a^2-eta-b^2)*z-eta=0, with stable root z=2*eta/(sqrt((a^2-eta-b^2)^2+4*a^2*eta)-(a^2-eta-b^2)). Bounds are acos(sqrt(z)) and pi-acos(sqrt(z)).",
+    "tolerance_rationale": "Each nonzero numerical error is bounded by 10 times its measured value. Polar containment uses only 10 times the root roundoff against mpmath at 80 digits; it does not use the finite accepted-step gap from the extrema. A separate 10-times-gap gate requires reaching both polar limits.",
+    "script": "tests/reference/run_null_calibration.py",
+    "command": "PYTHONPATH=tests uv run python -m reference.run_null_calibration --case kerr --check",
+    "python": "3.11.15",
+    "platform": "Linux-7.2.6-arch2-1-x86_64-with-glibc2.44",
+    "numpy": "2.4.6",
+    "astropy": "8.0.1",
+    "scipy": "1.17.1",
+    "mpmath": "1.3.0",
+    "extension_sha256": "5fdcb8016a4fd87c2f65956684c9680b205b0786f92013eae957a8ee5c0434cf",
+    "timing_policy": "seconds/runtime are descriptive, remeasured, and excluded from bitwise equality.",
+    "output_policy": "--output exports all 30 candidate/invariant reports and regenerated fixtures."
+  },
+  "spherical_cases": [
+    {
+      "id": "spin_0.5",
+      "reference_row": {
+        "a_over_M": "0.5",
+        "r_over_M": "2.4953954216968726",
+        "lambda_over_M": "3.0337434076525634",
+        "eta_over_M2": "10.134263804565824",
+        "R_residual": "1.2829270608442539e-49",
+        "dRdr_residual": "1.9062695218548791e-49"
+      },
+      "csv_locator": "CSV physical line 3 (header is line 1), all columns",
+      "t_final_over_M": 40.0,
+      "radial_sign": 1,
+      "polar_sign": 1,
+      "initial_theta_rad": 1.5707963267948966,
+      "claim_ids": [
+        "C011",
+        "C013"
+      ],
+      "measurements": {
+        "radau": {
+          "measured": {
+            "max_radius_error": 2.533440124352637e-10,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.4081216859019166e-16,
+            "theta_extrema_gap": 0.0002493654783697341,
+            "theta_limits": [
+              0.7580989478709309,
+              2.383493705718862
+            ],
+            "theta_range": [
+              0.7583483133493006,
+              2.383482305980158
+            ],
+            "turns": 2,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 2.5334401243526372e-09,
+            "theta_bounds_absolute": 1.4081216859019167e-15,
+            "theta_extrema_gap_absolute": 0.002493654783697341
+          }
+        },
+        "dop853": {
+          "measured": {
+            "max_radius_error": 1.0804361849636734e-09,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.4081216859019166e-16,
+            "theta_extrema_gap": 0.000610157599981509,
+            "theta_limits": [
+              0.7580989478709309,
+              2.383493705718862
+            ],
+            "theta_range": [
+              0.7585108588977362,
+              2.3828835481188806
+            ],
+            "turns": 2,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 1.0804361849636734e-08,
+            "theta_bounds_absolute": 1.4081216859019167e-15,
+            "theta_extrema_gap_absolute": 0.00610157599981509
+          }
+        },
+        "dp45": {
+          "measured": {
+            "max_radius_error": 5.022120497244487e-10,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.4081216859019166e-16,
+            "theta_extrema_gap": 3.992609762359933e-06,
+            "theta_limits": [
+              0.7580989478709309,
+              2.383493705718862
+            ],
+            "theta_range": [
+              0.7580989781275121,
+              2.3834897131090997
+            ],
+            "turns": 2,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 5.022120497244487e-09,
+            "theta_bounds_absolute": 1.4081216859019167e-15,
+            "theta_extrema_gap_absolute": 3.992609762359933e-05
+          }
+        }
+      }
+    },
+    {
+      "id": "spin_0.9",
+      "reference_row": {
+        "a_over_M": "0.9",
+        "r_over_M": "2.1459579553432963",
+        "lambda_over_M": "1.3426451811475596",
+        "eta_over_M2": "15.559475929325161",
+        "R_residual": "1.2829270608442539e-49",
+        "dRdr_residual": "1.6910689365457761e-49"
+      },
+      "csv_locator": "CSV physical line 22 (header is line 1), all columns",
+      "t_final_over_M": 40.0,
+      "radial_sign": 1,
+      "polar_sign": 1,
+      "initial_theta_rad": 1.5707963267948966,
+      "claim_ids": [
+        "C011",
+        "C013"
+      ],
+      "measurements": {
+        "radau": {
+          "measured": {
+            "max_radius_error": 1.9154773767127153e-08,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.1129270687568188e-16,
+            "theta_extrema_gap": 0.00013932250575798832,
+            "theta_limits": [
+              0.3211558800341218,
+              2.8204367735556715
+            ],
+            "theta_range": [
+              0.32115647021545296,
+              2.8202974510499135
+            ],
+            "turns": 3,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 1.9154773767127153e-07,
+            "theta_bounds_absolute": 1.1129270687568188e-15,
+            "theta_extrema_gap_absolute": 0.0013932250575798832
+          }
+        },
+        "dop853": {
+          "measured": {
+            "max_radius_error": 1.7434667043403351e-09,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.1129270687568188e-16,
+            "theta_extrema_gap": 0.00010904618469798066,
+            "theta_limits": [
+              0.3211558800341218,
+              2.8204367735556715
+            ],
+            "theta_range": [
+              0.3211603122112654,
+              2.8203277273709735
+            ],
+            "turns": 3,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 1.743466704340335e-08,
+            "theta_bounds_absolute": 1.1129270687568188e-15,
+            "theta_extrema_gap_absolute": 0.0010904618469798066
+          }
+        },
+        "dp45": {
+          "measured": {
+            "max_radius_error": 3.2184241938182367e-09,
+            "theta_bound_excess": 0.0,
+            "theta_root_roundoff": 1.1129270687568188e-16,
+            "theta_extrema_gap": 8.039342745014277e-06,
+            "theta_limits": [
+              0.3211558800341218,
+              2.8204367735556715
+            ],
+            "theta_range": [
+              0.32116391937686684,
+              2.8204361938116356
+            ],
+            "turns": 3,
+            "initial_kr": 0.0
+          },
+          "tolerances": {
+            "radius_absolute": 3.218424193818237e-08,
+            "theta_bounds_absolute": 1.1129270687568188e-15,
+            "theta_extrema_gap_absolute": 8.039342745014277e-05
+          }
+        }
+      }
+    }
+  ],
+  "invariant_case": {
+    "id": "inclined_infall_spin_0.9",
+    "spin": 0.9,
+    "r_over_M": 10.0,
+    "b_over_M": 3.0,
+    "eta_over_M2": 5.0,
+    "theta_rad": 1.1,
+    "radial_sign": -1,
+    "polar_sign": 1,
+    "t_final_over_M": 20.0,
+    "claim_ids": [
+      "C010",
+      "C011"
+    ],
+    "measurements": {
+      "radau": {
+        "measured": {
+          "energy": 3.85691782064453e-10,
+          "axial_angular_momentum": 1.0015133964058891e-09,
+          "carter_constant": 1.5537489873722395e-09,
+          "relative_norm": 1.3575770436777223e-10,
+          "absolute_norm": 3.086977416310449e-10
+        },
+        "tolerances": {
+          "energy": 3.85691782064453e-09,
+          "axial_angular_momentum": 1.001513396405889e-08,
+          "carter_constant": 1.5537489873722395e-08,
+          "relative_norm": 1.3575770436777222e-09,
+          "absolute_norm": 3.086977416310449e-09
+        },
+        "initial_constants_error": {
+          "b": 4.440892098500626e-16,
+          "eta": 2.6645352591003757e-15
+        },
+        "initial_constants_tolerance": {
+          "b": 4.440892098500626e-15,
+          "eta": 2.6645352591003757e-14
+        },
+        "r_range": [
+          2.52352000661783,
+          10.0
+        ]
+      },
+      "dop853": {
+        "measured": {
+          "energy": 2.8494714507809667e-12,
+          "axial_angular_momentum": 2.5194193989158922e-11,
+          "carter_constant": 5.5812138891051705e-11,
+          "relative_norm": 4.903493448824643e-12,
+          "absolute_norm": 2.2430269664211466e-11
+        },
+        "tolerances": {
+          "energy": 2.8494714507809668e-11,
+          "axial_angular_momentum": 2.519419398915892e-10,
+          "carter_constant": 5.58121388910517e-10,
+          "relative_norm": 4.903493448824643e-11,
+          "absolute_norm": 2.2430269664211466e-10
+        },
+        "initial_constants_error": {
+          "b": 4.440892098500626e-16,
+          "eta": 2.6645352591003757e-15
+        },
+        "initial_constants_tolerance": {
+          "b": 4.440892098500626e-15,
+          "eta": 2.6645352591003757e-14
+        },
+        "r_range": [
+          2.5235432158745983,
+          10.0
+        ]
+      },
+      "dp45": {
+        "measured": {
+          "energy": 1.171982724789697e-11,
+          "axial_angular_momentum": 1.6354735742869473e-11,
+          "carter_constant": 2.2555674127561086e-10,
+          "relative_norm": 7.150309944576984e-11,
+          "absolute_norm": 2.492167897830827e-10
+        },
+        "tolerances": {
+          "energy": 1.171982724789697e-10,
+          "axial_angular_momentum": 1.6354735742869474e-10,
+          "carter_constant": 2.2555674127561085e-09,
+          "relative_norm": 7.150309944576984e-10,
+          "absolute_norm": 2.492167897830827e-09
+        },
+        "initial_constants_error": {
+          "b": 4.440892098500626e-16,
+          "eta": 2.6645352591003757e-15
+        },
+        "initial_constants_tolerance": {
+          "b": 4.440892098500626e-15,
+          "eta": 2.6645352591003757e-14
+        },
+        "r_range": [
+          2.5235151101750724,
+          10.0
+        ]
+      }
+    }
+  }
+}

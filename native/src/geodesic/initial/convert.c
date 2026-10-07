@@ -32,10 +32,11 @@ static double outer_horizon(double spin)
     return 1.0 + sqrt((1.0 - spin) * (1.0 + spin));
 }
 
-rp_kerr_status rp_initial_cartesian_to_canonical(
+static rp_kerr_status cartesian_to_bl_kinematics(
     double spin,
     const double cartesian[RP_INITIAL_CARTESIAN_DIM],
-    double canonical[RP_INITIAL_CANONICAL_DIM]
+    double coordinates[RP_KERR_DIM],
+    double velocity[3]
 )
 {
     double x;
@@ -55,16 +56,9 @@ rp_kerr_status rp_initial_cartesian_to_canonical(
     double cos_theta;
     double sigma;
     double transverse_velocity;
-    double coordinates[RP_KERR_DIM];
-    double velocity[3];
-    double four_velocity[RP_KERR_DIM];
     rp_kerr_status status;
     size_t index;
 
-    if (canonical == NULL) {
-        return RP_KERR_STATUS_NULL_POINTER;
-    }
-    clear_values(canonical, RP_INITIAL_CANONICAL_DIM);
     if (cartesian == NULL) {
         return RP_KERR_STATUS_NULL_POINTER;
     }
@@ -142,6 +136,58 @@ rp_kerr_status rp_initial_cartesian_to_canonical(
         }
     }
 
+    return RP_KERR_STATUS_OK;
+}
+
+/** Pure chart kinematics shared by timelike and null initial-state builders. */
+rp_kerr_status rp_initial_cartesian_to_bl(
+    double spin,
+    const double cartesian[RP_INITIAL_CARTESIAN_DIM],
+    double bl[RP_INITIAL_CARTESIAN_DIM]
+)
+{
+    double coordinates[RP_KERR_DIM];
+    double velocity[3];
+    rp_kerr_status status;
+    size_t index;
+
+    if (bl == NULL) {
+        return RP_KERR_STATUS_NULL_POINTER;
+    }
+    clear_values(bl, RP_INITIAL_CARTESIAN_DIM);
+    status = cartesian_to_bl_kinematics(spin, cartesian, coordinates, velocity);
+    if (status != RP_KERR_STATUS_OK) {
+        return status;
+    }
+    for (index = 0U; index < RP_KERR_DIM; ++index) {
+        bl[index] = coordinates[index];
+    }
+    for (index = 0U; index < 3U; ++index) {
+        bl[index + RP_KERR_DIM] = velocity[index];
+    }
+    return RP_KERR_STATUS_OK;
+}
+
+rp_kerr_status rp_initial_cartesian_to_canonical(
+    double spin,
+    const double cartesian[RP_INITIAL_CARTESIAN_DIM],
+    double canonical[RP_INITIAL_CANONICAL_DIM]
+)
+{
+    double coordinates[RP_KERR_DIM];
+    double velocity[3];
+    double four_velocity[RP_KERR_DIM];
+    rp_kerr_status status;
+    size_t index;
+
+    if (canonical == NULL) {
+        return RP_KERR_STATUS_NULL_POINTER;
+    }
+    clear_values(canonical, RP_INITIAL_CANONICAL_DIM);
+    status = cartesian_to_bl_kinematics(spin, cartesian, coordinates, velocity);
+    if (status != RP_KERR_STATUS_OK) {
+        return status;
+    }
     status = rp_kerr_four_velocity(
         1.0, spin, coordinates, velocity, four_velocity
     );

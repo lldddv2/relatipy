@@ -1,0 +1,554 @@
+{
+  "schema_version": "1.0",
+  "manual_review": "pending",
+  "generated_at": "2026-09-30",
+  "conventions": {
+    "units": "G=c=M=1",
+    "coordinates": "Boyer-Lindquist (t,r,theta,phi)",
+    "state": "(t,r,theta,phi,kt,kr,ktheta,kphi)",
+    "constants": "b=Lz/E, eta=Q/E^2; initial kt=1",
+    "branch": "BPT Eq. (2.18) (INF-030:C012); PyGRO Eq. (42) labels remain unresolved (C015)."
+  },
+  "provenance": [
+    {
+      "record_id": "INF-030",
+      "brain_path": "thesis_apply/brain/030-referencias-analiticas-para-validar-geodesicas-nulas-de-kerr/data/derived/schwarzschild_null_reference.csv",
+      "dataset_id": "D001",
+      "claim_ids": [
+        "C001",
+        "C002",
+        "C003",
+        "C011"
+      ],
+      "source_ids": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006"
+      ],
+      "evidence": {
+        "C001": [
+          {
+            "source_id": "S002",
+            "locator": "p. 177 impresa (PDF p. 184), cap. 7, Eq. (7.51)",
+            "excerpt_note": "r_c=3GM para fotones, ε=0."
+          },
+          {
+            "source_id": "S003",
+            "locator": "p. 4, texto sobre r0=3M",
+            "excerpt_note": "Identifica r0=3M como esfera fotónica."
+          },
+          {
+            "source_id": "S004",
+            "locator": "p. 5, sec. III.A, Eq. (45)",
+            "excerpt_note": "x_m=3/2 en unidades de 2M."
+          },
+          {
+            "source_id": "S001",
+            "locator": "p. 8, sec. 3.3",
+            "excerpt_note": "Fotón circular inestable r=3M separa escape y captura."
+          }
+        ],
+        "C002": [
+          {
+            "source_id": "S004",
+            "locator": "p. 5, sec. III.A, Eq. (49)",
+            "excerpt_note": "u_m=3√3/2 en unidades de 2M."
+          },
+          {
+            "source_id": "S003",
+            "locator": "p. 4, sec. IV",
+            "excerpt_note": "Imágenes relativistas para J>3√3 M."
+          },
+          {
+            "source_id": "S001",
+            "locator": "p. 12, sec. 3.5, Eq. (41), límite a=0",
+            "excerpt_note": "b_c=√27 M para Schwarzschild."
+          }
+        ],
+        "C003": [
+          {
+            "source_id": "S004",
+            "locator": "p. 2, sec. II, texto sobre u→u_m y Eqs. (6)–(7)",
+            "excerpt_note": "La deflexión diverge en el límite crítico y se describe captura al reducir el impacto."
+          },
+          {
+            "source_id": "S001",
+            "locator": "p. 12, sec. 3.5, Eq. (41) y texto sobre captura/escape, límite a=0",
+            "excerpt_note": "Intervalo entre impactos críticos separa captura de escape; límite de Schwarzschild."
+          }
+        ],
+        "C011": [
+          {
+            "source_id": "S005",
+            "locator": "p. 2, Eqs. (6a,b)–(8)",
+            "excerpt_note": "Ecuaciones separadas y potenciales nulos reescalados."
+          },
+          {
+            "source_id": "S006",
+            "locator": "p. 350, Eqs. (2.9)–(2.10), μ=0",
+            "excerpt_note": "Potenciales V_r y V_θ para el movimiento separado."
+          }
+        ]
+      },
+      "source_generated_at": "2026-09-30",
+      "copied_at": "2026-09-30",
+      "source_csv_sha256": "c5b96800aa4c47b2f81aae3d5be8bc2bafe58ad20a8378c06b9a680610c2dbce",
+      "manual_review": "pending",
+      "columns": [
+        {
+          "name": "quantity",
+          "unit": null,
+          "description": "Nombre de la cantidad: r_horizon, r_photon o b_critical."
+        },
+        {
+          "name": "value",
+          "unit": "M",
+          "description": "Valor calculado en la unidad indicada por la columna unit, con M=1."
+        },
+        {
+          "name": "unit",
+          "unit": null,
+          "description": "Texto de unidad de value; M para las tres filas."
+        },
+        {
+          "name": "formula_id",
+          "unit": null,
+          "description": "Etiqueta interna F1 del generador; no representa una fuente bibliográfica adicional."
+        },
+        {
+          "name": "note",
+          "unit": null,
+          "description": "Descripción textual del cálculo, conservada como la exporta el script."
+        }
+      ],
+      "rows": [
+        {
+          "csv_line": 2,
+          "quantity": "r_horizon",
+          "value": "2.0",
+          "unit": "M",
+          "formula_id": "F1",
+          "note": "Schwarzschild horizon; computed"
+        },
+        {
+          "csv_line": 3,
+          "quantity": "r_photon",
+          "value": "3.0",
+          "unit": "M",
+          "formula_id": "F1",
+          "note": "Schwarzschild photon sphere; computed"
+        },
+        {
+          "csv_line": 4,
+          "quantity": "b_critical",
+          "value": "5.1961524227066319",
+          "unit": "M",
+          "formula_id": "F1",
+          "note": "Critical impact parameter; computed"
+        }
+      ],
+      "copy_transformation": "Selected rows copied as decimal strings without recomputation; csv_line counts the header as line 1."
+    },
+    {
+      "record_id": "INF-030",
+      "brain_path": "thesis_apply/brain/030-referencias-analiticas-para-validar-geodesicas-nulas-de-kerr/data/derived/schwarzschild_radial_null_infall.csv",
+      "dataset_id": "D002",
+      "claim_ids": [
+        "C004",
+        "C005",
+        "C017"
+      ],
+      "source_ids": [
+        "S001",
+        "S002"
+      ],
+      "evidence": {
+        "C004": [
+          {
+            "source_id": "S002",
+            "locator": "p. 182 impresa (PDF p. 189), Eq. (7.64)",
+            "excerpt_note": "Pendiente temporal de curvas nulas radiales."
+          }
+        ],
+        "C005": [
+          {
+            "source_id": "S002",
+            "locator": "p. 183 impresa (PDF p. 190), Eqs. (7.65)–(7.66)",
+            "excerpt_note": "t=±r*+const y r*=r+2GM ln(r/(2GM)−1)."
+          },
+          {
+            "source_id": "S001",
+            "locator": "p. 12, sec. 3.6, Eq. (43)",
+            "excerpt_note": "Solución entrante/saliente escrita con log(r−2M) y referencia r0."
+          }
+        ],
+        "C017": [
+          {
+            "source_id": "S002",
+            "locator": "p. 183 impresa (PDF p. 190), Eqs. (7.65)–(7.66)",
+            "excerpt_note": "Primitiva temporal radial usada para calcular la diferencia."
+          },
+          {
+            "source_id": "S001",
+            "locator": "p. 12, sec. 3.6, Eq. (43)",
+            "excerpt_note": "Solución entrante referida a r0."
+          }
+        ]
+      },
+      "source_generated_at": "2026-09-30",
+      "copied_at": "2026-09-30",
+      "source_csv_sha256": "a6a7dc77974e3581162ace5974974ca447b48c215d64e845a21e28d92d7df58c",
+      "manual_review": "pending",
+      "columns": [
+        {
+          "name": "r_over_M",
+          "unit": "adimensional",
+          "description": "Radio Schwarzschild r/M, exterior al horizonte."
+        },
+        {
+          "name": "t_minus_t0_over_M",
+          "unit": "adimensional",
+          "description": "Tiempo de coordenada (t(r)−t(50M))/M de la rama radial entrante."
+        }
+      ],
+      "rows": [
+        {
+          "csv_line": 2,
+          "r_over_M": "50.0",
+          "t_minus_t0_over_M": "0.0"
+        },
+        {
+          "csv_line": 82,
+          "r_over_M": "10.0",
+          "t_minus_t0_over_M": "43.58351893845611"
+        },
+        {
+          "csv_line": 96,
+          "r_over_M": "3.0",
+          "t_minus_t0_over_M": "54.742402021815782"
+        },
+        {
+          "csv_line": 99,
+          "r_over_M": "2.1",
+          "t_minus_t0_over_M": "60.247572207803873"
+        }
+      ],
+      "copy_transformation": "Selected rows copied as decimal strings without recomputation; csv_line counts the header as line 1."
+    }
+  ],
+  "measurement": {
+    "script": "tests/reference/run_null_calibration.py",
+    "command": "PYTHONPATH=tests uv run python -m reference.run_null_calibration --case schwarzschild --check",
+    "script_sha256": "6475b5f2e57b5af7b366957d67e11598c10e59f44414e89b28bee95e278136d2",
+    "python": "3.11.15",
+    "platform": "Linux-7.2.6-arch2-1-x86_64-with-glibc2.44",
+    "numpy": "2.4.6",
+    "astropy": "8.0.1",
+    "extension_sha256": "5fdcb8016a4fd87c2f65956684c9680b205b0786f92013eae957a8ee5c0434cf",
+    "budget_rationale": "Ten times each measured nonzero error, rounded upward to two significant figures. Zero-error circular radius uses ten times the largest perturbed linearization discrepancy, plus the separately stated roundoff growth floor. Circular linearization uses max(10 times each method's measured linearization error, 100 times roundoff_growth_floor), rounded upward to two significant figures: radau and dp45 retain their budgets; dop853 gains margin above roundoff. These are local regression budgets, not accuracy guarantees.",
+    "scipy": "1.17.1",
+    "mpmath": "1.3.0",
+    "timing_policy": "seconds/runtime are descriptive, remeasured, and excluded from bitwise equality."
+  },
+  "solver": {
+    "rtol": 1e-10,
+    "atol": 1e-12
+  },
+  "radial": {
+    "r0": 50,
+    "r_stop": 2.1,
+    "t_final": 60.24757220780387,
+    "claim_ids": [
+      "C004",
+      "C005",
+      "C017"
+    ],
+    "rows_measured": "All accepted rows except the last time-cut Hermite interpolant; initial row included. Endpoint measured separately.",
+    "methods": {
+      "radau": {
+        "status": 0,
+        "accepted_t_error": 1.2249440128897504e-08,
+        "endpoint_r_error": 4.727747082711176e-10,
+        "rows": 65,
+        "seconds": 0.004508776000875514,
+        "initial": [
+          0.0,
+          50.00000000000001,
+          1.5707963267948966,
+          0.0,
+          1.0,
+          -0.9600000000000002,
+          0.0,
+          0.0
+        ],
+        "accepted_t_tolerance": 1.3e-07,
+        "endpoint_r_tolerance": 4.8e-09
+      },
+      "dop853": {
+        "status": 0,
+        "accepted_t_error": 5.702152760383994e-10,
+        "endpoint_r_error": 6.966871524127782e-12,
+        "rows": 43,
+        "seconds": 0.000637647997791646,
+        "initial": [
+          0.0,
+          50.00000000000001,
+          1.5707963267948966,
+          0.0,
+          1.0,
+          -0.9600000000000002,
+          0.0,
+          0.0
+        ],
+        "accepted_t_tolerance": 5.8e-09,
+        "endpoint_r_tolerance": 7e-11
+      },
+      "dp45": {
+        "status": 0,
+        "accepted_t_error": 1.5590609185600623e-09,
+        "endpoint_r_error": 7.424194592431377e-11,
+        "rows": 140,
+        "seconds": 0.0005258600031083915,
+        "initial": [
+          0.0,
+          50.00000000000001,
+          1.5707963267948966,
+          0.0,
+          1.0,
+          -0.9600000000000002,
+          0.0,
+          0.0
+        ],
+        "accepted_t_tolerance": 1.6e-08,
+        "endpoint_r_tolerance": 7.5e-10
+      }
+    },
+    "csv_formula_error_measured": 2.2898349882893854e-16,
+    "csv_formula_tolerance": 2.3e-15
+  },
+  "capture": {
+    "r0": 100,
+    "r_escape": 110,
+    "t_final": 400,
+    "delta": 0.001,
+    "claim_ids": [
+      "C002",
+      "C003"
+    ],
+    "measured": {
+      "radau-1": {
+        "status": 1,
+        "reason": "horizon",
+        "r_final": 2.000002169770185,
+        "r_min": 2.000002169770185,
+        "t_final": 167.5239114762528,
+        "rows": 211,
+        "seconds": 0.005186203001358081
+      },
+      "radau1": {
+        "status": 1,
+        "reason": "escape",
+        "r_final": 126.1710547779304,
+        "r_min": 3.080168643553078,
+        "t_final": 277.4677863898419,
+        "rows": 108,
+        "seconds": 0.002683205999346683
+      },
+      "dop853-1": {
+        "status": 1,
+        "reason": "horizon",
+        "r_final": 2.000002277869021,
+        "r_min": 2.000002277869021,
+        "t_final": 167.42666792669573,
+        "rows": 144,
+        "seconds": 0.0008564149975427426
+      },
+      "dop8531": {
+        "status": 1,
+        "reason": "escape",
+        "r_final": 111.66581039651207,
+        "r_min": 3.0807904535812223,
+        "t_final": 262.70015546569783,
+        "rows": 82,
+        "seconds": 0.0006846010001027025
+      },
+      "dp45-1": {
+        "status": 1,
+        "reason": "horizon",
+        "r_final": 2.0000020358036967,
+        "r_min": 2.0000020358036967,
+        "t_final": 167.65136970287847,
+        "rows": 683,
+        "seconds": 0.0009540680002828594
+      },
+      "dp451": {
+        "status": 1,
+        "reason": "escape",
+        "r_final": 110.52915014041115,
+        "r_min": 3.0801725863393967,
+        "t_final": 261.54140836806056,
+        "rows": 406,
+        "seconds": 0.0007937339978525415
+      }
+    },
+    "horizon_excess_measured": 2.277869020961276e-06,
+    "classification_mismatches_measured": 0,
+    "classification_mismatches_tolerance": 0,
+    "finite_radius_rationale": "The inbound constants define the same geodesic as an infinity-launched ray outside the outer turning point. r0=100 is on that exterior branch; b differs by 0.1% from bc, far above floating-point conversion error.",
+    "horizon_excess_tolerance": 2.3e-05
+  },
+  "circle": {
+    "r0": 3,
+    "t_final": 10,
+    "perturbed_dr": 1e-07,
+    "claim_ids": [
+      "C001",
+      "C011"
+    ],
+    "lyapunov": 0.19245008972987526,
+    "lyapunov_derivation": "Own linearization of the C011 Schwarzschild radial potential and coordinate-time equations at r=3: d²(delta r)/dt²=delta r/27; lambda=1/(3 sqrt(3)). Tangential release has dr/dt=0, hence delta r(t)=delta r(0) cosh(lambda t), with O(delta r²) correction. This is a calculation based on C011, not an additional reported result.",
+    "effective_initial_perturbation_definition": "|r0-3| + |(kr/kt)0|/lambda + |(-f/r0²*kt0²+f*r0*kphi0²)/kt0²|/lambda², f=1-2/r0. Last term includes radial forcing from initial tangent roundoff. Conservative scale, not an independently measured displacement.",
+    "roundoff_growth_floor": 4.5641677746308646e-14,
+    "methods": {
+      "radau": {
+        "exact": {
+          "status": 0,
+          "max_r_error": 0.0,
+          "max_linear_error": 0.0,
+          "initial_effective_perturbation": 0.0,
+          "initial_acceleration": 0.0,
+          "initial": [
+            0.0,
+            3.0,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987526
+          ],
+          "endpoint_r": 3.0,
+          "rows": 9,
+          "seconds": 0.0004546449999907054
+        },
+        "perturbed": {
+          "status": 0,
+          "max_r_error": 3.4988896713272766e-07,
+          "max_linear_error": 5.133227176656874e-12,
+          "initial_effective_perturbation": 1.9999999967962312e-07,
+          "initial_acceleration": 3.7037036978992965e-09,
+          "initial": [
+            0.0,
+            3.0000001,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987493
+          ],
+          "endpoint_r": 3.000000349888967,
+          "rows": 10,
+          "seconds": 0.0004556259991659317
+        },
+        "exact_r_tolerance": 5.2e-11,
+        "perturbed_r_tolerance": 3.5e-06,
+        "linearization_tolerance": 5.2e-11
+      },
+      "dop853": {
+        "exact": {
+          "status": 0,
+          "max_r_error": 0.0,
+          "max_linear_error": 0.0,
+          "initial_effective_perturbation": 0.0,
+          "initial_acceleration": 0.0,
+          "initial": [
+            0.0,
+            3.0,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987526
+          ],
+          "endpoint_r": 3.0,
+          "rows": 6,
+          "seconds": 0.00036193000050843693
+        },
+        "perturbed": {
+          "status": 0,
+          "max_r_error": 3.498837921611653e-07,
+          "max_linear_error": 4.1744385725905886e-14,
+          "initial_effective_perturbation": 1.9999999967962312e-07,
+          "initial_acceleration": 3.7037036978992965e-09,
+          "initial": [
+            0.0,
+            3.0000001,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987493
+          ],
+          "endpoint_r": 3.000000349883792,
+          "rows": 7,
+          "seconds": 0.0003569609980331734
+        },
+        "exact_r_tolerance": 5.2e-11,
+        "perturbed_r_tolerance": 3.5e-06,
+        "linearization_tolerance": 4.6e-12
+      },
+      "dp45": {
+        "exact": {
+          "status": 0,
+          "max_r_error": 0.0,
+          "max_linear_error": 0.0,
+          "initial_effective_perturbation": 0.0,
+          "initial_acceleration": 0.0,
+          "initial": [
+            0.0,
+            3.0,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987526
+          ],
+          "endpoint_r": 3.0,
+          "rows": 7,
+          "seconds": 0.0003765459987334907
+        },
+        "perturbed": {
+          "status": 0,
+          "max_r_error": 3.498881988583946e-07,
+          "max_linear_error": 4.3649528436162655e-12,
+          "initial_effective_perturbation": 1.9999999967962312e-07,
+          "initial_acceleration": 3.7037036978992965e-09,
+          "initial": [
+            0.0,
+            3.0000001,
+            1.5707963267948966,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.19245008972987493
+          ],
+          "endpoint_r": 3.000000349888199,
+          "rows": 9,
+          "seconds": 0.00035421699794824235
+        },
+        "exact_r_tolerance": 5.2e-11,
+        "perturbed_r_tolerance": 3.5e-06,
+        "linearization_tolerance": 4.3999999999999997e-11
+      }
+    },
+    "linearization_tolerance_rule": "max(10 * perturbed.max_linear_error, 100 * roundoff_growth_floor), rounded upward to two significant figures. The floor prevents a roundoff-dominated regression threshold; only dop853 changes."
+  }
+}

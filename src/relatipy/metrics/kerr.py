@@ -10,6 +10,7 @@ from astropy.constants import G, c
 
 from .._validation import dimensionless_scalar, readonly_quantity
 from ..coordinates import KerrOrbitalElements
+from ..geodesic.null import Null
 from ..geodesic.orbit import Orbit
 
 # Private codes matching ``rp_kerr_surface`` in the native core.
@@ -499,6 +500,84 @@ class Kerr:
         arguments = locals().copy()
         arguments.pop("self")
         return Orbit._from_kwargs(self, **arguments)
+
+    def null(
+        self, *,
+        x=None, y=None, z=None, vx=None, vy=None, vz=None,
+        r=None, theta=None, phi=None, vr=None, vtheta=None, vphi=None,
+        R=None, Theta=None, Phi=None, vR=None, vTheta=None, vPhi=None,
+        b=None, eta=None, radial_sign=None, polar_sign=None,
+        t: u.Quantity = 0 * u.s,
+    ) -> Null:
+        """Construct one exterior scalar Kerr null geodesic.
+
+        Parameters
+        ----------
+        x, y, z : astropy.units.Quantity, optional
+            Cartesian position lengths. At least one selects this family;
+            omitted components are zero.
+        vx, vy, vz : astropy.units.Quantity, optional
+            Cartesian coordinate direction in length per time. Omitted
+            components are zero. C determines the null speed.
+        r, theta, phi : astropy.units.Quantity, optional
+            Spherical radial length and angles; all three are required.
+        vr, vtheta, vphi : astropy.units.Quantity, optional
+            Spherical coordinate direction: length per time and angles per
+            time. Omitted components are zero.
+        R, Theta, Phi : astropy.units.Quantity, optional
+            Boyer--Lindquist radial length and angles; all three are required.
+        vR, vTheta, vPhi : astropy.units.Quantity, optional
+            Boyer--Lindquist coordinate direction: length per time and angles
+            per time. Omitted components are zero.
+        b, eta : astropy.units.Quantity, optional
+            Bardeen constants in length and squared length. Supply both and
+            both signs instead of velocities.
+        radial_sign, polar_sign : {-1, +1}, optional
+            Integer radial and polar branch signs for constants input.
+        t : astropy.units.Quantity, optional
+            Finite scalar initial coordinate time; default zero seconds.
+
+        Returns
+        -------
+        relatipy.geodesic.Null
+            Independently evolving photon. Presentation length uses the first
+            supplied position length unit; presentation time uses ``t.unit``.
+
+        Raises
+        ------
+        TypeError
+            A value lacks units, has an invalid type, or an unsupported
+            keyword is supplied.
+        astropy.units.UnitConversionError
+            A position, direction, constant, or time has incompatible units.
+        ValueError
+            Families are incompatible, values are missing, non-scalar or
+            non-finite, signs are invalid, the direction is zero, the position
+            violates the horizon margin or polar guard, no future null tangent
+            exists, or the ergoregion direction has two future roots.
+
+        Notes
+        -----
+        Exactly one position family is required. Velocities specify only a
+        direction in that same family, never an observer-frame speed.
+        The native initial tangent has ``k^t = 1``. The affine parameter is
+        internal; public evolution uses coordinate time. Integration to the
+        past, observer frames, redshift and choosing the ergoregion root
+        remain pending.
+
+        Examples
+        --------
+        >>> from astropy import units as u
+        >>> from astropy.constants import c
+        >>> bh = Kerr(mass=1 * u.Msun, spin=0)
+        >>> photon = bh.null(x=10 * bh.r_g, vx=c)
+        >>> solution = photon.solve(t_eval=[0, 1e-8] * u.s, method="dp45")
+        >>> solution.status, len(solution)
+        (0, 2)
+        """
+        arguments = locals().copy()
+        arguments.pop("self")
+        return Null._from_kwargs(self, **arguments)
 
 
 def _rebuild_kerr(mass: u.Quantity, spin: float) -> Kerr:

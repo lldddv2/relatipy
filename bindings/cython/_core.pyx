@@ -525,3 +525,303 @@ def osculating_preview(double spin, canonical, int samples=256):
     if status != RP_KERR_STATUS_OK:
         raise ValueError(f"osculating preview is undefined (native status {<int>status})")
     return points, references
+
+
+# Null entry points deliberately keep the GIL: concurrent null integration
+# has not yet been validated. Existing timelike entry points are unchanged.
+cdef extern from "relatipy/kerr_null.h":
+    ctypedef enum rp_kerr_null_family:
+        RP_KERR_NULL_FAMILY_CARTESIAN
+        RP_KERR_NULL_FAMILY_SPHERICAL
+        RP_KERR_NULL_FAMILY_BOYER_LINDQUIST
+    ctypedef struct rp_kerr_null_invariants:
+        double energy
+        double axial_angular_momentum
+        double carter_constant
+        double impact_parameter
+        double eta
+        double norm
+        double relative_norm
+    double rp_kerr_null_horizon_threshold(double spin)
+    rp_kerr_status rp_kerr_null_family_to_bl(
+        double spin, rp_kerr_null_family family,
+        const double row[7], double bl[7]
+    )
+    rp_kerr_status rp_kerr_null_state_from_direction(
+        double spin, rp_kerr_null_family family,
+        const double row[7], double state[8]
+    )
+    rp_kerr_status rp_kerr_null_state_from_constants(
+        double spin, const double bl_position[4],
+        double impact_parameter, double eta,
+        int radial_sign, int polar_sign, double state[8]
+    )
+    rp_kerr_status rp_kerr_null_invariants_evaluate(
+        double spin, const double state[8], rp_kerr_null_invariants *invariants
+    )
+    rp_kerr_status rp_kerr_null_views_batch(
+        double spin, rp_kerr_null_family family, const double *states,
+        size_t count, double *views, rp_kerr_status *row_status
+    )
+
+cdef extern from "geodesic/null/solve.h":
+    ctypedef enum rp_kerr_null_termination:
+        RP_KERR_NULL_TERMINATION_NONE
+        RP_KERR_NULL_TERMINATION_HORIZON
+        RP_KERR_NULL_TERMINATION_ESCAPE
+    ctypedef struct rp_kerr_null_trajectory:
+        double *lambdas
+        double *states
+        size_t count
+        size_t capacity
+        double final_state[8]
+        double final_lambda
+        rp_integrator_stats stats
+        rp_integrator_status integrator_status
+        rp_kerr_null_termination termination
+        int allocation_failed
+    rp_integrator_status rp_kerr_null_trajectory_solve(
+        double spin, const double initial_state[8], double t_final,
+        const double *t_eval, size_t n_eval, double r_escape,
+        rp_integrator_method method, double rtol, double scalar_atol,
+        const double *vector_atol, int store_steps,
+        rp_kerr_null_trajectory *trajectory
+    )
+    void rp_kerr_null_trajectory_free(rp_kerr_null_trajectory *trajectory)
+
+cdef extern from "geodesic/integrators/integrator.h":
+    enum:
+        RP_INTEGRATOR_STATUS_NULL_POINTER
+        RP_INTEGRATOR_STATUS_INVALID_ARGUMENT
+        RP_INTEGRATOR_STATUS_NONFINITE_VALUE
+
+
+cdef rp_kerr_null_family _null_family(family) except *:
+    if family == "cartesian":
+        return RP_KERR_NULL_FAMILY_CARTESIAN
+    if family == "spherical":
+        return RP_KERR_NULL_FAMILY_SPHERICAL
+    if family == "bl":
+        return RP_KERR_NULL_FAMILY_BOYER_LINDQUIST
+    raise ValueError("family must be cartesian, spherical or bl")
+
+
+def null_horizon_threshold(double spin):
+    """Return the native exterior null-state threshold in geometric units."""
+    return rp_kerr_null_horizon_threshold(spin)
+
+
+def null_family_to_bl(double spin, family, row):
+    """Return one geometric BL row and its native reconstruction status."""
+    cdef rp_kerr_null_family selected = _null_family(family)
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] source
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] output
+    cdef rp_kerr_status status
+    source = np.ascontiguousarray(row, dtype=np.float64)
+    if source.shape[0] != 7:
+        raise ValueError("row must have shape (7,)")
+    output = np.empty(7, dtype=np.float64)
+    status = rp_kerr_null_family_to_bl(spin, selected, &source[0], &output[0])
+    output.flags.writeable = False
+    return output, <int>status
+
+
+def null_state_from_direction(double spin, family, row):
+    """Return one geometric null state and its native initial-state status."""
+    cdef rp_kerr_null_family selected = _null_family(family)
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] source
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] output
+    cdef rp_kerr_status status
+    source = np.ascontiguousarray(row, dtype=np.float64)
+    if source.shape[0] != 7:
+        raise ValueError("row must have shape (7,)")
+    output = np.empty(8, dtype=np.float64)
+    status = rp_kerr_null_state_from_direction(
+        spin, selected, &source[0], &output[0]
+    )
+    output.flags.writeable = False
+    return output, <int>status
+
+
+def null_state_from_constants(
+    double spin, bl_position, double b, double eta,
+    int radial_sign, int polar_sign,
+):
+    """Return one geometric null state from Bardeen constants and signs."""
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] source
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] output
+    cdef rp_kerr_status status
+    source = np.ascontiguousarray(bl_position, dtype=np.float64)
+    if source.shape[0] != 4:
+        raise ValueError("bl_position must have shape (4,)")
+    output = np.empty(8, dtype=np.float64)
+    status = rp_kerr_null_state_from_constants(
+        spin, &source[0], b, eta, radial_sign, polar_sign, &output[0]
+    )
+    output.flags.writeable = False
+    return output, <int>status
+
+
+def null_invariants(double spin, state):
+    """Return geometric null invariants and their native evaluation status."""
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] source
+    cdef rp_kerr_null_invariants output
+    cdef rp_kerr_status status
+    source = np.ascontiguousarray(state, dtype=np.float64)
+    if source.shape[0] != 8:
+        raise ValueError("state must have shape (8,)")
+    memset(&output, 0, sizeof(output))
+    status = rp_kerr_null_invariants_evaluate(spin, &source[0], &output)
+    return {
+        "energy": output.energy,
+        "axial_angular_momentum": output.axial_angular_momentum,
+        "carter_constant": output.carter_constant,
+        "impact_parameter": output.impact_parameter,
+        "eta": output.eta,
+        "norm": output.norm,
+        "relative_norm": output.relative_norm,
+    }, <int>status
+
+
+def null_views_batch(double spin, family, states):
+    """Return immutable geometric coordinate rows and int32 row statuses."""
+    cdef rp_kerr_null_family selected = _null_family(family)
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] source
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] output
+    cdef cnp.ndarray[cnp.int32_t, ndim=1, mode="c"] statuses
+    cdef rp_kerr_status *row_status = NULL
+    cdef Py_ssize_t count, i
+    source = np.ascontiguousarray(states, dtype=np.float64)
+    if source.shape[1] != 8:
+        raise ValueError("states must have shape (n, 8)")
+    count = source.shape[0]
+    output = np.zeros((count, 7), dtype=np.float64)
+    statuses = np.zeros(count, dtype=np.int32)
+    if count:
+        if <size_t>count > (<size_t>-1) // sizeof(rp_kerr_status):
+            raise OverflowError("too many states for native status buffer")
+        row_status = <rp_kerr_status *>malloc(<size_t>count * sizeof(rp_kerr_status))
+        if row_status == NULL:
+            raise MemoryError("could not allocate native status buffer")
+        try:
+            rp_kerr_null_views_batch(
+                spin, selected, &source[0, 0], <size_t>count,
+                &output[0, 0], row_status
+            )
+            for i in range(count):
+                statuses[i] = <int>row_status[i]
+        finally:
+            free(row_status)
+    output.flags.writeable = False
+    statuses.flags.writeable = False
+    return output, statuses
+
+
+def integrate_kerr_null(
+    double spin, y0, double t_final, t_eval_or_None=None,
+    double r_escape=0.0, method="radau", double rtol=1e-10,
+    atol=1e-10, bint store_steps=True,
+):
+    """Integrate one geometric null state, retaining the GIL.
+
+    The returned tuple contains NumPy-owned states, the independent final
+    state, statistics, frontend status and terminal reason. Native trajectory
+    buffers are freed even if allocation or construction of the tuple fails.
+    No affine-parameter samples are exposed.
+    """
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] initial
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] samples
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] vector_atol
+    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] final_state
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] states
+    cdef const double *atol_pointer = NULL
+    cdef const double *eval_pointer = NULL
+    cdef size_t n_eval = 0
+    cdef double scalar_atol = 0.0
+    cdef rp_integrator_method selected_method
+    cdef rp_integrator_status native_status
+    cdef rp_kerr_null_trajectory trajectory
+    cdef Py_ssize_t count, i, j
+    cdef int status
+    reason = None
+    if method == "radau":
+        selected_method = RP_INTEGRATOR_METHOD_RADAU
+    elif method == "dop853":
+        selected_method = RP_INTEGRATOR_METHOD_DOP853
+    elif method == "dp45":
+        selected_method = RP_INTEGRATOR_METHOD_DP45
+    else:
+        raise ValueError("method must be one of radau, dop853, dp45 for null geodesics")
+    initial = np.ascontiguousarray(y0, dtype=np.float64)
+    if initial.shape[0] != 8:
+        raise ValueError("y0 must have shape (8,)")
+    if np.ndim(atol) == 0:
+        scalar_atol = float(atol)
+    else:
+        vector_atol = np.ascontiguousarray(atol, dtype=np.float64)
+        if vector_atol.shape[0] != 8:
+            raise ValueError("atol must be scalar or have shape (8,)")
+        atol_pointer = &vector_atol[0]
+    if t_eval_or_None is not None:
+        samples = np.ascontiguousarray(t_eval_or_None, dtype=np.float64)
+        if samples.shape[0] == 0:
+            raise ValueError("t_eval must be nonempty")
+        n_eval = <size_t>samples.shape[0]
+        eval_pointer = &samples[0]
+    memset(&trajectory, 0, sizeof(trajectory))
+    try:
+        native_status = rp_kerr_null_trajectory_solve(
+            spin, &initial[0], t_final, eval_pointer, n_eval,
+            r_escape, selected_method, rtol, scalar_atol, atol_pointer,
+            <int>store_steps, &trajectory
+        )
+        if (trajectory.count == 0 and
+                (native_status == RP_INTEGRATOR_STATUS_NULL_POINTER or
+                 native_status == RP_INTEGRATOR_STATUS_INVALID_ARGUMENT)):
+            raise ValueError(
+                "internal error: native null integration rejected input "
+                f"(native status {<int>native_status})"
+            )
+        if trajectory.count > ((<size_t>-1) >> 1) // 8:
+            raise OverflowError("null trajectory exceeds Python array limits")
+        count = <Py_ssize_t>trajectory.count
+        states = np.empty((count, 8), dtype=np.float64)
+        final_state = np.empty(8, dtype=np.float64)
+        for i in range(count):
+            for j in range(8):
+                states[i, j] = trajectory.states[i * 8 + j]
+        for j in range(8):
+            final_state[j] = trajectory.final_state[j]
+        # A failed native operation may leave its zeroed result untouched.
+        # Keep an independent valid endpoint even when no sample was stored.
+        if (count == 0 or not np.all(np.isfinite(final_state)) or
+                not np.any(final_state)):
+            final_state = np.array(initial, dtype=np.float64, copy=True)
+        if count == 0 and t_eval_or_None is None:
+            states = np.array(initial, dtype=np.float64, copy=True).reshape(1, 8)
+        stats = {
+            "n_steps": int(trajectory.stats.accepted_steps),
+            "nfev": int(trajectory.stats.rhs_evaluations),
+            "rejected_steps": int(trajectory.stats.rejected_steps),
+            "jacobian_evaluations": int(trajectory.stats.jacobian_evaluations),
+            "linear_solves": int(trajectory.stats.linear_solves),
+            "native_status": int(native_status),
+        }
+        if native_status == RP_INTEGRATOR_STATUS_OK:
+            status = 0
+        elif native_status == RP_INTEGRATOR_STATUS_OBSERVER_STOPPED:
+            if trajectory.termination == RP_KERR_NULL_TERMINATION_HORIZON:
+                status = 1
+                reason = "horizon"
+            elif trajectory.termination == RP_KERR_NULL_TERMINATION_ESCAPE:
+                status = 1
+                reason = "escape"
+            else:
+                status = -1
+        else:
+            status = -1
+        states.flags.writeable = False
+        final_state.flags.writeable = False
+        return states, final_state, stats, status, reason
+    finally:
+        rp_kerr_null_trajectory_free(&trajectory)
