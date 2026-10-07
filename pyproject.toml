@@ -13,18 +13,31 @@ license-files = ["LICENSE"]
 authors = [
     { name = "lldddv2" },
 ]
-dependencies = ["numpy>=2", "astropy>=6", "scipy>=1.11"]
+dependencies = [
+    "numpy>=2",
+    "astropy>=6",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "plotly>=5",
+    "nbformat>=4.2",  # Plotly display in notebooks
+]
 
-[project.optional-dependencies]
-plot = ["matplotlib>=3.8"]
-interactive = ["plotly>=5", "nbformat>=4.2"]  # nbformat: Plotly display in notebooks
-mcmc = ["emcee>=3.1,<4"]
-notebook = ["matplotlib>=3.8", "plotly>=5", "pandas>=2", "ipykernel>=6", "nbformat>=5", "nbclient>=0.10", "emcee>=3.1,<4"]
+[project.urls]
+Homepage = "https://github.com/lldddv2/relatipy"
+Documentation = "https://relatipy.readthedocs.io/en/latest/"
+Source = "https://github.com/lldddv2/relatipy"
+Issues = "https://github.com/lldddv2/relatipy/issues"
 
 [dependency-groups]
 dev = [
     "pytest>=8",
     "einsteinpy>=0.4.0",
+]
+notebook = [
+    "pandas>=2",
+    "ipykernel>=6",
+    "nbclient>=0.10",
+    "emcee>=3.1,<4",
 ]
 docs = [
     "sphinx>=8.2,<9",

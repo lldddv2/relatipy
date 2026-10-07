@@ -1,9 +1,16 @@
 <h1 align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo-dark.svg">
-    <img src="docs/_static/logo.svg" alt="RelatiPy" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lldddv2/relatipy/main/docs/_static/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/lldddv2/relatipy/main/docs/_static/logo.svg" alt="RelatiPy" width="420">
   </picture>
 </h1>
+
+<p align="center">
+  <a href="https://relatipy.readthedocs.io/en/latest/">Documentation</a> ·
+  <a href="https://pypi.org/project/relatipy/">PyPI</a> ·
+  <a href="https://github.com/lldddv2/relatipy">Source</a> ·
+  <a href="https://github.com/lldddv2/relatipy/issues">Issues</a>
+</p>
 
 Numerical tools for relativistic geometry: timelike geodesics in the Kerr
 spacetime, with a Python interface built on Astropy units and a native C core.
@@ -15,7 +22,7 @@ layers; the integration loop makes no Python callbacks.
 
 > **Status:** research software under active development (version 1.1.0).
 > The first public interface covers scalar timelike orbits around a Kerr black
-> hole. See [scope and limits](docs/integration-roadmap.rst) before relying on
+> hole. See [scope and limits](https://relatipy.readthedocs.io/en/latest/integration-roadmap.html) before relying on
 > results.
 
 ## Features
@@ -43,8 +50,25 @@ layers; the integration loop makes no Python callbacks.
 
 ## Installation
 
-Requirements: Python 3.11 or later, a C11 compiler, and the standard C math
-library. Installing from source builds the private Cython extensions.
+Requirements: Python 3.11 or later.
+
+```console
+python -m pip install relatipy
+```
+
+This installs the package together with all of its dependencies: NumPy,
+Astropy, SciPy, Matplotlib, and Plotly. Prebuilt wheels are published for
+Linux x86_64 and CPython 3.11–3.14; on other platforms pip builds from the
+source distribution, which needs a C11 compiler and the standard C math
+library.
+
+`KerrMcmcModel` returns model predictions (astrometry and line-of-sight
+velocity); the likelihood and the sampler are left to the user, so RelatiPy
+does not depend on a specific sampler. The example notebooks use
+[emcee](https://emcee.readthedocs.io/), installed separately with
+`python -m pip install emcee` or through the `notebook` dependency group below.
+
+To install from a source checkout:
 
 ```console
 git clone https://github.com/lldddv2/relatipy.git
@@ -52,23 +76,11 @@ cd relatipy
 python -m pip install .
 ```
 
-Optional extras:
-
-| Extra | Installs | Purpose |
-| --- | --- | --- |
-| `plot` | matplotlib | Static plots |
-| `interactive` | plotly, nbformat | Interactive 3D plots |
-| `mcmc` | emcee | Sampler workflows with `KerrMcmcModel` |
-| `notebook` | all of the above, pandas, ipykernel, nbclient | Example notebooks |
-
-```console
-python -m pip install ".[plot]"
-```
-
 Development environment with [uv](https://docs.astral.sh/uv/):
 
 ```console
 uv sync --group dev
+uv sync --group dev --group notebook   # adds pandas, ipykernel, nbclient, emcee for the examples
 ```
 
 ## Quick start
@@ -136,10 +148,10 @@ alpha, delta, v_los = model.get_ra_dec_vr(
 ```
 
 `alpha` and `delta` are offsets in arcsec and `v_los` is in km/s, returned as
-read-only NumPy arrays. See [docs/kerr-mcmc.rst](docs/kerr-mcmc.rst) for the
+read-only NumPy arrays. See [Kerr MCMC guide](https://relatipy.readthedocs.io/en/latest/kerr-mcmc.html) for the
 fixed-epoch API and solver settings.
 
-A minimal runnable script is in [`examples/bound_orbit.py`](examples/bound_orbit.py).
+A minimal runnable script is in [`examples/bound_orbit.py`](https://github.com/lldddv2/relatipy/blob/main/examples/bound_orbit.py).
 
 ## Conventions
 
@@ -175,13 +187,15 @@ pytest is a development-only dependency declared in the `dev` dependency group
 uv run --group dev pytest
 ```
 
-The layout and placement rules are described in [tests/README.md](tests/README.md).
+The layout and placement rules are described in [tests/README.md](https://github.com/lldddv2/relatipy/blob/main/tests/README.md).
 
 Native C tests are standalone programs under `native/tests/`. Build each one
 with the exact source list and compiler flags given in
-[native/README.md](native/README.md).
+[native/README.md](https://github.com/lldddv2/relatipy/blob/main/native/README.md).
 
 ## Documentation
+
+Full documentation: <https://relatipy.readthedocs.io/en/latest/>.
 
 Sphinx sources live in `docs/` and are published through Read the Docs.
 Build locally with warnings treated as errors:
@@ -191,10 +205,10 @@ uv sync --group docs
 uv run --group docs sphinx-build -W --keep-going -b html docs docs/_build/html
 ```
 
-Key pages: [usage](docs/usage.rst), [scope and limits](docs/integration-roadmap.rst),
-[developer architecture](docs/developer-architecture.rst),
-[native Kerr reference](docs/native-kerr-reference.rst), and
-[peer-library validation](docs/peer-validation.rst).
+Key pages: [usage](https://relatipy.readthedocs.io/en/latest/usage.html), [scope and limits](https://relatipy.readthedocs.io/en/latest/integration-roadmap.html),
+[developer architecture](https://relatipy.readthedocs.io/en/latest/developer-architecture.html),
+[native Kerr reference](https://github.com/lldddv2/relatipy/blob/main/native/README.md), and
+[peer-library validation](https://relatipy.readthedocs.io/en/latest/peer-validation.html).
 
 ## Validation status
 
@@ -202,12 +216,12 @@ Native integrators and geometry have unit tests, invariant-drift checks, and
 comparisons against SciPy. A peer-library harness with KerrGeoPy and PyGRO
 exists, but its RelatiPy comparison gate is still skipped and the associated
 scientific records await manual review. Do not treat those comparisons as a
-validation of RelatiPy. Details: [docs/peer-validation.rst](docs/peer-validation.rst).
+validation of RelatiPy. Details: [peer-library validation](https://relatipy.readthedocs.io/en/latest/peer-validation.html).
 
 ## Contributing
 
-Read [docs/contributing.rst](docs/contributing.rst) and
-[docs/developer-architecture.rst](docs/developer-architecture.rst) first. In
+Read the [contributing guide](https://relatipy.readthedocs.io/en/latest/contributing.html) and
+[developer architecture](https://relatipy.readthedocs.io/en/latest/developer-architecture.html) first. In
 short: physics and integration stay in C, the Python layer handles API, units,
 objects, and interpolation, private extension modules are not public API, and
 public docstrings follow the NumPy style.
@@ -221,4 +235,4 @@ RelatiPy was developed with the help of AI coding assistants:
 
 ## License
 
-GPL-3.0-only. See [LICENSE](LICENSE).
+GPL-3.0-only. See [LICENSE](https://github.com/lldddv2/relatipy/blob/main/LICENSE).

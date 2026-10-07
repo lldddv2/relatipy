@@ -1829,31 +1829,13 @@ version = "1.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
+    { name = "matplotlib" },
+    { name = "nbformat" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "plotly" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-]
-
-[package.optional-dependencies]
-interactive = [
-    { name = "nbformat" },
-    { name = "plotly" },
-]
-mcmc = [
-    { name = "emcee" },
-]
-notebook = [
-    { name = "emcee" },
-    { name = "ipykernel" },
-    { name = "matplotlib" },
-    { name = "nbclient" },
-    { name = "nbformat" },
-    { name = "pandas" },
-    { name = "plotly" },
-]
-plot = [
-    { name = "matplotlib" },
 ]
 
 [package.dev-dependencies]
@@ -1865,25 +1847,22 @@ docs = [
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
 ]
+notebook = [
+    { name = "emcee" },
+    { name = "ipykernel" },
+    { name = "nbclient" },
+    { name = "pandas" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=6" },
-    { name = "emcee", marker = "extra == 'mcmc'", specifier = ">=3.1,<4" },
-    { name = "emcee", marker = "extra == 'notebook'", specifier = ">=3.1,<4" },
-    { name = "ipykernel", marker = "extra == 'notebook'", specifier = ">=6" },
-    { name = "matplotlib", marker = "extra == 'notebook'", specifier = ">=3.8" },
-    { name = "matplotlib", marker = "extra == 'plot'", specifier = ">=3.8" },
-    { name = "nbclient", marker = "extra == 'notebook'", specifier = ">=0.10" },
-    { name = "nbformat", marker = "extra == 'interactive'", specifier = ">=4.2" },
-    { name = "nbformat", marker = "extra == 'notebook'", specifier = ">=5" },
+    { name = "matplotlib", specifier = ">=3.8" },
+    { name = "nbformat", specifier = ">=4.2" },
     { name = "numpy", specifier = ">=2" },
-    { name = "pandas", marker = "extra == 'notebook'", specifier = ">=2" },
-    { name = "plotly", marker = "extra == 'interactive'", specifier = ">=5" },
-    { name = "plotly", marker = "extra == 'notebook'", specifier = ">=5" },
+    { name = "plotly", specifier = ">=5" },
     { name = "scipy", specifier = ">=1.11" },
 ]
-provides-extras = ["plot", "interactive", "mcmc", "notebook"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1893,6 +1872,12 @@ dev = [
 docs = [
     { name = "sphinx", specifier = ">=8.2,<9" },
     { name = "sphinx-rtd-theme", specifier = ">=3.0,<4" },
+]
+notebook = [
+    { name = "emcee", specifier = ">=3.1,<4" },
+    { name = "ipykernel", specifier = ">=6" },
+    { name = "nbclient", specifier = ">=0.10" },
+    { name = "pandas", specifier = ">=2" },
 ]
 
 [[package]]

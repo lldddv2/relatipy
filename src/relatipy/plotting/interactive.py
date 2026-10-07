@@ -137,8 +137,8 @@ def _plotly():
         import plotly.graph_objects as go
     except ImportError as exc:
         raise ImportError(
-            "Interactive plotting requires Plotly; install relatipy[interactive] "
-            "or pass interactive=False for a static figure"
+            "Interactive plotting requires Plotly, a dependency of relatipy; "
+            "reinstall relatipy or pass interactive=False for a static figure"
         ) from exc
     return go
 
