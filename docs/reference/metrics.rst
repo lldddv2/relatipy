@@ -35,10 +35,15 @@ Initial orbit construction
 
 :meth:`~relatipy.metrics.Kerr.orbit` constructs one scalar, timelike
 :class:`~relatipy.geodesic.Orbit`.
-It accepts exactly one initial-condition family: stable bound Kerr elements,
-osculating Kepler elements, Cartesian coordinates and coordinate velocity,
-spherical coordinates and coordinate velocity, or Boyer--Lindquist
-coordinates and coordinate velocity.  See :doc:`usage` for supported field
+It accepts exactly one initial-condition family:
+
+- stable bound Kerr elements;
+- osculating Kepler elements;
+- Cartesian coordinates and coordinate velocity;
+- spherical coordinates and coordinate velocity;
+- Boyer--Lindquist coordinates and coordinate velocity.
+
+See :doc:`/user-guide/usage` for supported field
 combinations and units.  The first public frontend is scalar; batch orbit
 construction is not implemented.
 

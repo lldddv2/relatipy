@@ -13,9 +13,14 @@ or include Shapiro delay or gravitational lensing.
 General interface
 -----------------
 
-Use :meth:`KerrMcmcModel.get_ra_dec_vr` for physical inputs. ``kerr`` supplies
-a positive mass quantity, dimensionless spin in ``[0, 1]``, and a three-value
-observer-frame direction ``(Dec, RA, away)``. ``orbit`` accepts a supported
+Use :meth:`KerrMcmcModel.get_ra_dec_vr` for physical inputs. ``kerr``
+supplies:
+
+- a positive mass quantity;
+- dimensionless spin in ``[0, 1]``;
+- a three-value observer-frame direction ``(Dec, RA, away)``.
+
+``orbit`` accepts a supported
 ``Kerr.orbit`` initial-condition family. Cartesian, spherical, and classical
 element inputs use observer axes; Boyer--Lindquist and bound-element inputs
 use the spin-aligned frame.
@@ -35,12 +40,16 @@ native integration or observed-time matching fails.
 Legacy interface
 ----------------
 
-The callable interface takes a 13-value numeric proposal only after legacy
-astrometry and spectroscopy epochs and :meth:`KerrMcmcModel.set_solver` have
-been supplied. Its parameter units and order are specified in the class
-documentation and in :doc:`kerr-mcmc`. It returns read-only arcsec offsets and
-km/s line-of-sight velocities. The native extension must be built; otherwise
-evaluation raises :class:`ImportError`.
+The callable interface takes a 13-value numeric proposal. It requires that:
+
+- legacy astrometry and spectroscopy epochs have been supplied;
+- :meth:`KerrMcmcModel.set_solver` has been supplied;
+- the native extension is built; otherwise evaluation raises
+  :class:`ImportError`.
+
+Its parameter units and order are specified in the class documentation and
+in :doc:`/user-guide/kerr-mcmc`. It returns read-only arcsec offsets and km/s
+line-of-sight velocities.
 
 API
 ---

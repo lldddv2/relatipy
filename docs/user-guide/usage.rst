@@ -28,8 +28,14 @@ coordinate velocity, then integrates from the saved initial state:
    assert orb.tau == orb.initial.tau  # solve leaves the orbit unchanged
    print(sol.tau, sol.xyz.shape)
 
-To request particular output times, pass a nonempty, one-dimensional, finite,
-strictly increasing ``tau_eval`` sequence. A single requested time is valid.
+To request particular output times, pass a ``tau_eval`` sequence that is:
+
+- nonempty;
+- one-dimensional;
+- finite;
+- strictly increasing.
+
+A single requested time is valid.
 
 .. code-block:: python
 
@@ -39,10 +45,14 @@ strictly increasing ``tau_eval`` sequence. A single requested time is valid.
    sampled = orb.solve(tau_eval=times, method="dp45")
    assert len(sampled) == len(times)
 
-Only one initial-condition family may be supplied. They are classical elements
-``(a, e, inc, Omega, omega, f)``, Cartesian position and velocity, spherical
-position and coordinate velocity, Boyer--Lindquist position and coordinate
-velocity, or bound Kerr parameters ``(p, e, x, q_r0, q_theta0, q_phi0)``.
+Only one initial-condition family may be supplied. They are:
+
+- classical elements ``(a, e, inc, Omega, omega, f)``;
+- Cartesian position and velocity;
+- spherical position and coordinate velocity;
+- Boyer--Lindquist position and coordinate velocity;
+- bound Kerr parameters ``(p, e, x, q_r0, q_theta0, q_phi0)``.
+
 The bound family also accepts a
 :class:`~relatipy.coordinates.KerrOrbitalElements` instance. In that family,
 ``x`` is the dimensionless Kerr inclination parameter, so it is not a
@@ -61,16 +71,20 @@ is invalid.
 Numerical controls and outcomes
 -------------------------------
 
-``integrate`` and ``solve`` share five controls: ``method``, ``rtol``,
-``atol``, ``first_step``, and ``max_step``. The default method is
-``"radau"``; ``"dop853"``, ``"dp45"``, and ``"projection_radau"``
-are explicit alternatives. Method names are case-sensitive.
-The defaults are ``rtol=None`` and ``atol=None``, which select tolerances
-automatically (see :ref:`integration-tolerances`), and ``None`` for both
-step controls. Supplied step controls are positive proper-time quantities.
-``atol`` is a nonnegative number or a numeric array of shape ``(8,)``,
-ordered as the native state
-``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
+``integrate`` and ``solve`` share five controls:
+
+- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``, and
+  ``"projection_radau"`` are explicit alternatives. Method names are
+  case-sensitive.
+- ``rtol``: the default ``rtol=None`` selects the tolerance automatically
+  (see :ref:`integration-tolerances`).
+- ``atol``: the default ``atol=None`` selects the tolerance automatically.
+  A supplied ``atol`` is a nonnegative number or a numeric array of shape
+  ``(8,)``, ordered as the native state
+  ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
+- ``first_step`` and ``max_step``: the default is ``None``. Supplied step
+  controls are positive proper-time quantities.
+
 These tolerances weight local error in the normalized state; they do not
 bound the global trajectory error.
 
@@ -163,9 +177,13 @@ global trajectory accuracy.
 
 The returned :class:`~relatipy.geodesic.Solution` has read-only samples,
 ``status``, ``success``, ``message``, and numerical settings and counts in
-``integration``. ``status == 0`` means the requested endpoint was reached;
-``status == 1`` means an internal terminal event stopped the solver;
-``status == -1`` means numerical failure with a partial result. For a
+``integration``. The status values mean:
+
+- ``status == 0``: the requested endpoint was reached;
+- ``status == 1``: an internal terminal event stopped the solver;
+- ``status == -1``: numerical failure with a partial result.
+
+For a
 confirmed outer-horizon crossing, ``termination.reason`` is
 ``"outer_horizon"``. Its state and proper time are the last stored valid
 point outside the horizon, not the exact crossing point. An attempted step
@@ -239,11 +257,51 @@ Use a supported position/velocity initial-condition family for a parabolic
 state. The bound Kerr ``p`` input family represents stable bound geodesics;
 it is distinct from this instantaneous Kepler classification.
 
+Keplerian period
+----------------
+
+:meth:`~relatipy.geodesic.Orbit.get_keplerian_period` returns
+``2*pi*sqrt(a**3 / (G*M))`` for the osculating conic of the current state, in
+the orbit's time unit. It is a Newtonian estimate, not a radial, azimuthal or
+polar period of the Kerr geodesic, and it raises ``ValueError`` when the conic
+is not elliptic. It is a convenient scale for ``tau_eval``:
+
+.. code-block:: python
+
+   period = orb.get_keplerian_period()
+   sol = orb.solve(tau_eval=np.linspace(0, 3, 1500) * period)
+
+Constants of motion
+-------------------
+
+The energy ``E = -u_t``, the axial angular momentum ``Lz = u_phi`` and the
+Carter constant ``Q`` (not ``K = Q + (Lz - a E)**2``) are normalized with
+``G = c = M = mu = 1``:
+
+- :meth:`~relatipy.geodesic.Orbit.get_E`,
+  :meth:`~relatipy.geodesic.Orbit.get_Lz` and
+  :meth:`~relatipy.geodesic.Orbit.get_Q` return floats for the current point;
+- :meth:`~relatipy.geodesic.Solution.get_E`,
+  :meth:`~relatipy.geodesic.Solution.get_Lz` and
+  :meth:`~relatipy.geodesic.Solution.get_Q` return read-only arrays aligned
+  with ``sol.tau``;
+- :meth:`~relatipy.geodesic.Solution.plot_constants` plots them, or their
+  relative drift with ``drift=True``, against ``t`` or ``tau``.
+
+Stored four-velocities are not renormalized, so the series show the numerical
+drift. Samples requested with ``tau_eval`` are interpolated; check
+conservation on a solution without ``tau_eval``.
+
+.. code-block:: python
+
+   E, Lz, Q = orb.get_E(), orb.get_Lz(), orb.get_Q()
+   fig, axes = sol.plot_constants(time="tau", drift=True)
+
 Plotting
 --------
 
-Matplotlib is optional and is imported only when a plotting method is called.
-Install it with ``pip install "relatipy[plot]"``.
+Matplotlib and Plotly are installed with RelatiPy and are imported only when
+a plotting method is called.
 :meth:`~relatipy.geodesic.Orbit.preview` draws the current
 osculating Kepler conic and marks the current position. It is a preview of
 the instantaneous classical orbit, **not** the integrated Kerr path. The
@@ -252,17 +310,35 @@ references in the oblate Cartesian ``xy`` plane; they are not 3D surfaces.
 ``preview`` raises ``ValueError`` for undefined required angles or a
 parabolic osculating conic.
 :meth:`~relatipy.geodesic.Solution.plot` draws the stored numerical samples
-of an actual integrated trajectory. Both methods accept ``projection="3d"``,
-``"xy"``, ``"xz"``, ``"yz"``, or ``"views"``. ``views`` is the default and
-produces three orthogonal planes. With ``interactive=False`` they return
-Matplotlib figures; with ``interactive=True`` they return Plotly figures. If
-``interactive`` is omitted, ``"3d"`` selects Plotly and other projections
-select Matplotlib.
+of an actual integrated trajectory. Both methods accept these ``projection``
+values:
+
+- ``"views"``, the default, which produces three orthogonal planes;
+- ``"3d"``;
+- ``"xy"``, ``"xz"``, and ``"yz"``.
+
+The returned figure type depends on ``interactive``:
+
+- with ``interactive=False`` they return Matplotlib figures;
+- with ``interactive=True`` they return Plotly figures;
+- if ``interactive`` is omitted, ``"3d"`` selects Plotly and other
+  projections select Matplotlib.
 
 .. code-block:: python
 
    preview_fig, preview_ax = orb.preview(projection="xy")
    path_fig, path_ax = sol.plot(projection="xy")
 
-See :doc:`api` for signatures and :doc:`integration-roadmap` for the
+:func:`relatipy.plotting.plot_sols` (also ``relatipy.plot_sols``) draws several solutions about the same black hole
+in one frame, each with its own colour and legend entry. It accepts the same
+``projection``, ``interactive`` and ``style`` arguments and an optional
+``labels`` sequence:
+
+.. code-block:: python
+
+   from relatipy import plot_sols
+
+   fig, ax = plot_sols(sol_a, sol_b, projection="xy", labels=["a", "b"])
+
+See :doc:`/reference/index` for signatures and :doc:`/user-guide/scope-and-limits` for the
 implementation limits.

@@ -13,26 +13,43 @@ General evaluator
 -----------------
 
 Construct an empty model and call ``get_ra_dec_vr`` with physical inputs. The
-``kerr`` mapping requires ``mass`` (a positive mass quantity), ``spin`` (a
-dimensionless scalar in ``[0, 1]``), and ``vec`` (three finite observer-frame
-components). ``vec`` gives the spin direction in ``(Dec, RA, away)`` axes. It
-is normalized for nonzero spin; a zero vector is valid only when ``spin`` is
-zero. ``distance`` is a positive observer distance quantity.
+``kerr`` mapping requires:
+
+- ``mass``, a positive mass quantity;
+- ``spin``, a dimensionless scalar in ``[0, 1]``;
+- ``vec``, three finite observer-frame components. ``vec`` gives the spin
+  direction in ``(Dec, RA, away)`` axes. It is normalized for nonzero spin; a
+  zero vector is valid only when ``spin`` is zero.
+
+``distance`` is a positive observer distance quantity.
 
 The ``orbit`` mapping accepts the same one-family initial conditions as
-:meth:`~relatipy.metrics.Kerr.orbit`: classical elements, Cartesian,
-spherical, Boyer--Lindquist, or bound Kerr inputs. Cartesian, spherical, and
-classical-element inputs use observer axes. Boyer--Lindquist and bound inputs
-use the spin-aligned body frame. Optional ``t`` and ``tau`` set the physical
-coordinate-time and proper-time origins.
+:meth:`~relatipy.metrics.Kerr.orbit`:
+
+- classical elements;
+- Cartesian inputs;
+- spherical inputs;
+- Boyer--Lindquist inputs;
+- bound Kerr inputs.
+
+Cartesian, spherical, and classical-element inputs use observer axes.
+Boyer--Lindquist and bound inputs use the spin-aligned body frame. Optional
+``t`` and ``tau`` set the physical coordinate-time and proper-time origins.
 
 The ``sol`` mapping requires exactly one nonempty one-dimensional quantity:
-``t_eval``, ``tau_eval``, or ``t_obs``. Input times may be unordered. The
-returned arrays retain that order. ``t_eval`` is coordinate time,
-``tau_eval`` is proper time, and ``t_obs`` is arrival time at the observer.
-The mapping can also set ``method`` (``"dop853"`` or ``"radau"``), positive
-scalar ``rtol`` and ``atol``, and positive integer ``max_steps``. Without an
-override, the general evaluator uses ``dop853``, ``rtol=1e-9``,
+
+- ``t_eval``, coordinate time;
+- ``tau_eval``, proper time;
+- ``t_obs``, arrival time at the observer.
+
+Input times may be unordered. The returned arrays retain that order. The
+mapping can also set:
+
+- ``method`` (``"dop853"`` or ``"radau"``);
+- positive scalar ``rtol`` and ``atol``;
+- positive integer ``max_steps``.
+
+Without an override, the general evaluator uses ``dop853``, ``rtol=1e-9``,
 ``atol=1e-12``, and ``max_steps=100000``.
 
 .. code-block:: python
@@ -143,8 +160,10 @@ gravitational lensing. ``v_los`` is redshift-equivalent velocity, not the
 star's coordinate velocity along the line of sight. Solver tolerances apply
 to the internal geometric state. Check observable convergence for each fit.
 
-Invalid mappings, units, shapes, values, spins, or solver settings raise
-``TypeError``, ``ValueError``, or an Astropy unit-conversion error. Native
-integration or observed-time matching failures raise
-:class:`~relatipy.geodesic.IntegrationError`. A missing compiled extension
-raises :class:`ImportError`.
+Errors are reported as follows:
+
+- invalid mappings, units, shapes, values, spins, or solver settings raise
+  ``TypeError``, ``ValueError``, or an Astropy unit-conversion error;
+- native integration or observed-time matching failures raise
+  :class:`~relatipy.geodesic.IntegrationError`;
+- a missing compiled extension raises :class:`ImportError`.

@@ -38,27 +38,32 @@ Integration controls and outcomes
 state to an absolute proper time and returns ``None``.
 :meth:`~relatipy.geodesic.Orbit.solve` leaves the orbit unchanged and
 returns a read-only :class:`~relatipy.geodesic.Solution`.
-Both accept ``method``, ``rtol``, ``atol``, ``first_step``, and ``max_step``.
-The default method is ``"radau"``; ``"dop853"``, ``"dp45"``, and
-``"projection_radau"`` are supported alternatives.  Defaults are
-``rtol=None``, ``atol=None``, and ``None`` for both step controls.  An omitted
-``rtol`` selects ``1e-10``; an omitted ``atol`` selects ``rtol`` times a
-characteristic scale of each native component at the starting state
-(see :ref:`integration-tolerances`).  Explicit tolerances are used as given,
-but an unfit value issues :class:`~relatipy.geodesic.IntegrationWarning`
-before integration.  A supplied
-step control is a finite, positive proper-time quantity.  ``atol`` is a
-finite, non-negative scalar or a read-only numeric vector of shape ``(8,)``;
-the native order is ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
-These controls scale local error estimates and do not guarantee global error.
+Both accept the following controls:
 
-The outer horizon is an internal terminal event.  ``solve`` records it as
-``status == 1`` and a :class:`~relatipy.geodesic.Termination`;
-``integrate`` raises
-:class:`~relatipy.geodesic.IntegrationTerminated`.  In either case,
-the recorded terminal state is the last valid exterior state, not a localized
-crossing.  A numerical failure uses ``status == -1`` in a solution or raises
-:class:`~relatipy.geodesic.IntegrationError` from ``integrate``.
+- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``, and
+  ``"projection_radau"`` are supported alternatives.
+- ``rtol``: the default is ``None``, which selects ``1e-10``.
+- ``atol``: the default is ``None``, which selects ``rtol`` times a
+  characteristic scale of each native component at the starting state
+  (see :ref:`integration-tolerances`).  A supplied ``atol`` is a finite,
+  non-negative scalar or a read-only numeric vector of shape ``(8,)``; the
+  native order is ``(t/T0, R/r_g, Theta, Phi, u^t, u^R, u^Theta, u^Phi)``.
+- ``first_step`` and ``max_step``: the default is ``None``.  A supplied step
+  control is a finite, positive proper-time quantity.
+
+Explicit tolerances are used as given, but an unfit value issues
+:class:`~relatipy.geodesic.IntegrationWarning` before integration.  These
+controls scale local error estimates and do not guarantee global error.
+
+Integration can end early in two ways:
+
+- The outer horizon is an internal terminal event.  ``solve`` records it as
+  ``status == 1`` and a :class:`~relatipy.geodesic.Termination`;
+  ``integrate`` raises :class:`~relatipy.geodesic.IntegrationTerminated`.  In
+  either case, the recorded terminal state is the last valid exterior state,
+  not a localized crossing.
+- A numerical failure uses ``status == -1`` in a solution or raises
+  :class:`~relatipy.geodesic.IntegrationError` from ``integrate``.
 
 Stored-result access
 --------------------
@@ -70,10 +75,13 @@ one-dimensional Boolean mask returns a series.  ``Solution.at(tau=...)`` or
 quantity.  Exact stored times are copied exactly.  Between samples, Cartesian
 position and coordinate velocity are interpolated independently; a native
 batch reconstructs the Kerr-coordinate state without reintegration.  Queries
-must lie within the stored domain.  Coordinate-time queries also require that
-the stored ``t(tau)`` relation be uniquely monotone.  Angular winding between
-adjacent samples that differ by at least ``pi`` radians cannot be recovered
-uniquely.
+are subject to these conditions:
+
+- Queries must lie within the stored domain.
+- Coordinate-time queries also require that the stored ``t(tau)`` relation
+  be uniquely monotone.
+- Angular winding between adjacent samples that differ by at least ``pi``
+  radians cannot be recovered uniquely.
 
 API
 ---

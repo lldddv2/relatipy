@@ -22,7 +22,7 @@ layers; the integration loop makes no Python callbacks.
 
 > **Status:** research software under active development (version 1.1.1).
 > The first public interface covers scalar timelike orbits around a Kerr black
-> hole. See [scope and limits](https://relatipy.readthedocs.io/en/latest/integration-roadmap.html) before relying on
+> hole. See [scope and limits](https://relatipy.readthedocs.io/en/latest/user-guide/scope-and-limits.html) before relying on
 > results.
 
 ## Features
@@ -45,8 +45,12 @@ layers; the integration loop makes no Python callbacks.
 - **Observables for MCMC.** `KerrMcmcModel` predicts sky-plane offsets
   (arcsec) and line-of-sight velocity (km/s) from a timelike Kerr geodesic,
   including Rømer delay, fully evaluated in C.
-- **Plotting.** Optional Matplotlib or Plotly views of the osculating conic
-  (`Orbit.preview`) and of the integrated path (`Solution.plot`).
+- **Constants of motion.** `get_E`, `get_Lz` and `get_Q` on orbits and
+  solutions, `Solution.plot_constants` for their drift, and
+  `Orbit.get_keplerian_period` as a time scale.
+- **Plotting.** Matplotlib or Plotly views of the osculating conic
+  (`Orbit.preview`), of the integrated path (`Solution.plot`), and of several
+  paths in one frame (`relatipy.plot_sols`).
 
 ## Installation
 
@@ -148,7 +152,7 @@ alpha, delta, v_los = model.get_ra_dec_vr(
 ```
 
 `alpha` and `delta` are offsets in arcsec and `v_los` is in km/s, returned as
-read-only NumPy arrays. See [Kerr MCMC guide](https://relatipy.readthedocs.io/en/latest/kerr-mcmc.html) for the
+read-only NumPy arrays. See [Kerr MCMC guide](https://relatipy.readthedocs.io/en/latest/user-guide/kerr-mcmc.html) for the
 fixed-epoch API and solver settings.
 
 A minimal runnable script is in [`examples/bound_orbit.py`](https://github.com/lldddv2/relatipy/blob/main/examples/bound_orbit.py).
@@ -205,10 +209,10 @@ uv sync --group docs
 uv run --group docs sphinx-build -W --keep-going -b html docs docs/_build/html
 ```
 
-Key pages: [usage](https://relatipy.readthedocs.io/en/latest/usage.html), [scope and limits](https://relatipy.readthedocs.io/en/latest/integration-roadmap.html),
-[developer architecture](https://relatipy.readthedocs.io/en/latest/developer-architecture.html),
+Key pages: [usage](https://relatipy.readthedocs.io/en/latest/user-guide/usage.html), [scope and limits](https://relatipy.readthedocs.io/en/latest/user-guide/scope-and-limits.html),
+[developer architecture](https://relatipy.readthedocs.io/en/latest/development/architecture.html),
 [native Kerr reference](https://github.com/lldddv2/relatipy/blob/main/native/README.md), and
-[peer-library validation](https://relatipy.readthedocs.io/en/latest/peer-validation.html).
+[peer-library validation](https://relatipy.readthedocs.io/en/latest/development/peer-validation.html).
 
 ## Validation status
 
@@ -216,12 +220,12 @@ Native integrators and geometry have unit tests, invariant-drift checks, and
 comparisons against SciPy. A peer-library harness with KerrGeoPy and PyGRO
 exists, but its RelatiPy comparison gate is still skipped and the associated
 scientific records await manual review. Do not treat those comparisons as a
-validation of RelatiPy. Details: [peer-library validation](https://relatipy.readthedocs.io/en/latest/peer-validation.html).
+validation of RelatiPy. Details: [peer-library validation](https://relatipy.readthedocs.io/en/latest/development/peer-validation.html).
 
 ## Contributing
 
-Read the [contributing guide](https://relatipy.readthedocs.io/en/latest/contributing.html) and
-[developer architecture](https://relatipy.readthedocs.io/en/latest/developer-architecture.html) first. In
+Read the [contributing guide](https://relatipy.readthedocs.io/en/latest/development/contributing.html) and
+[developer architecture](https://relatipy.readthedocs.io/en/latest/development/architecture.html) first. In
 short: physics and integration stay in C, the Python layer handles API, units,
 objects, and interpolation, private extension modules are not public API, and
 public docstrings follow the NumPy style.

@@ -34,15 +34,21 @@ with ``a = spin * r_g``. Their spherical view is the Euclidean one,
 with ``phi = Phi``. For nonzero spin, ``r`` and ``theta`` therefore differ from
 the Boyer--Lindquist ``R`` and ``Theta``. Velocities are derivatives with
 respect to coordinate time ``t``; four-velocities are derivatives with respect
-to proper time. Lengths must be compatible with metres,
-times with seconds, angles with radians, radial velocities with length per
-time, and angular velocities with angle per time.
+to proper time. Units must be compatible as follows:
+
+- lengths with metres;
+- times with seconds;
+- angles with radians;
+- radial velocities with length per time;
+- angular velocities with angle per time.
 
 ``CartesianCoordinates.xyz`` has shape ``(3,)`` for one position and
 ``(n, 3)`` for a series. ``CartesianStateVector.xyz`` and ``vxyz`` have the
-same two alternatives. Invalid quantity types raise :class:`TypeError`;
-incompatible dimensions raise :class:`astropy.units.UnitConversionError`; and
-invalid or mismatched shapes raise :class:`ValueError`.
+same two alternatives. Validation errors are raised as follows:
+
+- invalid quantity types raise :class:`TypeError`;
+- incompatible dimensions raise :class:`astropy.units.UnitConversionError`;
+- invalid or mismatched shapes raise :class:`ValueError`.
 
 Classical elements
 ------------------
@@ -56,9 +62,14 @@ convention. Its fields are ``(a, e, inc, Omega, omega, f)``. ``a`` is a length,
 exactly parabolic conic; ``NaN`` and other infinities are not.
 
 :class:`KerrOrbitalElements` is a separate scalar input for a stable bound
-timelike Kerr geodesic. ``p`` is a positive physical semilatus rectum, ``e``
-is in ``[0, 1)``, ``x`` is in ``[-1, 1]``, and the three Mino phases are finite
-angles. It validates only public units, scalar shapes, and basic parameter
+timelike Kerr geodesic. Its fields satisfy:
+
+- ``p`` is a positive physical semilatus rectum;
+- ``e`` is in ``[0, 1)``;
+- ``x`` is in ``[-1, 1]``;
+- the three Mino phases are finite angles.
+
+It validates only public units, scalar shapes, and basic parameter
 ranges. Native construction checks stability and the Boyer--Lindquist chart
 domain.
 

@@ -22,11 +22,35 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinx_reredirects",
+    "myst_nb",
 ]
+
+# Tutorial notebooks are committed with their outputs; the docs build does not
+# execute them. Re-run a notebook locally after changing it.
+nb_execution_mode = "off"
+myst_enable_extensions = ["dollarmath", "amsmath"]
+
+# Pages moved into section folders; keep the old URLs working.
+redirects = {
+    "installation": "user-guide/installation.html",
+    "usage": "user-guide/usage.html",
+    "kerr-mcmc": "user-guide/kerr-mcmc.html",
+    "integration-roadmap": "user-guide/scope-and-limits.html",
+    "contributing": "development/contributing.html",
+    "developer-architecture": "development/architecture.html",
+    "peer-validation": "development/peer-validation.html",
+    "api": "reference/index.html",
+    "metrics-reference": "reference/metrics.html",
+    "geodesic-reference": "reference/geodesic.html",
+    "coordinates-reference": "reference/coordinates.html",
+    "observables-reference": "reference/observables.html",
+    "plotting-reference": "reference/plotting.html",
+}
 
 root_doc = "index"
 language = "en"
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
 
 # Every Python cross-reference must resolve; the strict build uses ``-n``.
 nitpicky = True
@@ -91,9 +115,11 @@ napoleon_type_aliases = {
 html_theme = "sphinx_rtd_theme"
 html_title = f"RelatiPy {release} documentation"
 html_static_path = ["_static"]
-html_logo = "_static/logo-mark-dark.svg"
+html_css_files = ["custom.css"]
+html_logo = "_static/logo-dark.svg"
 html_favicon = "_static/logo-mark.svg"
 html_theme_options = {
+    "logo_only": True,
     "collapse_navigation": False,
     "navigation_depth": 4,
 }

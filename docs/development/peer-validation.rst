@@ -4,9 +4,13 @@ Scientific validation
 =====================
 
 The ``tests/reference/`` suite compares RelatiPy with independent references:
-exact Schwarzschild solutions, the analytic Kerr trajectories of KerrGeoPy,
-the numerical geodesics of PyGRO, and conserved Kerr quantities computed
-outside the native core. Frozen reference data and the recorded reports live
+
+- exact Schwarzschild solutions;
+- the analytic Kerr trajectories of KerrGeoPy;
+- the numerical geodesics of PyGRO;
+- conserved Kerr quantities computed outside the native core.
+
+Frozen reference data and the recorded reports live
 in ``tests/fixtures/``.
 
 .. warning::
@@ -19,10 +23,15 @@ in ``tests/fixtures/``.
 Conventions
 -----------
 
-All reference comparisons use geometric units ``G = c = M = 1``, metric
-signature ``(-,+,+,+)``, Boyer--Lindquist component order
-``(t, r, theta, phi)``, timelike proper time ``tau``, and the contravariant
-four-velocity ``u^mu = dx^mu/dtau``. Compared states have the order
+All reference comparisons use:
+
+- geometric units ``G = c = M = 1``;
+- metric signature ``(-,+,+,+)``;
+- Boyer--Lindquist component order ``(t, r, theta, phi)``;
+- timelike proper time ``tau``;
+- the contravariant four-velocity ``u^mu = dx^mu/dtau``.
+
+Compared states have the order
 ``(t, r, theta, phi, u^t, u^r, u^theta, u^phi)``. Equivalent azimuth branches
 separated by an integer multiple of ``2*pi`` are aligned before subtraction.
 Error limits are maximum absolute componentwise limits in these units.
@@ -152,15 +161,21 @@ reduced.
 Invariant drift
 ---------------
 
-``tests/fixtures/orbit_invariant_drift_results.json`` records two cases: an
-inclined eccentric Kerr orbit (``a = 0.5 M``, ``p = 8 M``, ``e = 0.2``,
-``x = 0.8``) over five radial periods, and a circular Schwarzschild orbit at
-``r = 10 M`` over five revolutions. Each runs with ``radau``, ``dop853``, and
-``dp45`` at a coarse setting (``rtol=1e-6``, ``atol=1e-8``) and a fine
-setting (``rtol=1e-10``, ``atol=1e-12``). With the fine setting, the scaled
-drift of every invariant and ``|u.u + 1|`` must stay below ``2e-8``; for the
-Kerr case the fine-to-coarse drift ratio must be at most ``0.05``. The
-recorded status is ``pass``. Conservation alone does not bound phase or
+``tests/fixtures/orbit_invariant_drift_results.json`` records two cases:
+
+- an inclined eccentric Kerr orbit (``a = 0.5 M``, ``p = 8 M``, ``e = 0.2``,
+  ``x = 0.8``) over five radial periods;
+- a circular Schwarzschild orbit at ``r = 10 M`` over five revolutions.
+
+Each runs with ``radau``, ``dop853``, and ``dp45`` at a coarse setting
+(``rtol=1e-6``, ``atol=1e-8``) and a fine setting (``rtol=1e-10``,
+``atol=1e-12``). The acceptance criteria are:
+
+- with the fine setting, the scaled drift of every invariant and
+  ``|u.u + 1|`` must stay below ``2e-8``;
+- for the Kerr case, the fine-to-coarse drift ratio must be at most ``0.05``.
+
+The recorded status is ``pass``. Conservation alone does not bound phase or
 coordinate error.
 
 Domain limits
@@ -168,14 +183,20 @@ Domain limits
 
 ``tests/fixtures/orbit_domain_extremes_results.json`` records near-axis,
 near-horizon, and radial-infall cases at ``rtol=1e-9`` and ``atol=1e-12``.
-Successful cases must keep the norm error below ``2e-9`` and each invariant
-drift below ``2e-9 * max(1, |initial value|)``. Exact Schwarzschild infall
-must match the exact radius within ``2e-11``. The endpoints of different
-methods must agree within ``2e-8``; because every method uses the same native
-right-hand side, this checks numerical consistency only. An integration stage
-that crosses the polar axis must end as a numerical failure that retains the
-initial state, and a case that fails from horizon conditioning must return a
-finite exterior partial solution; no accuracy is claimed for either.
+The cases must satisfy these requirements:
+
+- Successful cases must keep the norm error below ``2e-9`` and each invariant
+  drift below ``2e-9 * max(1, |initial value|)``.
+- Exact Schwarzschild infall must match the exact radius within ``2e-11``.
+- The endpoints of different methods must agree within ``2e-8``; because
+  every method uses the same native right-hand side, this checks numerical
+  consistency only.
+- An integration stage that crosses the polar axis must end as a numerical
+  failure that retains the initial state.
+- A case that fails from horizon conditioning must return a finite exterior
+  partial solution.
+
+No accuracy is claimed for the last two failure cases.
 
 Limitations
 -----------
@@ -198,7 +219,10 @@ From the repository root, with the package built in the environment:
 
    $ uv run --group dev pytest tests/reference
 
-The public-orbit, invariant, projection, and domain tests need only RelatiPy
-and its runtime dependencies. The oracle tests skip when KerrGeoPy or PyGRO
-is missing; when both are installed, KerrGeoPy must be version 0.9.3 and
-PyGRO at least 1.0.3. The native tests skip without a C compiler.
+Test requirements differ by module:
+
+- The public-orbit, invariant, projection, and domain tests need only
+  RelatiPy and its runtime dependencies.
+- The oracle tests skip when KerrGeoPy or PyGRO is missing; when both are
+  installed, KerrGeoPy must be version 0.9.3 and PyGRO at least 1.0.3.
+- The native tests skip without a C compiler.

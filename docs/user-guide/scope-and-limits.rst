@@ -26,8 +26,14 @@ normalized by ``T0``. Public position and velocity remain physical
 quantities. The six-value Cartesian ``state_vector`` is distinct from this
 native integration state.
 
-The general methods are ``"radau"`` (default), ``"dop853"``, ``"dp45"``,
-and ``"projection_radau"``. These method names are case-sensitive. The common
+The general methods are:
+
+- ``"radau"`` (default);
+- ``"dop853"``;
+- ``"dp45"``;
+- ``"projection_radau"``.
+
+These method names are case-sensitive. The common
 controls are ``method``, ``rtol``, ``atol``,
 ``first_step``, and ``max_step``. Omitted tolerances are automatic:
 ``rtol`` becomes ``1e-10`` and ``atol`` becomes ``rtol`` times a
@@ -36,7 +42,7 @@ characteristic scale of each native component at the starting state (see
 native state order.
 The native controller scales local error componentwise; this is no guarantee
 of global trajectory error. The native integrators and their standalone
-tests are described in :doc:`developer-architecture`. The output solution holds
+tests are described in :doc:`/development/architecture`. The output solution holds
 accepted samples or validated requested samples; no native dense output is
 retained. :meth:`relatipy.geodesic.Solution.at` interpolates stored
 Cartesian position and coordinate velocity in Python and asks C to
@@ -63,7 +69,7 @@ The spin parameter is dimensionless with ``0 <= spin <= 1``. Retrograde
 motion is selected by the initial velocity or inclination. The six input
 orbital elements use a right-handed Cartesian frame centered on the black
 hole, with ``z`` along the spin axis. The first orbit must start outside the
-outer Kerr horizon. See :doc:`usage` and :doc:`api` for signatures and
+outer Kerr horizon. See :doc:`/user-guide/usage` and :doc:`/reference/index` for signatures and
 examples.
 
 Osculating elements and degeneracies
@@ -111,11 +117,15 @@ and both equatorial ISCO radii as reference circles in the oblate Cartesian
 ``xy`` plane. These circles are not the full Kerr surfaces, and the preview
 is not an integrated trajectory. ``Solution.plot`` draws the actual stored
 Cartesian samples returned by the numerical integration; it does not
-resample or interpolate them. Both operations accept ``"views"`` (the
-default three-panel static figure), ``"3d"``, ``"xy"``, ``"xz"``, and
-``"yz"``. Static figures use Matplotlib from the ``plot`` extra; ``"3d"``
-defaults to an interactive Plotly figure from the ``interactive`` extra.
-See :doc:`plotting-reference` for the return forms.
+resample or interpolate them. Both operations accept:
+
+- ``"views"``, the default three-panel static figure;
+- ``"3d"``;
+- ``"xy"``, ``"xz"``, and ``"yz"``.
+
+Static figures use Matplotlib; ``"3d"`` defaults to an interactive Plotly
+figure. Both libraries are installed with RelatiPy.
+See :doc:`/reference/plotting` for the return forms.
 ``Orbit.preview`` raises ``ValueError`` if required element angles are
 undefined or the osculating conic is parabolic. ``Solution.plot`` can still
 draw the finite stored Cartesian trajectory.
@@ -123,8 +133,13 @@ draw the finite stored Cartesian trajectory.
 Termination and failure
 -----------------------
 
-``Solution.status`` follows the ``-1, 0, 1`` convention: numerical failure,
-requested endpoint reached, or internal terminal event. A positive terminal
+``Solution.status`` follows the ``-1, 0, 1`` convention:
+
+- ``-1``: numerical failure;
+- ``0``: requested endpoint reached;
+- ``1``: internal terminal event.
+
+A positive terminal
 status has structured ``Solution.termination``. For a confirmed crossing
 of the outer horizon by an accepted native step, the reported termination
 state is the last valid point outside the horizon, and
@@ -143,11 +158,14 @@ be reconstructed. Invalid arguments and units raise Python validation errors
 before native integration.
 
 Both operations issue :class:`~relatipy.geodesic.IntegrationWarning` before
-integration when an explicit ``rtol`` or ``atol`` is unfit for the starting
-state; omitted tolerances never trigger it. ``Orbit.solve`` also warns
-when adjacent requested proper-time samples are farther apart than one
-tenth of the initial osculating Kepler period, provided that the initial
-elements describe a finite bound conic.
+integration in these cases:
+
+- an explicit ``rtol`` or ``atol`` is unfit for the starting state; omitted
+  tolerances never trigger it;
+- for ``Orbit.solve`` only, adjacent requested proper-time samples are
+  farther apart than one tenth of the initial osculating Kepler period,
+  provided that the initial elements describe a finite bound conic.
+
 This period is a Newtonian sampling estimate, not an error bound for a Kerr
 trajectory. Warnings leave the return status and exceptions unchanged.
 
@@ -182,8 +200,13 @@ binding and freed; public state arrays are read-only. The precise native object 
 lifetime design beyond these operations remains an open decision.
 
 The repository currently builds its private Cython extension with
-``setuptools.build_meta``. A migration to scikit-build-core and CMake, C11
-as a required minimum, supported platforms and wheel matrix, and generated
-analytic-expression strategy remain proposals or pending decisions; they are
-not distribution guarantees. The scientific reference checks and their
-limits are described in :doc:`peer-validation`.
+``setuptools.build_meta``. The following remain proposals or pending
+decisions; they are not distribution guarantees:
+
+- a migration to scikit-build-core and CMake;
+- C11 as a required minimum;
+- supported platforms and wheel matrix;
+- generated analytic-expression strategy.
+
+The scientific reference checks and their
+limits are described in :doc:`/development/peer-validation`.

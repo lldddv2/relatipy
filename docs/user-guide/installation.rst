@@ -1,56 +1,40 @@
 Installation
 ============
 
-Requirements
-------------
-
-RelatiPy requires Python 3.11 or later, a C11 compiler, and the standard C
-math library. Source installation builds the private Cython extensions used by
-the public Python interface.
-
-Install from source
--------------------
-
-Clone the repository and install the package from its root directory:
+RelatiPy requires Python 3.11 or later. Install it from PyPI:
 
 .. code-block:: console
 
-   $ git clone https://github.com/lldddv2/relatipy.git
-   $ cd relatipy
-   $ python -m pip install .
+   $ python -m pip install relatipy
 
-Install optional dependencies with extras:
+This also installs its runtime dependencies:
 
-.. code-block:: console
+- NumPy;
+- Astropy;
+- SciPy;
+- Matplotlib, for static figures;
+- Plotly with nbformat, for interactive figures, which are the default for
+  ``projection="3d"`` in :meth:`~relatipy.geodesic.Orbit.preview` and
+  :meth:`~relatipy.geodesic.Solution.plot`.
 
-   $ python -m pip install ".[plot]"
-   $ python -m pip install ".[interactive]"
-   $ python -m pip install ".[notebook]"
+Prebuilt wheels are published for Linux x86_64 and CPython 3.11 to 3.14. On
+other platforms pip builds the package from the source distribution, which
+requires a C11 compiler and the standard C math library.
 
-``plot`` installs Matplotlib for static figures. ``interactive`` installs
-Plotly and nbformat for interactive figures, which are the default for
-``projection="3d"`` in :meth:`~relatipy.geodesic.Orbit.preview` and
-:meth:`~relatipy.geodesic.Solution.plot`. ``notebook`` installs Matplotlib,
-Plotly, pandas, the Jupyter kernel and client packages, and emcee.
+Samplers
+--------
 
-The ``mcmc`` extra installs ``emcee`` for sampler workflows. The
-:class:`~relatipy.observables.KerrMcmcModel` is included in the base package.
-
-For an editable development installation, use
-`uv <https://docs.astral.sh/uv/>`_:
-
-.. code-block:: console
-
-   $ uv sync --group dev
-
-Build the documentation
------------------------
-
-Install the documentation dependency group and run a strict Sphinx build:
+:class:`~relatipy.observables.KerrMcmcModel` returns model predictions
+(astrometry and line-of-sight velocity); the likelihood and the sampler are
+left to the user, so RelatiPy does not depend on a specific sampler. The
+example notebooks use `emcee <https://emcee.readthedocs.io/>`_:
 
 .. code-block:: console
 
-   $ uv sync --group docs
-   $ uv run --group docs sphinx-build -W --keep-going -n -b html docs docs/_build/html
+   $ python -m pip install emcee
 
-Open ``docs/_build/html/index.html`` in a browser to inspect the result.
+Development installation
+------------------------
+
+Contributors working from a checkout of the repository use
+`uv <https://docs.astral.sh/uv/>`_; see :doc:`/development/contributing`.

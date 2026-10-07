@@ -7,19 +7,28 @@ Plotting
 
 :mod:`relatipy.plotting` creates figures from stored public data. Plotting
 does not integrate a trajectory or interpolate a solution. Matplotlib is
-imported only when a static figure is drawn; Plotly is optional for interactive
+imported only when a static figure is drawn; Plotly draws interactive
 three-dimensional figures. Functions return figures without showing or saving
 them.
 
 Orbit and time-series figures
 -----------------------------
 
-``plot_solution`` draws stored Cartesian samples of a
-:class:`relatipy.geodesic.Solution`. ``preview_orbit`` draws the native
-osculating preview of an :class:`relatipy.geodesic.Orbit`; it is not an
-integrated Kerr trajectory. ``plot_views`` renders three orthogonal Cartesian
-projections at a shared physical scale. ``plot_evolution`` draws stored
-coordinate or osculating-element time series. Cartesian coordinates are
+- ``plot_solution`` draws stored Cartesian samples of a
+  :class:`relatipy.geodesic.Solution`.
+- ``plot_sols`` draws the stored samples of several solutions about the same
+  black hole in one frame, each with its own colour and legend entry; it is
+  also available as ``relatipy.plot_sols``.
+- ``preview_orbit`` draws the native osculating preview of an
+  :class:`relatipy.geodesic.Orbit`; it is not an integrated Kerr trajectory.
+- ``plot_views`` renders three orthogonal Cartesian projections at a shared
+  physical scale.
+- ``plot_evolution`` draws stored coordinate or osculating-element time
+  series.
+- ``plot_constants`` draws the stored energy, axial angular momentum and
+  Carter constant, or their drift, against time.
+
+Cartesian coordinates are
 expressed in the selected displayed length unit, while axes retain their
 physical units.
 
@@ -32,15 +41,17 @@ called.
 Fit and publication figures
 ---------------------------
 
-``plot_observables`` plots observed and predicted astrometry or velocity
-series. ``plot_corner`` expects finite posterior samples with shape ``(n, k)``,
-where ``n >= 2`` and ``k >= 2``; labels contain one display name, including any
-unit, per parameter. ``Style`` and its immutable nested settings control
-figure sizes, fonts, axes, roles, and plot-specific appearance. ``Target``
-contains dimensions in millimetres and text sizes in points. ``MM`` converts
-millimetres to inches. ``new_figure``, ``format_axes``,
-``publication_style``, and ``save_figure`` support consistently formatted
-custom Matplotlib figures.
+- ``plot_observables`` plots observed and predicted astrometry or velocity
+  series.
+- ``plot_corner`` expects finite posterior samples with shape ``(n, k)``,
+  where ``n >= 2`` and ``k >= 2``; labels contain one display name, including
+  any unit, per parameter.
+- ``Style`` and its immutable nested settings control figure sizes, fonts,
+  axes, roles, and plot-specific appearance.
+- ``Target`` contains dimensions in millimetres and text sizes in points.
+- ``MM`` converts millimetres to inches.
+- ``new_figure``, ``format_axes``, ``publication_style``, and
+  ``save_figure`` support consistently formatted custom Matplotlib figures.
 
 API
 ---
@@ -97,6 +108,8 @@ Figure functions
 
 .. autofunction:: relatipy.plotting.plot_solution
 
+.. autofunction:: relatipy.plotting.plot_sols
+
 .. autofunction:: relatipy.plotting.preview_orbit
 
 .. autofunction:: relatipy.plotting.plot_views
@@ -106,6 +119,8 @@ Figure functions
 .. autofunction:: relatipy.plotting.preview_orbit_interactive
 
 .. autofunction:: relatipy.plotting.plot_evolution
+
+.. autofunction:: relatipy.plotting.plot_constants
 
 .. autofunction:: relatipy.plotting.plot_observables
 

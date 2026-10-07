@@ -31,25 +31,37 @@ Source layout
 -------------
 
 ``native/include/relatipy/`` contains internal C headers for local Kerr
-geometry and geodesic right-hand sides. ``native/src/`` separates shared
-numeric utilities (``utils/``), metric routines (``metric/``), initial-state
-conversion (``geodesic/initial/``), solution reconstruction
-(``geodesic/solution/``), and adaptive integrators
-(``geodesic/integrators/``). The native integrator names are ``dop853``,
-``dp45``, ``radau``, and ``projection_radau``. None of these headers is
-installed with the package.
+geometry and geodesic right-hand sides. ``native/src/`` separates:
 
-``bindings/cython/_core.pyx`` and ``bindings/cython/_mcmc_core.pyx`` declare
-the private C interfaces, validate boundary arrays, release the GIL only
-around native calls, and construct NumPy results. They contain no Kerr
-formulas and no per-step Python callbacks. Generated ``.c`` files beside the
-Cython sources are build artifacts.
+- shared numeric utilities (``utils/``);
+- metric routines (``metric/``);
+- initial-state conversion (``geodesic/initial/``);
+- solution reconstruction (``geodesic/solution/``);
+- adaptive integrators (``geodesic/integrators/``).
+
+The native integrator names are ``dop853``, ``dp45``, ``radau``, and
+``projection_radau``. None of these headers is installed with the package.
+
+``bindings/cython/_core.pyx`` and ``bindings/cython/_mcmc_core.pyx``:
+
+- declare the private C interfaces;
+- validate boundary arrays;
+- release the GIL only around native calls;
+- construct NumPy results.
+
+They contain no Kerr formulas and no per-step Python callbacks. Generated
+``.c`` files beside the Cython sources are build artifacts.
 
 ``setup.py`` is the active extension definition. The build backend is
 ``setuptools.build_meta`` with Cython and NumPy as build requirements. Both
-extensions are compiled from the ``.pyx`` and C sources listed in
-``setup.py``, include the NumPy and native headers, link ``libm``, and pass
-``-std=c11`` and ``-O3``. The release workflow in
+extensions:
+
+- are compiled from the ``.pyx`` and C sources listed in ``setup.py``;
+- include the NumPy and native headers;
+- link ``libm``;
+- pass ``-std=c11`` and ``-O3``.
+
+The release workflow in
 ``.github/workflows/publish.yml`` runs ``uv build --no-sources``. A migration
 to CMake and scikit-build-core has been proposed but is not the current build
 path.
@@ -57,9 +69,13 @@ path.
 Native conventions
 ------------------
 
-The native geometry uses Boyer--Lindquist component order
-``(t, r, theta, phi)``, metric signature ``(-,+,+,+)``, and geometric units
-``G = c = 1``. The solver normalizes the mass to one, so lengths are in
+The native geometry uses:
+
+- Boyer--Lindquist component order ``(t, r, theta, phi)``;
+- metric signature ``(-,+,+,+)``;
+- geometric units ``G = c = 1``.
+
+The solver normalizes the mass to one, so lengths are in
 ``G M / c^2`` and times in ``G M / c^3``; the Python frontend converts these
 to and from physical quantities. Local geometry operations write into
 caller-owned fixed-size buffers and return typed status codes. The header
@@ -86,7 +102,7 @@ Python tests are organized by purpose, as described in ``tests/README.md``:
 * ``tests/internal/`` checks private helpers and direct calls to the private
   extensions.
 * ``tests/reference/`` checks native computations against independent
-  references, invariants, and exact solutions; see :doc:`peer-validation`.
+  references, invariants, and exact solutions; see :doc:`/development/peer-validation`.
 * ``tests/fixtures/`` holds frozen JSON references and validation reports, and
   ``tests/support/`` holds shared test builders.
 
@@ -111,12 +127,22 @@ it with warnings treated as errors and nitpicky cross-reference checking:
 Change boundaries
 -----------------
 
-Keep physical equations, native state transitions, integration, events, and
-native memory ownership in C. Keep public signatures, units, object creation,
-and post-integration interpolation in Python. Keep Cython limited to adapting
-the two layers. A runtime change must preserve this boundary and add tests
-proportional to its public behavior.
+Each layer keeps its own responsibilities:
 
-Supported platforms, a required minimum C standard, and a build-system
-migration are open decisions. Do not infer them from the current compiler
-flags, the native test commands, or the private extension names.
+- C keeps physical equations, native state transitions, integration, events,
+  and native memory ownership.
+- Python keeps public signatures, units, object creation, and
+  post-integration interpolation.
+- Cython is limited to adapting the two layers.
+
+A runtime change must preserve this boundary and add tests proportional to
+its public behavior.
+
+The following are open decisions:
+
+- supported platforms;
+- a required minimum C standard;
+- a build-system migration.
+
+Do not infer them from the current compiler flags, the native test commands,
+or the private extension names.
