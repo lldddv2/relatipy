@@ -356,6 +356,10 @@ _MARKERS = {
     "end": {"shape": "chevron", "color": None, "size": 22, "linewidth": 0.8},
     "current": {"shape": "dot", "color": "black", "size": 8},
 }
+# Colours of overlaid trajectories (plot_sols), in order: black, then Paul
+# Tol "muted" hues other than the ISCO green and purple.
+_TRAJECTORY_COLORS = ("black", "#332288", "#CC6677", "#44AA99", "#999933",
+                      "#88CCEE", "#DDCC77", "#AA4499")
 _NAMES = {
     "trajectory": "Trajectory", "preview": "Osculating Kepler\npreview",
     "horizon": "Outer horizon", "isco_prograde": "Prograde ISCO",
@@ -400,6 +404,10 @@ class Style:
     lines, markers : mapping, optional
         Looks by role (see the module constants for the keys). Defaults are
         the module's role tables.
+    trajectory_colors : tuple of str, optional
+        Colours of overlaid trajectories in :func:`plot_sols`, used in
+        order and repeated when there are more trajectories. Default:
+        black, then colour-blind-safe hues distinct from the ISCOs.
     names : mapping, optional
         Legend names by role. Default is the module's role-name table.
     isco_arrows, center_marker : mapping or None, optional
@@ -440,8 +448,9 @@ class Style:
     Raises
     ------
     ValueError
-        If ``target`` is a name not in :data:`TARGETS`, or ``length_unit``
-        is neither ``"r_g"`` nor ``None``.
+        If ``target`` is a name not in :data:`TARGETS`, ``length_unit``
+        is neither ``"r_g"`` nor ``None``, or ``trajectory_colors`` is not
+        a nonempty sequence of colour strings.
     TypeError
         If ``target`` is neither a :class:`Target` nor a string.
 
@@ -466,6 +475,7 @@ class Style:
     title_color: str = "#555555"
     lines: Mapping = field(default_factory=lambda: _frozen(_LINES))
     markers: Mapping = field(default_factory=lambda: _frozen(_MARKERS))
+    trajectory_colors: tuple[str, ...] = _TRAJECTORY_COLORS
     names: Mapping = field(default_factory=lambda: _frozen(_NAMES))
     isco_arrows: Mapping | None = field(default_factory=lambda: _frozen(
         {"count": 4, "size": 14, "linewidth": 0.6}))
@@ -496,6 +506,11 @@ class Style:
             raise TypeError("target must be a Target or the name of one")
         if self.length_unit not in ("r_g", None):
             raise ValueError("length_unit must be 'r_g' or None")
+        colors = self.trajectory_colors
+        colors = () if isinstance(colors, str) else tuple(colors)
+        if not colors or not all(isinstance(color, str) for color in colors):
+            raise ValueError("trajectory_colors must be a nonempty sequence of colours")
+        object.__setattr__(self, "trajectory_colors", colors)
         for name in ("lines", "markers", "names", "isco_arrows", "center_marker"):
             object.__setattr__(self, name, _frozen(getattr(self, name)))
 

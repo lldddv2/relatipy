@@ -23,7 +23,7 @@ from ._layout import (
     scaled_formatter,
 )
 from ._markers import heading, style_marker
-from ._scene import AXES, ISCO_SENSE, Scene, preview_scene, solution_scene
+from ._scene import AXES, ISCO_SENSE, Scene, preview_scene, solution_scene, solutions_scene
 from .style import MM, Style, format_axes, resolve_style, set_axis_label
 
 if TYPE_CHECKING:
@@ -138,16 +138,82 @@ def plot_solution(
     >>> fig, (main, top, right) = plot_solution(solution)
     >>> plt.close("all")
     """
+    return _plot_scene(lambda style: solution_scene(solution), projection, interactive,
+                       style, fig, ax, "Solution.plot")
+
+
+def plot_sols(
+    *solutions: Solution, projection: str = "views", interactive: bool | None = None,
+    style: Style | None = None, fig: Any = None, ax: Any = None,
+    labels: Any = None,
+) -> Any:
+    """Plot the stored samples of several trajectories in one frame.
+
+    The black hole, its name and the spin note are drawn once; each
+    trajectory gets its own colour and legend entry.
+
+    Parameters
+    ----------
+    *solutions : relatipy.geodesic.Solution
+        One or more solutions about the same black hole. Lengths and proper
+        times are shown in the units of the first one.
+    projection, interactive, style, fig, ax
+        As in :func:`plot_solution`.
+    labels : sequence of str or None, optional
+        Legend name of each solution. ``None`` (default) numbers the
+        trajectory name: ``"Trajectory 1"``, ``"Trajectory 2"``, ...
+        A single unlabelled solution looks as with :func:`plot_solution`.
+
+    Returns
+    -------
+    figure : plotly.graph_objects.Figure or tuple
+        Same forms as :func:`plot_solution`.
+
+    Raises
+    ------
+    ImportError
+        If Plotly (interactive) or Matplotlib (static) is unavailable.
+    TypeError
+        If an argument in ``solutions`` is not a ``Solution``, or the
+        plotting arguments have the wrong type as in :func:`plot_solution`.
+    ValueError
+        If no solution is given, the solutions orbit different black holes,
+        ``labels`` does not give one string per solution, or the plotting
+        arguments are invalid as in :func:`plot_solution`.
+
+    Notes
+    -----
+    Colours come from ``style.trajectory_colors``. An early end of
+    integration is reported in the corner note with the trajectory name.
+
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> from astropy import units as u
+    >>> from astropy.constants import c
+    >>> import relatipy as rp
+    >>> bh = rp.Kerr(mass=1 * u.Msun, spin=0.5)
+    >>> span = (0 * u.s, 2e-8 * u.s)
+    >>> sols = [bh.orbit(x=r * bh.r_g, vy=0.1 * c).solve(tau_span=span, method="dp45")
+    ...         for r in (12, 15)]
+    >>> fig, ax = rp.plot_sols(*sols, projection="xy", labels=["r = 12", "r = 15"])
+    >>> plt.close(fig)
+    """
+    return _plot_scene(lambda style: solutions_scene(solutions, labels, style),
+                       projection, interactive, style, fig, ax, "plot_sols")
+
+
+def _plot_scene(build, projection: str, interactive, style, fig, ax, operation: str):
+    """Validate the plotting arguments, build the scene and render it."""
     style = resolve_style(style)
     if _interactive(projection, interactive):
         if ax is not None:
             raise ValueError("ax is only used by static figures")
         from .interactive import render_interactive
 
-        return render_interactive(solution_scene(solution), projection, style, fig)
-    _validate_axes(projection, fig, ax, "Solution.plot")
-    scene = solution_scene(solution)
-    return _render_matplotlib(scene, projection, style, fig, ax)
+        return render_interactive(build(style), projection, style, fig)
+    _validate_axes(projection, fig, ax, operation)
+    return _render_matplotlib(build(style), projection, style, fig, ax)
 
 
 def preview_orbit(
@@ -216,17 +282,8 @@ def preview_orbit(
     True
     >>> plt.close(fig)
     """
-    style = resolve_style(style)
-    if _interactive(projection, interactive):
-        if ax is not None:
-            raise ValueError("ax is only used by static figures")
-        from .interactive import render_interactive
-
-        return render_interactive(preview_scene(orbit, show_horizon, show_isco),
-                                  projection, style, fig)
-    _validate_axes(projection, fig, ax, "Orbit.preview")
-    scene = preview_scene(orbit, show_horizon, show_isco)
-    return _render_matplotlib(scene, projection, style, fig, ax)
+    return _plot_scene(lambda style: preview_scene(orbit, show_horizon, show_isco),
+                       projection, interactive, style, fig, ax, "Orbit.preview")
 
 
 def _render_matplotlib(scene: Scene, projection: str, style: Style, fig, ax):
@@ -263,7 +320,8 @@ def draw_plane(scene: Scene, ax, horizontal: str, vertical: str, style: Style,
     """Draw the scene on one Cartesian plane; return legend candidates.
 
     Data stay in the scene unit; ticks show lengths in the style's unit.
-    Each artist carries its role as ``gid``.
+    Each artist carries its role as ``gid``. Candidates are
+    ``(artist, role, name)`` triples.
     """
     columns = (AXES.index(horizontal), AXES.index(vertical))
     candidates = []
@@ -273,22 +331,23 @@ def draw_plane(scene: Scene, ax, horizontal: str, vertical: str, style: Style,
         points = np.atleast_2d(points)
         return points[:, columns[0]], points[:, columns[1]]
 
-    path_role = scene.path_role
-    path_line, = ax.plot(*project(scene.path), gid=path_role, zorder=3,
-                         **style.lines[path_role])
-    candidates.append((path_line, path_role))
+    for track in scene.tracks:
+        look = track.line(style)
+        path_line, = ax.plot(*project(track.path), gid=track.role, zorder=3, **look)
+        candidates.append((path_line, track.role, track.name(style)))
     for role in scene.references:
         line, = ax.plot(*project(scene.circle(role)), gid=role, zorder=2,
                         **style.lines[role])
-        candidates.append((line, role))
+        candidates.append((line, role, style.name(role)))
 
-    angle = heading(np.column_stack(project(scene.path)))
-    for role, point in scene.points.items():
-        settings = style.markers[role]
-        collection = ax.scatter(*project(point), zorder=4, gid=role)
-        color = settings["color"] or style.lines[path_role]["color"]
-        style_marker(collection, settings, angle, color)
-        candidates.append((collection, role))
+    for track in scene.tracks:
+        angle = heading(np.column_stack(project(track.path)))
+        for role, point in track.points.items():
+            settings = style.markers[role]
+            collection = ax.scatter(*project(point), zorder=4, gid=role)
+            color = settings["color"] or track.line(style)["color"]
+            style_marker(collection, settings, angle, color)
+            candidates.append((collection, role, style.name(role)))
 
     center = style.center_marker
     if center is not None:
@@ -320,13 +379,13 @@ def draw_plane(scene: Scene, ax, horizontal: str, vertical: str, style: Style,
 
 
 def legend_candidates(candidates, style: Style, exclude=()) -> tuple[list, list]:
-    """Handles and names of the roles a legend lists."""
+    """Handles and names of the roles a legend lists, each name once."""
     handles, names = [], []
-    for handle, role in candidates:
-        if role in style.legend_hide or role in exclude:
+    for handle, role, name in candidates:
+        if role in style.legend_hide or role in exclude or name in names:
             continue
         handles.append(handle)
-        names.append(style.name(role))
+        names.append(name)
     return handles, names
 
 
@@ -389,4 +448,4 @@ def corner_note(style: Style, scene: Scene) -> str | None:
     return "\n".join(lines) or None
 
 
-__all__ = ["plot_solution", "preview_orbit"]
+__all__ = ["plot_sols", "plot_solution", "preview_orbit"]

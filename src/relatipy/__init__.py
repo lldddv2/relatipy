@@ -2,7 +2,8 @@
 
 The implementation is organized into ``coordinates``, ``geodesic``,
 ``metrics``, ``observables``, and ``plotting`` packages.  The most common
-classes are also re-exported here.
+classes, and :func:`plot_sols` for several trajectories in one frame, are
+also re-exported here.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from .geodesic import (
 )
 from .metrics import Kerr
 from .observables import KerrMcmcModel
+from .plotting import plot_sols
 
 __all__ = [
     "coordinates",
@@ -33,4 +35,5 @@ __all__ = [
     "IntegrationError",
     "IntegrationTerminated",
     "IntegrationWarning",
+    "plot_sols",
 ]

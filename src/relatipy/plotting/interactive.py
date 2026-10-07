@@ -168,7 +168,7 @@ def render_interactive(scene: Scene, projection: str, style: Style, fig=None):
 
     hover = "<br>".join(f"{name} [{unit}]: %{{{key}:.6g}}"
                         for name, key in zip(shown_axes, keys))
-    if scene.tau is not None:
+    if scene.tau_unit is not None:
         hover += f"<br>tau [{scene.tau_unit.to_string()}]: %{{customdata:.6g}}"
     hover += "<extra>%{fullData.name}</extra>"
 
@@ -176,16 +176,16 @@ def render_interactive(scene: Scene, projection: str, style: Style, fig=None):
         """Return a Plotly-safe display name for a scene role."""
         return style.name(role).replace("\n", "<br>")
 
-    def line(role: str, width: float) -> dict:
-        """Return Plotly line settings for a styled scene role."""
-        look = style.lines[role]
+    def line(look: dict, width: float) -> dict:
+        """Return Plotly line settings for Matplotlib line settings."""
         return {"color": look["color"], "width": width,
                 "dash": _DASHES[look.get("linestyle", "-")]}
 
-    role = scene.path_role
-    fig.add_trace(trace(**coordinates(scene.path), mode="lines", name=name(role),
-                        customdata=scene.tau, hovertemplate=hover,
-                        line=line(role, settings.trajectory_width)))
+    for track in scene.tracks:
+        fig.add_trace(trace(**coordinates(track.path), mode="lines",
+                            name=track.name(style).replace("\n", "<br>"),
+                            customdata=track.tau, hovertemplate=hover,
+                            line=line(track.line(style), settings.trajectory_width)))
     horizon_surface = (projection == "3d" and scene.metric is not None
                        and settings.horizon_surface is not None)
     for reference in scene.references:
@@ -193,19 +193,24 @@ def render_interactive(scene: Scene, projection: str, style: Style, fig=None):
             continue  # drawn as a surface below
         fig.add_trace(trace(**coordinates(scene.circle(reference)), mode="lines",
                             name=name(reference), hoverinfo="skip",
-                            line=line(reference, settings.reference_width)))
-    for point_role, point in scene.points.items():
-        marker = style.markers[point_role]
-        index = 0 if point_role == "initial" else -1
-        fig.add_trace(trace(
-            **coordinates(point), mode="markers", name=name(point_role),
-            showlegend=point_role not in style.legend_hide,
-            customdata=None if scene.tau is None else [scene.tau[index]],
-            hovertemplate=hover,
-            marker={"symbol": "circle", "size": settings.marker_sizes.get(point_role, 3),
-                    "color": marker["color"] or style.lines[role]["color"],
-                    # The end is shown by an arrowhead; its marker is for hover.
-                    "opacity": 0.0 if point_role == "end" and projection == "3d" else 1.0}))
+                            line=line(style.lines[reference], settings.reference_width)))
+    listed = set()
+    for track in scene.tracks:
+        for point_role, point in track.points.items():
+            marker = style.markers[point_role]
+            index = 0 if point_role == "initial" else -1
+            fig.add_trace(trace(
+                **coordinates(point), mode="markers", name=name(point_role),
+                showlegend=point_role not in style.legend_hide and point_role not in listed,
+                customdata=None if track.tau is None else [track.tau[index]],
+                hovertemplate=hover,
+                marker={"symbol": "circle",
+                        "size": settings.marker_sizes.get(point_role, 3),
+                        "color": marker["color"] or track.line(style)["color"],
+                        # The end is shown by an arrowhead; its marker is for hover.
+                        "opacity": 0.0 if point_role == "end" and projection == "3d"
+                        else 1.0}))
+            listed.add(point_role)
 
     if projection == "3d":
         _decorate_3d(go, fig, scene, style, scale)
@@ -247,13 +252,15 @@ def _decorate_3d(go, fig, scene: Scene, style: Style, scale: float) -> None:
                               colorscale=[[0, color], [1, color]], showscale=False,
                               showlegend=False, hoverinfo="skip", lighting=flat))
 
-    if scene.kind == "trajectory":
-        points = scene.path / scale
+    for track in scene.tracks:
+        if track.role != "trajectory":
+            continue
+        points = track.path / scale
         step = next((points[-1] - points[i] for i in range(len(points) - 2, -1, -1)
                      if np.linalg.norm(points[-1] - points[i]) > 0), None)
         if step is not None:
             cone(points[-1], step / np.linalg.norm(step),
-                 style.lines["trajectory"]["color"], settings.end_cone, "tip")
+                 track.line(style)["color"], settings.end_cone, "tip")
 
     arrows = style.isco_arrows
     for role, sense in ISCO_SENSE.items():

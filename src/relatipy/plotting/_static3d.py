@@ -137,13 +137,13 @@ def render_static_3d(scene: Scene, style: Style, fig=None, ax=None):
                    colors=frame.color, pad=0.0)
 
     candidates = []
-    role = scene.path_role
-    line, = ax.plot(*scene.path.T, zorder=3, gid=role, **style.lines[role])
-    candidates.append((line, role))
+    for track in scene.tracks:
+        line, = ax.plot(*track.path.T, zorder=3, gid=track.role, **track.line(style))
+        candidates.append((line, track.role, track.name(style)))
     for reference in scene.references:
         circle, = ax.plot(*scene.circle(reference).T, zorder=2, gid=reference,
                           **style.lines[reference])
-        candidates.append((circle, reference))
+        candidates.append((circle, reference, style.name(reference)))
 
     low, high = scene.extent.min(axis=0), scene.extent.max(axis=0)
     margin = settings.padding * float(np.max(high - low))
@@ -169,14 +169,15 @@ def render_static_3d(scene: Scene, style: Style, fig=None, ax=None):
 
     # The projection is final from here on: screen angles can be measured.
     fig.canvas.draw()
-    angle = heading(_display(ax, scene.path))
-    for point_role, point in scene.points.items():
-        settings_marker = style.markers[point_role]
-        collection = ax.scatter(*point[:, None], depthshade=False, zorder=4,
-                                gid=point_role)
-        color = settings_marker["color"] or style.lines[role]["color"]
-        style_marker(collection, settings_marker, angle, color)
-        candidates.append((collection, point_role))
+    for track in scene.tracks:
+        angle = heading(_display(ax, track.path))
+        for point_role, point in track.points.items():
+            settings_marker = style.markers[point_role]
+            collection = ax.scatter(*point[:, None], depthshade=False, zorder=4,
+                                    gid=point_role)
+            color = settings_marker["color"] or track.line(style)["color"]
+            style_marker(collection, settings_marker, angle, color)
+            candidates.append((collection, point_role, style.name(point_role)))
     _isco_chevrons(ax, style)
     center = style.center_marker
     if center is not None:
