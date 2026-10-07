@@ -80,6 +80,20 @@ def test_publication_style_applies_to_plain_matplotlib(pyplot):
     assert rc_params()["axes.labelsize"] == TARGETS["thesis"].label_size
 
 
+def test_publication_style_keeps_interactive_mode_set_inside(pyplot):
+    # Inline backends enable interactive mode when the first figure selects
+    # them; leaving the style context must not switch it back off.
+    import matplotlib
+
+    before = matplotlib.is_interactive()
+    try:
+        with publication_style():
+            matplotlib.interactive(not before)
+        assert matplotlib.is_interactive() is (not before)
+    finally:
+        matplotlib.interactive(before)
+
+
 def test_save_figure_writes_each_format(pyplot, tmp_path):
     fig, ax = new_figure()
     ax.plot([0, 1], [0, 1])

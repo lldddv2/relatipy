@@ -744,8 +744,19 @@ def publication_style(style: Style | None = None) -> Iterator[Style]:
     import matplotlib
 
     style = resolve_style(style)
-    with matplotlib.rc_context(rc_params(style)):
-        yield style
+    # The first pyplot figure of a session may select the backend inside this
+    # context; inline backends then enable interactive mode, which rc_context
+    # would undo on exit and later figures would not display. Keep that state.
+    state = {}
+    try:
+        with matplotlib.rc_context(rc_params(style)):
+            try:
+                yield style
+            finally:
+                state["interactive"] = matplotlib.is_interactive()
+    finally:
+        if "interactive" in state:
+            matplotlib.interactive(state["interactive"])
 
 
 def format_axes(ax: Any, style: Style | None = None) -> Any:
