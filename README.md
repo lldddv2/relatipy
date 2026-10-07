@@ -20,7 +20,7 @@ inputs, handles physical units, exposes immutable result objects, and performs
 post-integration interpolation. A private Cython binding connects the two
 layers; the integration loop makes no Python callbacks.
 
-> **Status:** research software under active development (version 1.1.1).
+> **Status:** research software under active development (version 1.2.0).
 > The first public interface covers scalar timelike orbits around a Kerr black
 > hole. See [scope and limits](https://relatipy.readthedocs.io/en/latest/user-guide/scope-and-limits.html) before relying on
 > results.
