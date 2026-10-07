@@ -42,6 +42,8 @@ notebook = [
 docs = [
     "sphinx>=8.2,<9",
     "sphinx-rtd-theme>=3.0,<4",
+    "sphinx-reredirects>=1.0,<2",
+    "myst-nb>=1.2,<2",
 ]
 
 [tool.pytest.ini_options]
