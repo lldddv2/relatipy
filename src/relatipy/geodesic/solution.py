@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from astropy import units as u
 
+from .._validation import immutable_array
 from ..coordinates import (
     BoyerLindquistCoordinates,
     BoyerLindquistFourVelocity,
@@ -111,6 +112,50 @@ def select_state(state: State, index: Any) -> State:
             f=elements.f[index],
         ),
     )
+
+
+def constants_of_motion(state: State) -> np.ndarray:
+    """Return native normalized ``(E, Lz, Q)`` rows of a canonical state.
+
+    Parameters
+    ----------
+    state : State
+        Scalar or vectorized state built from native canonical samples.
+
+    Returns
+    -------
+    numpy.ndarray
+        Read-only array of shape ``(n, 3)``; a scalar state has ``n == 1``.
+
+    Raises
+    ------
+    ValueError
+        If the state carries no native canonical samples or a row is rejected
+        by the native kernel.
+    """
+    from .. import _core
+    from . import _native as native
+
+    if not isinstance(state, DeferredState):
+        raise ValueError(
+            "constants of motion require native Kerr samples from an orbit"
+        )
+    rows, statuses = _core.constants_of_motion_batch(
+        state._spin, np.ascontiguousarray(state._canonical)
+    )
+    rows = np.asarray(rows, dtype=np.float64)
+    statuses = np.asarray(statuses)
+    if rows.shape != (len(state._canonical), 3) or statuses.shape != (len(rows),):
+        raise RuntimeError("native constants of motion returned invalid shape")
+    failed = np.flatnonzero(statuses != 0)
+    if failed.size:
+        row = int(failed[0])
+        raise ValueError(
+            f"constants of motion of state row {row} are undefined "
+            f"({native.describe_reconstruction_status(statuses[row])})"
+        )
+    rows.flags.writeable = False
+    return rows
 
 
 def _validate_index(index: Any, size: int) -> Any:
@@ -461,6 +506,47 @@ class Solution:
 
         return plot_evolution(self, time=time, coords=coords, style=style, **components)
 
+    def plot_constants(self, *, time="t", drift=False, style=None, **constants):
+        """Plot stored E, Lz and Carter Q against coordinate or proper time.
+
+        Parameters
+        ----------
+        time : {"t", "tau"}, optional
+            Horizontal coordinate, default coordinate time ``"t"``.
+        drift : bool, optional
+            If ``True``, plot ``(X - X_0) / |X_0|`` relative to the first
+            sample, or ``X - X_0`` when ``|X_0| < 1e-12``. Default ``False``.
+        style : relatipy.plotting.Style or None, optional
+            Figure format.
+        **constants : bool
+            Switches named ``E``, ``Lz`` or ``Q``; all are enabled by default
+            and an explicit ``False`` removes that panel.
+
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+            Figure without implicit display or saving.
+        axes : numpy.ndarray
+            One-dimensional array with one panel per selected constant.
+
+        Raises
+        ------
+        ValueError
+            If time or a constant name is unknown, none is selected, or the
+            solution carries no native Kerr samples.
+        TypeError
+            If a switch is not boolean or ``style`` is invalid.
+
+        Notes
+        -----
+        Values are normalized with ``G = c = M = mu = 1``, as returned by
+        :meth:`get_E`, :meth:`get_Lz` and :meth:`get_Q`. Stored samples are
+        used without integration or interpolation.
+        """
+        from ..plotting import plot_constants
+
+        return plot_constants(self, time=time, drift=drift, style=style, **constants)
+
     @property
     def success(self) -> bool:
         """Report whether integration ended without numerical failure.
@@ -484,5 +570,66 @@ class Solution:
         """
         return self._state.orbital_elements()
 
+
+    def get_E(self) -> np.ndarray:
+        """Return the specific energy at every stored sample.
+
+        Returns
+        -------
+        numpy.ndarray
+            Read-only float array of shape ``(n,)`` aligned with
+            :attr:`tau`. Values are ``E = -u_t``, normalized with
+            ``G = c = M = mu = 1``, i.e. ``E / (mu c^2)``.
+
+        Raises
+        ------
+        ValueError
+            If the solution was not produced by an orbit or a sample lies
+            on a Boyer--Lindquist coordinate singularity.
+
+        Notes
+        -----
+        Stored four-velocities are not renormalized, so the series exposes
+        the numerical drift of the integration.
+        """
+        return immutable_array(constants_of_motion(self._state)[:, 0])
+
+    def get_Lz(self) -> np.ndarray:
+        """Return the specific axial angular momentum at every stored sample.
+
+        Returns
+        -------
+        numpy.ndarray
+            Read-only float array of shape ``(n,)`` aligned with
+            :attr:`tau`. Values are ``Lz = u_phi`` in units of ``mu G M / c``
+            (normalized with ``G = c = M = mu = 1``).
+
+        Raises
+        ------
+        ValueError
+            If the solution was not produced by an orbit or a sample lies
+            on a Boyer--Lindquist coordinate singularity.
+        """
+        return immutable_array(constants_of_motion(self._state)[:, 1])
+
+    def get_Q(self) -> np.ndarray:
+        """Return the Carter constant at every stored sample.
+
+        Returns
+        -------
+        numpy.ndarray
+            Read-only float array of shape ``(n,)`` aligned with
+            :attr:`tau`. Values are
+            ``Q = u_theta**2 + cos(theta)**2 * (a**2 (1 - E**2) + Lz**2 / sin(theta)**2)``
+            in units of ``(mu G M / c)**2``, with fixed rest mass ``mu = 1``.
+            It is not ``K = Q + (Lz - a E)**2``.
+
+        Raises
+        ------
+        ValueError
+            If the solution was not produced by an orbit or a sample lies
+            on a Boyer--Lindquist coordinate singularity.
+        """
+        return immutable_array(constants_of_motion(self._state)[:, 2])
 
 delegate_state_properties(Solution, "_state")

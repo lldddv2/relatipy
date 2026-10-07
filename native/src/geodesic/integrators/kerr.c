@@ -13,6 +13,68 @@
 #include <math.h>
 #include <stddef.h>
 
+void rp_kerr_timelike_constants_from_momentum(
+    double spin,
+    double theta,
+    const double momentum[4],
+    double constants[3]
+)
+{
+    const double sine = sin(theta);
+    const double cosine = cos(theta);
+    const double energy = -momentum[0];
+    const double angular_momentum = momentum[3];
+
+    constants[0] = energy;
+    constants[1] = angular_momentum;
+    constants[2] = momentum[2] * momentum[2]
+        + cosine * cosine * (spin * spin * (1.0 - energy * energy)
+            + angular_momentum * angular_momentum / (sine * sine));
+}
+
+int rp_kerr_timelike_constants(
+    double mass,
+    double spin,
+    const double state[8],
+    double constants[3]
+)
+{
+    double metric[RP_KERR_DIM][RP_KERR_DIM];
+    double momentum[RP_KERR_DIM] = {0.0, 0.0, 0.0, 0.0};
+    rp_kerr_status status;
+    size_t mu;
+    size_t nu;
+
+    if (constants == NULL) {
+        return (int)RP_KERR_STATUS_NULL_POINTER;
+    }
+    constants[0] = constants[1] = constants[2] = 0.0;
+    if (state == NULL) {
+        return (int)RP_KERR_STATUS_NULL_POINTER;
+    }
+    for (mu = 0U; mu < 2U * RP_KERR_DIM; ++mu) {
+        if (!isfinite(state[mu])) {
+            return (int)RP_KERR_STATUS_NONFINITE_INPUT;
+        }
+    }
+    status = rp_kerr_metric(mass, spin, state, metric);
+    if (status != RP_KERR_STATUS_OK) {
+        return (int)status;
+    }
+    for (mu = 0U; mu < RP_KERR_DIM; ++mu) {
+        for (nu = 0U; nu < RP_KERR_DIM; ++nu) {
+            momentum[mu] += metric[mu][nu] * state[RP_KERR_DIM + nu];
+        }
+    }
+    rp_kerr_timelike_constants_from_momentum(spin, state[2], momentum, constants);
+    if (!isfinite(constants[0]) || !isfinite(constants[1])
+        || !isfinite(constants[2])) {
+        constants[0] = constants[1] = constants[2] = 0.0;
+        return (int)RP_KERR_STATUS_NUMERICAL_RANGE;
+    }
+    return 0;
+}
+
 int rp_kerr_integrator_prepare_projection(
     rp_kerr_integrator_context *context,
     const double state[8]
@@ -21,11 +83,7 @@ int rp_kerr_integrator_prepare_projection(
     double metric[RP_KERR_DIM][RP_KERR_DIM];
     double momentum[RP_KERR_DIM] = {0.0, 0.0, 0.0, 0.0};
     double norm = 0.0;
-    double sine;
-    double cosine;
-    double energy;
-    double angular_momentum;
-    double carter_q;
+    double constants[3];
     double horizon;
     rp_kerr_status status;
     size_t mu;
@@ -61,21 +119,16 @@ int rp_kerr_integrator_prepare_projection(
     if (!isfinite(norm) || fabs(norm + 1.0) > 1.0e-8) {
         return (int)RP_KERR_STATUS_NON_TIMELIKE_VELOCITY;
     }
-    sine = sin(state[2]);
-    cosine = cos(state[2]);
-    energy = -momentum[0];
-    angular_momentum = momentum[3];
-    carter_q = momentum[2] * momentum[2]
-        + cosine * cosine * (context->spin * context->spin
-            * (1.0 - energy * energy)
-            + angular_momentum * angular_momentum / (sine * sine));
-    if (!isfinite(energy) || !isfinite(angular_momentum)
-        || !isfinite(carter_q)) {
+    rp_kerr_timelike_constants_from_momentum(
+        context->spin, state[2], momentum, constants
+    );
+    if (!isfinite(constants[0]) || !isfinite(constants[1])
+        || !isfinite(constants[2])) {
         return (int)RP_KERR_STATUS_NUMERICAL_RANGE;
     }
-    context->E0 = energy;
-    context->Lz0 = angular_momentum;
-    context->Q0 = carter_q;
+    context->E0 = constants[0];
+    context->Lz0 = constants[1];
+    context->Q0 = constants[2];
     context->projection_ready = 1;
     return 0;
 }
@@ -98,6 +151,7 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
     double energy;
     double angular_momentum;
     double carter_q;
+    double constants[3];
     rp_kerr_status status;
     size_t mu;
     size_t nu;
@@ -194,12 +248,12 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
         }
         norm += momentum[mu] * velocity[mu];
     }
-    energy = -momentum[0];
-    angular_momentum = momentum[3];
-    carter_q = momentum[2] * momentum[2]
-        + cosine * cosine * (context->spin * context->spin
-            * (1.0 - energy * energy)
-            + angular_momentum * angular_momentum / (sine * sine));
+    rp_kerr_timelike_constants_from_momentum(
+        context->spin, state[2], momentum, constants
+    );
+    energy = constants[0];
+    angular_momentum = constants[1];
+    carter_q = constants[2];
     if (!isfinite(norm) || !isfinite(energy) || !isfinite(angular_momentum)
         || !isfinite(carter_q)) {
         return (int)RP_KERR_STATUS_NUMERICAL_RANGE;

@@ -17,7 +17,7 @@ from ._delegation import delegate_state_properties
 from ._options import IntegrationOptions, integration_options
 from .exceptions import IntegrationError, IntegrationTerminated, IntegrationWarning
 from .integration import IntegrationInfo, Termination
-from .solution import Solution, select_state
+from .solution import Solution, constants_of_motion, select_state
 from .state import InitialState, State
 
 if TYPE_CHECKING:
@@ -399,20 +399,30 @@ def _resolve_options(
     return options
 
 
+def _keplerian_period(elements: OrbitalElements, mass: u.Quantity) -> u.Quantity | None:
+    """Newtonian period ``2*pi*sqrt(a**3 / (G*M))`` of an elliptic osculating conic.
+
+    Returns ``None`` unless ``0 <= e < 1`` and ``a`` is finite and positive.
+    """
+    eccentricity = float(elements.e)
+    semi_major = elements.a
+    if not (0.0 <= eccentricity < 1.0) or not np.isfinite(semi_major.value):
+        return None
+    if not semi_major.value > 0.0:
+        return None
+    return 2 * np.pi * np.sqrt(semi_major**3 / (G * mass))
+
+
 def _warn_sparse_sampling(
     initial: InitialState, mass: u.Quantity, evaluation: u.Quantity
 ) -> None:
     """Warn when tau_eval is too sparse for the initial Kepler period."""
     if evaluation.size < 2:
         return
-    elements = initial.orbital_elements()
-    eccentricity = float(elements.e)
-    semi_major = elements.a
-    if not (0.0 <= eccentricity < 1.0) or not np.isfinite(semi_major.value):
+    period = _keplerian_period(initial.orbital_elements(), mass)
+    if period is None:
         return
-    if not semi_major.value > 0.0:
-        return
-    period = (2 * np.pi * np.sqrt(semi_major**3 / (G * mass))).to(evaluation.unit)
+    period = period.to(evaluation.unit)
     spacing = np.max(np.diff(evaluation))
     if spacing <= period / _SAMPLES_PER_PERIOD:
         return
@@ -1036,5 +1046,104 @@ class Orbit:
         """
         return self._current.orbital_elements()
 
+    def get_keplerian_period(self) -> u.Quantity:
+        """Return the Keplerian period of the current osculating conic.
+
+        The period is ``2*pi*sqrt(a**3 / (G*M))``, with ``a`` the osculating
+        semi-major axis of the current state and ``M`` the black-hole mass.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Scalar period in the orbit's time unit.
+
+        Raises
+        ------
+        ValueError
+            If the osculating conic is not elliptic (``e`` outside
+            ``[0, 1)`` or ``a`` not finite and positive).
+
+        Notes
+        -----
+        This is a Newtonian estimate from instantaneous elements, not the
+        radial, azimuthal or polar period of the Kerr geodesic. It changes as
+        the orbit advances.
+
+        Examples
+        --------
+        >>> from astropy import units as u
+        >>> from relatipy import Kerr
+        >>> bh = Kerr(mass=1 * u.Msun, spin=0.0)
+        >>> orbit = bh.orbit(a=100 * bh.r_g, e=0.0, inc=0 * u.rad,
+        ...                  Omega=0 * u.rad, omega=0 * u.rad, f=0 * u.rad)
+        >>> orbit.get_keplerian_period().unit == orbit.tau.unit
+        True
+        """
+        period = _keplerian_period(self.orbital_elements(), self._metric.mass)
+        if period is None:
+            raise ValueError(
+                "the Keplerian period needs an elliptic osculating conic "
+                "(0 <= e < 1 and finite positive a)"
+            )
+        return period.to(self._time_unit)
+
+
+    def get_E(self) -> float:
+        """Return the specific energy of the current point state.
+
+        Returns
+        -------
+        float
+            ``E = -u_t`` normalized with ``G = c = M = mu = 1``, i.e.
+            ``E / (mu c^2)``. Bound orbits have ``E < 1``.
+
+        Raises
+        ------
+        ValueError
+            If the current state lies on a Boyer--Lindquist coordinate
+            singularity.
+
+        Notes
+        -----
+        The value follows the current state, so after :meth:`integrate` it
+        includes the numerical drift of the integration.
+        """
+        return float(constants_of_motion(self._current)[0, 0])
+
+    def get_Lz(self) -> float:
+        """Return the specific axial angular momentum of the current state.
+
+        Returns
+        -------
+        float
+            ``Lz = u_phi`` in units of ``mu G M / c`` (normalized with
+            ``G = c = M = mu = 1``).
+
+        Raises
+        ------
+        ValueError
+            If the current state lies on a Boyer--Lindquist coordinate
+            singularity.
+        """
+        return float(constants_of_motion(self._current)[0, 1])
+
+    def get_Q(self) -> float:
+        """Return the Carter constant of the current point state.
+
+        Returns
+        -------
+        float
+            ``Q = u_theta**2 + cos(theta)**2 * (a**2 (1 - E**2) + Lz**2 / sin(theta)**2)``
+            in units of ``(mu G M / c)**2``, with fixed rest mass ``mu = 1``.
+            It is not ``K = Q + (Lz - a E)**2``; equatorial orbits have
+            ``Q = 0``.
+
+        Raises
+        ------
+        ValueError
+            If the current state lies on a Boyer--Lindquist coordinate
+            singularity.
+        """
+        return float(constants_of_motion(self._current)[0, 2])
 
 delegate_state_properties(Orbit, "_current")

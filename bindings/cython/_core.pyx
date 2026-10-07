@@ -49,6 +49,10 @@ cdef extern from "geodesic/solution/reconstruct.h":
         rp_solution_family family, double *output,
         rp_kerr_status *row_status
     ) nogil
+    rp_kerr_status rp_solution_constants_of_motion_batch(
+        double spin, const double *canonical, size_t count,
+        double *constants, rp_kerr_status *row_status
+    ) nogil
 
 cdef extern from "metric/kerr_properties.h":
     rp_kerr_status rp_kerr_characteristic_radii(
@@ -344,6 +348,39 @@ def reconstruct_canonical_batch(double spin, states):
     finally:
         free(row_status)
     return output, cartesian, statuses
+
+
+def constants_of_motion_batch(double spin, states):
+    """Return normalized ``(E, Lz, Q)`` rows and native row statuses."""
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] source
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] output
+    cdef cnp.ndarray[cnp.int32_t, ndim=1, mode="c"] statuses
+    cdef rp_kerr_status *row_status = NULL
+    cdef rp_kerr_status native_status
+    cdef Py_ssize_t count, i
+    source = np.ascontiguousarray(states, dtype=np.float64)
+    if source.ndim != 2 or source.shape[1] != 8:
+        raise ValueError("states must have shape (n, 8)")
+    count = source.shape[0]
+    output = np.zeros((count, 3), dtype=np.float64)
+    statuses = np.zeros(count, dtype=np.int32)
+    if count == 0:
+        return output, statuses
+    if <size_t>count > (<size_t>-1) // sizeof(rp_kerr_status):
+        raise OverflowError("too many states")
+    row_status = <rp_kerr_status *>malloc(<size_t>count * sizeof(rp_kerr_status))
+    if row_status == NULL:
+        raise MemoryError("could not allocate native status buffer")
+    try:
+        with nogil:
+            native_status = rp_solution_constants_of_motion_batch(
+                spin, &source[0, 0], <size_t>count, &output[0, 0], row_status
+            )
+        for i in range(count):
+            statuses[i] = <int>row_status[i]
+    finally:
+        free(row_status)
+    return output, statuses
 
 
 def reconstruct_canonical_family_batch(double spin, states, family):

@@ -22,6 +22,35 @@ typedef struct {
 } rp_kerr_integrator_context;
 
 /**
+ * Evaluate specific E, Lz and Carter Q from covariant momentum at theta.
+ *
+ * `momentum` is `u_mu = g_(mu nu) u^nu` in geometric units with explicit spin
+ * length. Q uses the fixed rest mass `mu^2 = 1`, not the measured norm, so
+ * normalization drift is not hidden. It is not `K = Q + (Lz - a E)^2`.
+ * Outputs are written to `constants` as `(E, Lz, Q)`; nothing is validated.
+ */
+void rp_kerr_timelike_constants_from_momentum(
+    double spin,
+    double theta,
+    const double momentum[4],
+    double constants[3]
+);
+
+/**
+ * Evaluate specific E, Lz and Carter Q of one packed `(x, u)` state.
+ *
+ * Requires finite input at a point accepted by `rp_kerr_metric`. The
+ * four-velocity is not renormalized. `constants` is
+ * caller owned and zeroed on failure; nothing is allocated or retained.
+ */
+int rp_kerr_timelike_constants(
+    double mass,
+    double spin,
+    const double state[8],
+    double constants[3]
+);
+
+/**
  * Capture the four timelike invariants from a unit-normalized initial state.
  *
  * The caller owns context and state. On failure context is unchanged. The

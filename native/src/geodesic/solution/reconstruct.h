@@ -15,6 +15,7 @@
 #define RP_SOLUTION_CARTESIAN_DIM 7U
 #define RP_SOLUTION_RECONSTRUCTED_DIM 29U
 #define RP_SOLUTION_ELEMENTS_DIM 6U
+#define RP_SOLUTION_CONSTANTS_DIM 3U
 
 /** Private, selected output family for canonical reconstruction. */
 typedef enum rp_solution_family {
@@ -136,6 +137,26 @@ rp_kerr_status rp_solution_reconstruct_canonical_family_batch(
     size_t count,
     rp_solution_family family,
     double *output,
+    rp_kerr_status *row_status
+);
+
+/**
+ * Evaluate specific constants of motion of stored canonical BL rows.
+ *
+ * Input rows are `(t,r,theta,phi,ut,ur,utheta,uphi)` with mass 1 and spin in
+ * [0, 1]. Each output row is `(E, Lz, Q)`: `E = -u_t`, `Lz = u_phi`, and
+ * Carter `Q = u_theta^2 + cos^2(theta) (a^2 (1 - E^2) + Lz^2 / sin^2(theta))`
+ * with fixed rest mass one. The four-velocity is never renormalized, so the
+ * values expose integration drift. Failed rows are zeroed and report their
+ * code; the return value is the first failure or `RP_KERR_STATUS_OK`. A zero
+ * count succeeds. Buffers are caller owned, contiguous and disjoint; no
+ * allocation occurs.
+ */
+rp_kerr_status rp_solution_constants_of_motion_batch(
+    double spin,
+    const double *canonical,
+    size_t count,
+    double *constants,
     rp_kerr_status *row_status
 );
 

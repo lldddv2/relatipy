@@ -324,6 +324,19 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/tests/unit/geodesic/test_kerr_mcmc.c -lm \
   -o /tmp/relatipy-native-tests/test-kerr-mcmc-c11
 /tmp/relatipy-native-tests/test-kerr-mcmc-c11
+
+cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
+  -Inative/include -Inative/src \
+  native/src/utils/numeric.c native/src/utils/tensor.c \
+  native/src/metric/physic/kerr.c native/src/metric/kerr.c \
+  native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/initial/convert.c \
+  native/src/geodesic/initial/bound.c \
+  native/src/geodesic/integrators/kerr.c \
+  native/src/geodesic/solution/reconstruct.c \
+  native/tests/unit/geodesic/test_constants_of_motion.c -lm \
+  -o /tmp/relatipy-native-tests/test-constants-of-motion-c11
+/tmp/relatipy-native-tests/test-constants-of-motion-c11
 ```
 
 On compilers that provide AddressSanitizer and UndefinedBehaviorSanitizer:

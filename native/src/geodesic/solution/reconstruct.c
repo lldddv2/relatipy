@@ -5,6 +5,7 @@
 
 #include "reconstruct.h"
 #include "../initial/convert.h"
+#include "../integrators/kerr.h"
 
 #include <float.h>
 #include <math.h>
@@ -492,6 +493,52 @@ rp_kerr_status rp_solution_reconstruct_canonical_family_batch(
             }
         }
         row_status[row] = status;
+    }
+    return first_status;
+}
+
+rp_kerr_status rp_solution_constants_of_motion_batch(
+    double spin,
+    const double *canonical,
+    size_t count,
+    double *constants,
+    rp_kerr_status *row_status
+)
+{
+    rp_kerr_status global_status = RP_KERR_STATUS_OK;
+    rp_kerr_status first_status = RP_KERR_STATUS_OK;
+    size_t row;
+
+    if (count == 0U) {
+        return RP_KERR_STATUS_OK;
+    }
+    if (constants == NULL || row_status == NULL) {
+        return RP_KERR_STATUS_NULL_POINTER;
+    }
+    if (count > SIZE_MAX / RP_INITIAL_CANONICAL_DIM) {
+        return RP_KERR_STATUS_INVALID_PARAMETER;
+    }
+    if (canonical == NULL) {
+        global_status = RP_KERR_STATUS_NULL_POINTER;
+    } else if (!isfinite(spin)) {
+        global_status = RP_KERR_STATUS_NONFINITE_INPUT;
+    } else if (spin < 0.0 || spin > 1.0) {
+        global_status = RP_KERR_STATUS_INVALID_PARAMETER;
+    }
+    for (row = 0U; row < count; ++row) {
+        double *output = constants + row * RP_SOLUTION_CONSTANTS_DIM;
+        rp_kerr_status status = global_status;
+        if (status == RP_KERR_STATUS_OK) {
+            status = (rp_kerr_status)rp_kerr_timelike_constants(
+                1.0, spin, canonical + row * RP_INITIAL_CANONICAL_DIM, output
+            );
+        } else {
+            output[0] = output[1] = output[2] = 0.0;
+        }
+        row_status[row] = status;
+        if (status != RP_KERR_STATUS_OK && first_status == RP_KERR_STATUS_OK) {
+            first_status = status;
+        }
     }
     return first_status;
 }
