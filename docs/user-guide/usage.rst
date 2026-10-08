@@ -7,7 +7,8 @@ Kerr geometry and one orbit
 A :class:`~relatipy.metrics.Kerr` object fixes the black-hole mass and
 its dimensionless spin. The supported spin interval is ``0 <= spin <= 1``.
 The mass sets the physical length scale :attr:`~relatipy.metrics.Kerr.r_g`
-and time scale used inside the native solver. Public coordinates and times are
+and time scale :attr:`~relatipy.metrics.Kerr.t_g` used inside the native
+solver. Public coordinates and times are
 Astropy quantities.
 
 This example constructs a timelike orbit from a Cartesian position and
@@ -67,6 +68,30 @@ restores the initial point, while :meth:`~relatipy.geodesic.Orbit.copy`
 creates an independently evolving orbit. A target before the current point
 restarts from the saved initial conditions; a target before the initial time
 is invalid.
+
+.. _geometric-units:
+
+Working in geometric units
+--------------------------
+
+The public API always takes and returns Astropy quantities; plain floats are
+not accepted as lengths or times. The native solver, however, works in
+geometric units ``G = c = M = 1``, whose length and time units are
+:attr:`~relatipy.metrics.Kerr.r_g` ``= G M / c²`` and
+:attr:`~relatipy.metrics.Kerr.t_g` ``= G M / c³``. To work in units of
+``M``, express lengths in ``bh.r_g``, times in ``bh.t_g`` and velocities in
+``c``, and divide the results by the same scales:
+
+.. code-block:: python
+
+   orb = bh.orbit(x=12 * bh.r_g, vy=0.3 * c)        # r = 12 M, v = 0.3
+   sol = orb.solve(tau_span=(0 * u.s, 500 * bh.t_g))  # tau = 0 ... 500 M
+
+   tau_M = (sol.tau / bh.t_g).to_value(u.one)
+   R_M = (sol.R / bh.r_g).to_value(u.one)
+
+The conversion happens once at the boundary of each call, so the result is
+independent of the chosen mass up to rounding.
 
 Numerical controls and outcomes
 -------------------------------

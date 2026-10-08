@@ -23,8 +23,10 @@ closed interval ``[0, 1]``.  The length and time scales held by a metric are
 
    r_g = \frac{G M}{c^2}, \qquad t_g = \frac{G M}{c^3}.
 
-All returned radii are immutable scalar quantities.  ``r_g`` and ``r_s`` are
-the gravitational and Schwarzschild length scales.  The ISCO, photon-orbit,
+All returned radii and scales are immutable scalar quantities.  ``r_g`` and
+``r_s`` are the gravitational and Schwarzschild length scales, and ``t_g`` is
+the gravitational time scale; together they express quantities in geometric
+units (see :ref:`geometric-units`).  The ISCO, photon-orbit,
 and horizon properties are Boyer--Lindquist coordinate radii; they are not
 Cartesian distances.  :meth:`~relatipy.metrics.Kerr.r_ergosurface` accepts a scalar or
 one-dimensional polar-angle quantity in ``[0, pi]`` and returns a radius with
