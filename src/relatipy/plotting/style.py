@@ -29,6 +29,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Iterator, Mapping
 
+import numpy as np
+
 MM = 1.0 / 25.4
 """Inches per millimetre."""
 
@@ -655,6 +657,69 @@ def number(value: float) -> str:
     return text.replace("-", MINUS)
 
 
+def _consistent_decimals(values: Any) -> int:
+    """Decimal places so evenly spaced values print with the same precision.
+
+    Formatting each tick independently with :func:`number` drops trailing
+    zeros per value (``2.0`` becomes ``"2"`` next to ``"1.8"``, ``"2.2"``);
+    this instead picks one decimal count, from the smallest gap between
+    values, shared by all of them.
+
+    Parameters
+    ----------
+    values : iterable of float
+        Candidate tick positions; non-finite values are ignored.
+
+    Returns
+    -------
+    int
+        Decimal places needed, 0 to 7.
+    """
+    locs = sorted({value for value in values if np.isfinite(value)})
+    if len(locs) < 2:
+        return 0
+    step = min(b - a for a, b in zip(locs, locs[1:]))
+    if step <= 0:
+        return 0
+    for decimals in range(7):
+        if abs(round(step, decimals) - step) < max(abs(step), 1.0) * 1e-6:
+            return decimals
+    return 7
+
+
+def tick_formatter(axis: Any, scale: float = 1.0) -> Any:
+    """Major-tick formatter using one decimal count for every tick of ``axis``.
+
+    Parameters
+    ----------
+    axis : matplotlib.axis.Axis
+        Axis the formatter will be attached to; its current major ticks set
+        the shared decimal count.
+    scale : float, optional
+        Divides each value before formatting (e.g. to show ``R / r_g``),
+        default ``1.0``.
+
+    Returns
+    -------
+    matplotlib.ticker.FuncFormatter
+        Formatter giving every tick the same decimal places, with a
+        typographic minus sign.
+
+    Raises
+    ------
+    ImportError
+        If Matplotlib is unavailable.
+    """
+    from matplotlib.ticker import FuncFormatter
+
+    def format_tick(value: float, _: int) -> str:
+        decimals = _consistent_decimals(loc / scale for loc in axis.get_majorticklocs())
+        text = f"{value / scale:.{decimals}f}"
+        return text.replace("-", MINUS)
+
+    return FuncFormatter(format_tick)
+
+
 def rc_params(style: Style | None = None) -> dict[str, Any]:
     """Return Matplotlib rcParams matching a RelatiPy style.
 
@@ -792,8 +857,6 @@ def format_axes(ax: Any, style: Style | None = None) -> Any:
     True
     >>> plt.close(fig)
     """
-    from matplotlib.ticker import FuncFormatter
-
     style = resolve_style(style)
     target, frame = style.target, style.frame
     ax.set_facecolor(style.background)
@@ -814,7 +877,7 @@ def format_axes(ax: Any, style: Style | None = None) -> Any:
         ax.minorticks_off()
     for axis in (ax.xaxis, ax.yaxis):
         if axis.get_scale() == "linear":
-            axis.set_major_formatter(FuncFormatter(lambda value, _: number(value)))
+            axis.set_major_formatter(tick_formatter(axis))
     return ax
 
 
