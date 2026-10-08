@@ -5,6 +5,7 @@ import pickle
 
 import pytest
 from astropy import units as u
+from astropy.constants import G, c
 
 from relatipy import Kerr
 
@@ -27,6 +28,14 @@ def test_kerr_is_immutable_and_returns_read_only_radii() -> None:
                    metric.r_photon_prograde, metric.r_photon_retrograde,
                    metric.horizons.event):
         assert not radius.flags.writeable
+    assert not metric.t_g.flags.writeable
+
+
+def test_kerr_t_g_is_geometric_time_scale() -> None:
+    metric = Kerr(mass=4.3e6 * u.M_sun, spin=0.0)
+    assert metric.t_g.unit == u.s
+    assert u.allclose(metric.t_g, G * metric.mass / c**3, rtol=1e-15)
+    assert u.allclose(metric.r_g / metric.t_g, c, rtol=1e-15)
 
 
 @pytest.mark.parametrize(

@@ -85,7 +85,7 @@ class Kerr:
     native core evaluates the metric in Boyer--Lindquist coordinates
     ``(t, r, theta, phi)`` with signature ``(-, +, +, +)`` and geometric
     units ``G = c = 1``, with lengths scaled by
-    :attr:`r_g` ``= G M / c^2`` and times by ``G M / c^3``. Every public
+    :attr:`r_g` ``= G M / c^2`` and times by :attr:`t_g` ``= G M / c^3``. Every public
     radius and time is converted back to an Astropy quantity; the returned
     radii are Boyer--Lindquist coordinate radii, not Cartesian distances.
 
@@ -237,6 +237,20 @@ class Kerr:
             Read-only scalar length in metres.
         """
         return readonly_quantity(2 * self._length_scale, u.m, "r_s", ndim=(0,))
+
+    @property
+    def t_g(self) -> u.Quantity:
+        """Return the gravitational time scale ``G M / c³``.
+
+        It is the unit of time of the native geometric convention, so
+        ``(tau / bh.t_g).to_value(u.one)`` expresses a proper time in ``M``.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Read-only scalar time in seconds.
+        """
+        return self._time_scale
 
     @property
     def horizons(self) -> Horizons:
