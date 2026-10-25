@@ -45,7 +45,7 @@ def uniform(t0, t1, per_yr):
 def campaign(el, t0, t1, n, half):
     out = []
     for tp in peris(el, t0, t1):
-        tt = np.linspace(tp - half, tp + half, n)
+        tt = tp - half + (np.arange(n) + 0.25) * 2 * half / n    # quarter-offset grid: nearest epoch >= 1/4 spacing (~10 d) from pericentre
         out += list(tt[(tt >= t0) & (tt <= t1)])
     return np.array(out)
 
