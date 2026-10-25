@@ -3,12 +3,10 @@
  * @brief Forced Kerr proper- and coordinate-time right-hand sides.
  *
  * The homogeneous term is called, never copied, through the single helper
- * `evaluate_homogeneous`.  An inactive force uses the corrected contraction
- * of `rp_kerr_null_geodesic_rhs` in `geodesic/kerr.c`, whose validation is
- * mirrored here, so it reproduces that path bit for bit.  An active force
- * uses the generated kernel of the same connection
- * (`geodesic/physic/kerr_rhs_generated.c`), which agrees with the
- * contraction to 1e-12 relative and is about ten times faster.
+ * `evaluate_homogeneous`.  It evaluates the generated corrected kernel
+ * (`geodesic/physic/kerr_rhs_generated.c`) of `rp_kerr_null_geodesic_rhs`
+ * in `geodesic/kerr.c`, whose validation is mirrored here, so an inactive
+ * force reproduces the homogeneous paths bit for bit.
  */
 
 #include "kerr_forced.h"
@@ -20,22 +18,15 @@
 #include <math.h>
 #include <stddef.h>
 
-/* The only calls into a homogeneous Kerr kernel (mass one). */
+/* The only call into the homogeneous Kerr kernel (mass one). */
 static void evaluate_homogeneous(
     double spin,
     const struct rp_kerr_geodesic_state *state,
-    int force_active,
     double coordinate_derivative[RP_KERR_DIM],
     double four_velocity_derivative[RP_KERR_DIM]
 )
 {
-    if (force_active) {
-        rp_kerr_geodesic_physic_evaluate_generated_rhs(
-            1.0, spin, state, coordinate_derivative, four_velocity_derivative
-        );
-        return;
-    }
-    rp_kerr_geodesic_physic_evaluate_corrected_rhs(
+    rp_kerr_geodesic_physic_evaluate_generated_rhs(
         1.0, spin, state, coordinate_derivative, four_velocity_derivative
     );
 }
@@ -108,8 +99,7 @@ int rp_kerr_forced_rhs(
     }
 
     evaluate_homogeneous(
-        spin, &state, rp_force_is_active(force),
-        coordinate_derivative, four_velocity_derivative
+        spin, &state, coordinate_derivative, four_velocity_derivative
     );
     if (rp_force_is_active(force)) {
         force_status = rp_force_evaluate_prepared(

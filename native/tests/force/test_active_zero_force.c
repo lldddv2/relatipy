@@ -1,8 +1,9 @@
 /*
- * An active force whose acceleration is zero takes the generated Kerr
- * kernel instead of the corrected contraction.  Its RHS agrees with the
- * homogeneous one to 1e-12 relative, and observables integrated through it
- * agree with the homogeneous evaluators to the integration tolerance.
+ * An active force whose acceleration is zero evaluates the same generated
+ * Kerr kernel as the homogeneous path and adds a zero four-acceleration, so
+ * its RHS equals the homogeneous one exactly (up to the sign of a zero),
+ * and dop853 observables integrated through it equal those of the
+ * homogeneous evaluator.
  */
 
 #include "force/kerr_forced.h"
@@ -33,12 +34,12 @@ static int zero_acceleration(
     return 0;
 }
 
-static double check_rhs(const rp_external_force *force)
+static size_t check_rhs(const rp_external_force *force)
 {
     const double spins[5] = {-0.99, -0.5, 0.0, 0.7, 0.99};
     const double radii[5] = {2.5, 7.3, 60.0, 3.0e3, 1.0e6};
     const double thetas[4] = {1e-4, 0.4, 1.2, 1.5707963267948966};
-    double worst = 0.0;
+    size_t checked = 0U;
     size_t s;
     size_t i;
     size_t j;
@@ -56,7 +57,6 @@ static double check_rhs(const rp_external_force *force)
                 double du_h[4];
                 double dx_f[4];
                 double du_f[4];
-                double scale = 0.0;
 
                 if (rp_kerr_null_geodesic_rhs(
                         1.0, spins[s], x, u, dx_h, du_h
@@ -68,19 +68,17 @@ static double check_rhs(const rp_external_force *force)
                 ) == 0);
                 for (k = 0U; k < 4U; ++k) {
                     assert(dx_h[k] == dx_f[k]);
-                    scale = fmax(scale, fabs(du_h[k]));
+                    assert(du_h[k] == du_f[k]);
                 }
-                for (k = 0U; k < 4U; ++k) {
-                    worst = fmax(worst, fabs(du_f[k] - du_h[k]) / scale);
-                }
+                ++checked;
             }
         }
     }
-    assert(worst <= 1e-12);
-    return worst;
+    assert(checked > 0U);
+    return checked;
 }
 
-static double check_mcmc(const rp_external_force *force)
+static void check_mcmc(const rp_external_force *force)
 {
     const double times[6] = {-3.0e5, -4.0e4, -10.0, 0.0, 800.0, 3.0e5};
     const rp_kerr_mcmc_observation observation = {
@@ -94,7 +92,6 @@ static double check_mcmc(const rp_external_force *force)
     double out_h[18];
     double out_f[18];
     rp_integrator_stats stats;
-    double worst = 0.0;
     size_t s;
     size_t k;
 
@@ -108,22 +105,18 @@ static double check_mcmc(const rp_external_force *force)
             1.16, times, 6U, &observation, out_f, &stats
         ) == RP_KERR_MCMC_OK);
         for (k = 0U; k < 18U; ++k) {
-            worst = fmax(
-                worst, fabs(out_f[k] - out_h[k]) / fmax(fabs(out_h[k]), 1e-12)
-            );
+            assert(out_f[k] == out_h[k]);
         }
     }
-    assert(worst <= 1e-10);
-    return worst;
 }
 
 int main(void)
 {
     const rp_external_force zero = {zero_acceleration, NULL};
-    const double rhs = check_rhs(&zero);
-    const double mcmc = check_mcmc(&zero);
+    const size_t points = check_rhs(&zero);
 
-    printf("max relative RHS difference %.2e, observables %.2e\n", rhs, mcmc);
+    check_mcmc(&zero);
+    printf("%zu RHS points and 3 observable runs equal\n", points);
     printf("test_active_zero_force: ok\n");
     return 0;
 }
