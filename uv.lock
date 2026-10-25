@@ -1949,6 +1949,11 @@ dependencies = [
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 
+[package.optional-dependencies]
+symbolic = [
+    { name = "sympy" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "einsteinpy" },
@@ -1975,7 +1980,9 @@ requires-dist = [
     { name = "numpy", specifier = ">=2" },
     { name = "plotly", specifier = ">=5" },
     { name = "scipy", specifier = ">=1.11" },
+    { name = "sympy", marker = "extra == 'symbolic'", specifier = ">=1.12" },
 ]
+provides-extras = ["symbolic"]
 
 [package.metadata.requires-dev]
 dev = [
