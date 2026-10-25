@@ -73,9 +73,46 @@ static void test_general_and_signs(void)
     state[6] = -fabs(state[6]) * 0.9;
     state[7] *= 0.98;
     assert(rp_kerr_integrator_project(0.1, state, &context) == 0);
-    assert(memcmp(position, state, sizeof(position)) == 0);
+    /* t and phi are fixed; r and theta move only along the projection. */
+    assert(state[0] == position[0] && state[3] == position[3]);
+    assert(fabs(state[1] - position[1]) < 1.0e-2);
+    assert(fabs(state[2] - position[2]) < 1.0e-2);
     assert(state[5] > 0.0 && state[6] < 0.0);
     check_invariants(&context, state);
+}
+
+/* A circular orbit nudged at the rounding level of an accepted step must not
+ * gain a radial velocity: recovering u^r from a square root of the nearly
+ * zero radial potential gave |u^r| ~ 1e-8. */
+static void test_circular_rounding(void)
+{
+    const double pi = acos(-1.0);
+    const double radii[2] = {8.0, 6.0};
+    const double senses[2] = {1.0, -1.0};
+    const double nudges[4] = {1.0e-15, -1.0e-15, 3.0e-14, -3.0e-14};
+    size_t orbit;
+    size_t nudge;
+
+    for (orbit = 0U; orbit < 2U; ++orbit) {
+        const double radius = radii[orbit];
+        const double circular[3] = {
+            0.0, 0.0, senses[orbit] / (pow(radius, 1.5) + senses[orbit] * 0.5)
+        };
+
+        for (nudge = 0U; nudge < 4U; ++nudge) {
+            rp_kerr_integrator_context context = {.mass = 1.0, .spin = 0.5};
+            double state[8];
+
+            make_state(radius, 0.5 * pi, circular, state);
+            assert(rp_kerr_integrator_prepare_projection(&context, state) == 0);
+            state[4] *= 1.0 + nudges[nudge];
+            state[7] *= 1.0 - nudges[nudge];
+            assert(rp_kerr_integrator_project(0.0, state, &context) == 0);
+            assert(fabs(state[5]) < 1.0e-12);
+            assert(fabs(state[1] / radius - 1.0) < 1.0e-12);
+            check_invariants(&context, state);
+        }
+    }
 }
 
 static void test_turning_points(void)
@@ -190,6 +227,7 @@ int main(void)
 {
     test_general_and_signs();
     test_turning_points();
+    test_circular_rounding();
     test_invalid_and_horizon();
     test_independent_contexts();
     return 0;

@@ -62,12 +62,21 @@ int rp_kerr_integrator_prepare_projection(
 );
 
 /**
- * Restore norm, energy, axial momentum and Carter Q at fixed position.
+ * Restore norm, energy, axial momentum and Carter Q by orthogonal projection.
  *
- * The caller owns state and context. Only velocity components state[4:8]
- * change on success; all eight components remain unchanged on failure.
- * A candidate at or inside the outer horizon is returned unchanged so the
- * integration observer can handle the terminal event.
+ * Off the invariant set, first sets (u^t, u^phi) from E and Lz at fixed
+ * position, then moves (r, theta, u^t, u^r, u^theta, u^phi) along J^T, J
+ * the Jacobian of the four invariants, with simplified Newton steps and an
+ * L D L^T solve of J J^T whose negligible pivots are dropped (Hairer,
+ * Lubich & Wanner, Geometric Numerical Integration, sec. IV.4). t and phi
+ * never change. A state already on the invariant set to rounding is
+ * returned unchanged; a Newton iteration that stagnates below a relative
+ * invariant error of 1e-10 is accepted.
+ * The caller owns state and context; all eight components remain unchanged
+ * on failure, reported as RP_KERR_STATUS_NON_TIMELIKE_VELOCITY when the
+ * invariant set is not reached. A candidate at or inside the outer horizon
+ * is returned unchanged so the integration observer can handle the
+ * terminal event.
  */
 int rp_kerr_integrator_project(double tau, double state[], void *context);
 
