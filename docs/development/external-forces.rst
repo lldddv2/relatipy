@@ -24,17 +24,13 @@ perturbed geodesic is
 The homogeneous term is the corrected Levi--Civita contraction of the Kerr
 metric, the one used by every homogeneous production path:
 
-- with an inactive force (a NULL force or a NULL callback) the forced
-  right-hand side calls ``rp_kerr_geodesic_physic_evaluate_corrected_rhs``
-  (the kernel behind ``rp_kerr_null_geodesic_rhs``), so observables are
-  bitwise those of ``_mcmc_core``;
-- with an active force it calls the generated kernel
-  ``rp_kerr_geodesic_physic_evaluate_generated_rhs``
-  (``native/src/geodesic/physic/kerr_rhs_generated.c``),
-  the same contraction optimized symbolically: faster, and equal to the
-  corrected contraction to about ``3e-15`` relative. A zero active force (a
-  thin disk of zero mass) therefore agrees with the homogeneous paths to
-  rounding error, about ``1e-13`` relative on observables, not bit for bit.
+the forced right-hand side always calls the generated kernel
+``rp_kerr_geodesic_physic_evaluate_generated_rhs``
+(``native/src/geodesic/physic/kerr_rhs_generated.c``), the kernel behind
+``rp_kerr_null_geodesic_rhs``. An inactive force (a NULL force or a NULL
+callback) therefore gives observables bitwise those of ``_mcmc_core``, and a
+zero active force (a thin disk of zero mass) adds a zero four-acceleration,
+so its right-hand side and its ``dop853`` observables are identical too.
 
 The generated kernel is committed C. Its header names the generator,
 ``tools/codegen/generate.py`` with the specification

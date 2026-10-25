@@ -77,10 +77,10 @@ to a ``multiprocessing`` pool of an emcee sampler; each worker builds its own
 disk table once.
 
 For five S-stars (S2, S29, S38, S55, S301) with 100-150 epochs each, one
-likelihood call costs about 13 ms with the thin disk and 22 ms without a
-force (dop853, ``rtol=1e-10``): the forced path uses a generated Kerr kernel
-that is faster than the homogeneous one. At that tolerance the numerical
-error of the disk model is below 0.1 uas.
+likelihood call costs about 16 ms with the thin disk and 8 ms without a
+force (dop853, ``rtol=1e-10``); both paths use the same generated Kerr
+kernel, and the disk adds its table lookup and projection. At that
+tolerance the numerical error of the disk model is below 0.1 uas.
 ``tools/benchmarks/bench_perturbed_kerr_mcmc_multi.py`` measures it.
 
 :class:`~relatipy.observables.PerturbedKerrMcmcModel` is the single-star
@@ -92,9 +92,9 @@ block.
 Accuracy notes
 --------------
 
-- A disk of zero mass reproduces the Kerr models to rounding error (about
-  ``1e-13`` relative), not bit for bit, because the forced right-hand side
-  uses its own generated Kerr kernel.
+- A disk of zero mass evaluates the same Kerr right-hand side as the Kerr
+  models and adds a zero four-acceleration, so ``dop853`` predictions are
+  identical.
 - ``projection_radau`` is not available: its projector restores Carter's
   constant, which a force does not conserve. Radau uses a finite-difference
   Jacobian.
