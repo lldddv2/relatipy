@@ -227,26 +227,37 @@ def _kerr(M6, spin):
     return _KERR[key]
 
 
-def tau_grid(a, e, tmax, npo):
-    """proper-time samples uniform in Kepler eccentric anomaly from apocentre (1PN tau(t))."""
-    dE = 2*np.pi/npo; E = [np.pi]; sa3 = np.sqrt(a**3)
+def segments(a, e, tmax, K=24, hw=0.01):
+    """Kepler eccentric-anomaly segments from apocentre: list of (tau_end, max_step) such that
+    the step h satisfies h*omega <= hw (omega = v/r, local dynamical rate)."""
+    sa3 = np.sqrt(a**3); dE = 2*np.pi/K; out = []; E0 = np.pi
     while True:
-        En = E[-1] + dE
-        E.append(En)
-        if sa3*(En - e*np.sin(En) - np.pi) > tmax*1.002 + 50.0: break
-    E = np.array(E); t = sa3*(E - e*np.sin(E) - np.pi)
-    tau = t - 2.0*np.sqrt(a)*(E - np.pi) + t/(2*a)
-    return tau
+        E1 = E0 + dE
+        EE = np.linspace(E0, E1, 33); r = a*(1 - e*np.cos(EE)); v = np.sqrt(np.maximum(2/r - 1/a, 1e-30))
+        t1 = sa3*(E1 - e*np.sin(E1) - np.pi)
+        tau1 = t1 - 2.0*np.sqrt(a)*(E1 - np.pi) + t1/(2*a)
+        out.append((tau1, hw/np.max(v/r)))
+        if t1 > tmax*1.002 + 50.0: break
+        E0 = E1
+    return out
 
 
-def exact_traj(p, tlo, thi, npo=4000, rtol=1e-12, return_ut=False):
-    """Exact Kerr geodesic from the harmonic apocentre state of p, sampled for t in [tlo, thi]
-    (geometric, relative to t0).  Returns T, X, V (harmonic, observer frame), Rb, spin."""
+def _bl_state(sol, i, rg, tg, cq):
+    return dict(R=sol.R[i], Theta=sol.Theta[i], Phi=sol.Phi[i], vR=sol.vR[i], vTheta=sol.vTheta[i], vPhi=sol.vPhi[i])
+
+
+def exact_traj(p, tlo, thi, K=24, hw=0.01, rtol=1e-12, return_ut=False):
+    """Exact Kerr geodesic (relatipy dop853, raw accepted steps, no relatipy interpolation) from the
+    harmonic apocentre state of p, covering t in [tlo, thi] (geometric, relative to t0).
+    Integration is chained over eccentric-anomaly segments with max_step = hw/omega.
+    Backward half uses the (t,phi)->(-t,-phi) symmetry of Kerr.  Returns T, X, V (harmonic,
+    observer frame, sorted), Rb, spin [, u^t samples]."""
     from astropy.constants import c
     M6 = p[0]; a_g, _, _ = geo(p); e = p[3]
     spin = float(p[IX['ast']]); vec = axis(p[IX['ths']], p[IX['phs']])
-    Rb = body_to_observer(vec) if spin > 0 else np.eye(3)
     x0, v0 = apo_state(a_g, e, p[4], p[5], p[6])
+    # a*=0: spherical symmetry -> put the body z axis along L (equatorial orbit, no polar crossings)
+    Rb = body_to_observer(vec) if spin > 0 else body_to_observer(np.cross(x0, v0))
     xb = Rb.T @ x0; vb = Rb.T @ v0
     r = np.linalg.norm(xb); th = np.arccos(xb[2]/r); ph = np.arctan2(xb[1], xb[0])
     rd = xb @ vb / r; thd = -(vb[2] - np.cos(th)*rd)/(r*np.sin(th))
@@ -254,16 +265,26 @@ def exact_traj(p, tlo, thi, npo=4000, rtol=1e-12, return_ut=False):
     bh = _kerr(M6, spin); rg = bh.r_g; tg = rg / c
     out = []
     for sgn, tm in ((1.0, thi), (-1.0, -tlo)):
-        o = bh.orbit(R=(r + 1.0)*rg, Theta=th*u.rad, Phi=(sgn*ph)*u.rad, vR=(sgn*rd)*c,
-                     vTheta=(sgn*thd)*u.rad/tg, vPhi=phd*u.rad/tg)
-        tau = tau_grid(a_g, e, max(tm, 1.0), npo)
-        s = o.solve(tau_eval=tau*tg, method="dop853", rtol=rtol)
-        if not s.success or len(s.t) != len(tau):
-            raise RuntimeError("relatipy exact integration failed")
-        T = (s.t/tg).decompose().value; R = (s.R/rg).decompose().value
-        Th = s.Theta.to_value(u.rad); Ph = s.Phi.to_value(u.rad)
-        vR = (s.vR/c).decompose().value; vTh = (s.vTheta*tg).to_value(u.rad); vPh = (s.vPhi*tg).to_value(u.rad)
-        ut = np.asarray(s.ut, float)
+        st = dict(R=(r + 1.0)*rg, Theta=th*u.rad, Phi=(sgn*ph)*u.rad, vR=(sgn*rd)*c,
+                  vTheta=(sgn*thd)*u.rad/tg, vPhi=phd*u.rad/tg)
+        Ts, Rs, Ths, Phs, vRs, vThs, vPhs, uts = [], [], [], [], [], [], [], []
+        tacc = 0.0; tauacc = 0.0
+        for tau1, hmax in segments(a_g, e, max(tm, 1.0), K, hw):
+            o = bh.orbit(**st)
+            s = o.solve(tau_span=(0*u.s, (tau1 - tauacc)*tg), method="dop853", rtol=rtol,
+                        max_step=hmax*tg)
+            if not s.success:
+                raise RuntimeError("relatipy exact integration failed")
+            T = (s.t/tg).decompose().value + tacc
+            sl = slice(0 if not Ts else 1, None)
+            Ts.append(T[sl]); Rs.append(s.R.to_value(rg)[sl]); Ths.append(s.Theta.to_value(u.rad)[sl])
+            Phs.append(s.Phi.to_value(u.rad)[sl]); vRs.append((s.vR/c).decompose().value[sl])
+            vThs.append((s.vTheta*tg).to_value(u.rad)[sl]); vPhs.append((s.vPhi*tg).to_value(u.rad)[sl])
+            uts.append(np.asarray(s.ut, float)[sl])
+            st = dict(R=s.R[-1], Theta=s.Theta[-1], Phi=s.Phi[-1], vR=s.vR[-1], vTheta=s.vTheta[-1], vPhi=s.vPhi[-1])
+            tacc = T[-1]; tauacc = tau1
+        T = np.concatenate(Ts); R = np.concatenate(Rs); Th = np.concatenate(Ths); Ph = np.concatenate(Phs)
+        vR = np.concatenate(vRs); vTh = np.concatenate(vThs); vPh = np.concatenate(vPhs); ut = np.concatenate(uts)
         if sgn < 0: T = -T; Ph = -Ph; vR = -vR; vTh = -vTh
         rH = R - 1.0; sT, cT, sP, cP = np.sin(Th), np.cos(Th), np.sin(Ph), np.cos(Ph)
         n = np.stack([sT*cP, sT*sP, cT], 1); eth = np.stack([cT*cP, cT*sP, -sT], 1)
@@ -295,11 +316,11 @@ def _offsets(p, d, al, de, rv):
     return (al + p[IX['x0']] + p[IX['vx0']]*dt, de + p[IX['y0']] + p[IX['vy0']]*dt, rv + p[IX['vz0']])
 
 
-def model_T(p, d, npo=4000, lens=1.0, shap=1.0):
+def model_T(p, d, hw=0.01, lens=1.0, shap=1.0):
     """Truth and model (iii): exact Kerr dynamics + first-order time transfer function."""
     a_g, ty, us = geo(p)
     tg = (d.tall - p[IX['t0']]) / ty
-    T, X, V, Rb, spin = exact_traj(p, tg.min() - 1.2*a_g*(1 + p[3]) - 100, tg.max() + 1.2*a_g*(1 + p[3]) + 100, npo)
+    T, X, V, Rb, spin = exact_traj(p, tg.min() - 1.2*a_g*(1 + p[3]) - 100, tg.max() + 1.2*a_g*(1 + p[3]) + 100, hw=hw)
     img, z, _, _ = obs_T(T, X, V, tg, Rb, spin, lens, shap, 0)
     na = d.na
     return _offsets(p, d, img[:na, 0]*us, img[:na, 1]*us, z[na:]*C_KMS)

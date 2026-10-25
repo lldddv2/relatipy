@@ -1,0 +1,15 @@
+S2 truth a*=0.0 axis(th,ph)=(0.0,0.0) deg; n_ast=170 (NACO 50, GRAV 120), n_rv=150
+-- full truth
+  (i) 1PN harm x fSP, f=1            chi2=   1.436 rms GRAV   2.13 uas, RV  0.75 km/s | M: +5.75e-03 (+0.64s, s=9.0e-03, +0.48pub) R0: +5.94e-04 (+0.09s, s=6.8e-03, +0.07pub) fsp: -1.50e-01 (-0.64s, s=2.3e-01, -1.25pub) [4s nfev 27]
+  (i') 1PN harm x fSP, f free        chi2=   0.876 rms GRAV   2.23 uas, RV  0.48 km/s | M: +1.18e-03 (+0.11s, s=1.1e-02, +0.10pub) R0: -3.08e-03 (-0.37s, s=8.4e-03, -0.34pub) fsp: -9.92e-02 (-0.41s, s=2.4e-01, -0.83pub) f: +1.89e-02 (+0.75s, s=2.5e-02) [3s nfev 24]
+  (ii) relatipy KerrMcmcModel a*=0   chi2=   0.950 rms GRAV   2.42 uas, RV  0.51 km/s | M: +2.29e-03 (+0.26s, s=9.0e-03, +0.19pub) R0: -8.14e-04 (-0.12s, s=6.8e-03, -0.09pub) [3s nfev 13]
+  (iii) exact + 1st-order T          chi2=   0.000 rms GRAV   0.00 uas, RV  0.00 km/s | M: +0.00e+00 (+0.00s, s=9.0e-03, +0.00pub) R0: +0.00e+00 (+0.00s, s=6.8e-03, +0.00pub) [9s nfev 1]
+-- truth w/o lensing
+  (i) 1PN harm x fSP, f=1            chi2=   2.065 rms GRAV   2.26 uas, RV  1.00 km/s | M: +1.06e-02 (+1.17s, s=9.0e-03, +0.88pub) R0: +5.91e-03 (+0.87s, s=6.8e-03, +0.66pub) fsp: -9.62e-02 (-0.41s, s=2.3e-01, -0.80pub) [3s nfev 21]
+  (i') 1PN harm x fSP, f free        chi2=   2.043 rms GRAV   2.41 uas, RV  0.98 km/s | M: +9.68e-03 (+0.89s, s=1.1e-02, +0.81pub) R0: +5.18e-03 (+0.62s, s=8.4e-03, +0.58pub) fsp: -8.61e-02 (-0.35s, s=2.4e-01, -0.72pub) f: +3.77e-03 (+0.15s, s=2.5e-02) [4s nfev 25]
+-- truth w/o Shapiro+RV-bending
+  (i) 1PN harm x fSP, f=1            chi2=   1.373 rms GRAV   2.92 uas, RV  0.56 km/s | M: -1.06e-03 (-0.12s, s=9.0e-03, -0.09pub) R0: -2.91e-03 (-0.43s, s=6.8e-03, -0.32pub) fsp: -8.11e-02 (-0.35s, s=2.3e-01, -0.68pub) [4s nfev 24]
+  (i') 1PN harm x fSP, f free        chi2=   0.768 rms GRAV   2.38 uas, RV  0.38 km/s | M: -5.80e-03 (-0.53s, s=1.1e-02, -0.48pub) R0: -6.73e-03 (-0.80s, s=8.4e-03, -0.75pub) fsp: -2.82e-02 (-0.12s, s=2.4e-01, -0.23pub) f: +1.97e-02 (+0.78s, s=2.5e-02) [4s nfev 23]
+-- truth w/o lensing,Shapiro,bending
+  (i) 1PN harm x fSP, f=1            chi2=   0.110 rms GRAV   0.39 uas, RV  0.25 km/s | M: +3.78e-03 (+0.42s, s=9.0e-03, +0.32pub) R0: +2.41e-03 (+0.35s, s=6.8e-03, +0.27pub) fsp: -2.72e-02 (-0.12s, s=2.3e-01, -0.23pub) [2s nfev 18]
+  (i') 1PN harm x fSP, f free        chi2=   0.078 rms GRAV   0.46 uas, RV  0.19 km/s | M: +2.69e-03 (+0.25s, s=1.1e-02, +0.22pub) R0: +1.53e-03 (+0.18s, s=8.4e-03, +0.17pub) fsp: -1.51e-02 (-0.06s, s=2.4e-01, -0.13pub) f: +4.52e-03 (+0.18s, s=2.5e-02) [5s nfev 26]
