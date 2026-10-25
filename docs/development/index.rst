@@ -11,4 +11,5 @@ independent references.
    contributing
    architecture
    external-forces
+   thin-disk-roadmap
    peer-validation

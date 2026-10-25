@@ -5,7 +5,9 @@ This page fixes the contract of the external-force layer used by the
 thin-disk MCMC models: a perturbed Kerr geodesic integrated beside, not
 inside, the homogeneous Kerr path. Existing Kerr modules, integrators and the
 ``_core`` and ``_mcmc_core`` extensions are not modified; the new layer only
-calls them. The user-facing description is :doc:`/user-guide/forces`.
+calls them. The user-facing description is :doc:`/user-guide/forces`; what
+was left out of this layer, and where it lives, is in
+:doc:`/development/thin-disk-roadmap`.
 
 Equation of motion
 ------------------
