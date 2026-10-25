@@ -7,13 +7,13 @@
  * of `rp_kerr_null_geodesic_rhs` in `geodesic/kerr.c`, whose validation is
  * mirrored here, so it reproduces that path bit for bit.  An active force
  * uses the generated kernel of the same connection
- * (`generated/kerr_rhs.c`), which agrees with the contraction to 1e-12
- * relative and is about ten times faster.
+ * (`geodesic/physic/kerr_rhs_generated.c`), which agrees with the
+ * contraction to 1e-12 relative and is about ten times faster.
  */
 
 #include "kerr_forced.h"
 
-#include "generated/kerr_rhs.h"
+#include "geodesic/physic/kerr_rhs_generated.h"
 
 #include "geodesic/jacobian.h"
 #include "../utils/tensor.h"
@@ -33,7 +33,7 @@ static void evaluate_homogeneous(
 )
 {
     if (force_active) {
-        rp_force_generated_kerr_rhs(
+        rp_kerr_geodesic_physic_evaluate_generated_rhs(
             1.0, spin, state, coordinate_derivative, four_velocity_derivative
         );
         return;

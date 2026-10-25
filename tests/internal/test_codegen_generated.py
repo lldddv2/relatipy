@@ -17,7 +17,12 @@ from relatipy import _jit
 ROOT = Path(__file__).resolve().parents[2]
 NATIVE = ROOT / "native"
 GENERATED = NATIVE / "src" / "force" / "generated"
-STEMS = ("kerr_rhs", "projection", "ring_field")
+# Specification name -> generated C source.
+SOURCES = {
+    "kerr_rhs": NATIVE / "src" / "geodesic" / "physic" / "kerr_rhs_generated.c",
+    "projection": GENERATED / "projection.c",
+    "ring_field": GENERATED / "ring_field.c",
+}
 _POINTER = ctypes.POINTER(ctypes.c_double)
 
 
@@ -45,7 +50,7 @@ def _pointer(array: np.ndarray):
     return array.ctypes.data_as(_POINTER)
 
 
-@pytest.mark.parametrize("name", STEMS)
+@pytest.mark.parametrize("name", sorted(SOURCES))
 def test_regeneration_reproduces_committed_files(name) -> None:
     sympy = pytest.importorskip("sympy")
     generator = _generator()
@@ -65,11 +70,11 @@ def test_regeneration_reproduces_committed_files(name) -> None:
 @pytest.mark.parametrize("standard", ["-std=c99", "-std=c11"])
 def test_generated_sources_compile_cleanly(tmp_path, standard) -> None:
     compiler = _jit.compiler_command()
-    for stem in STEMS:
+    for name, source in SOURCES.items():
         subprocess.run(
             [*compiler, standard, "-Wall", "-Wextra", "-Wpedantic", "-Werror",
-             f"-I{NATIVE / 'include'}", "-c", str(GENERATED / f"{stem}.c"),
-             "-o", str(tmp_path / f"{stem}.o")],
+             f"-I{NATIVE / 'include'}", "-c", str(source),
+             "-o", str(tmp_path / f"{name}.o")],
             check=True, capture_output=True, text=True,
         )
 
@@ -95,7 +100,7 @@ int rp_test_rhs(int generated, double spin, const double x[4], const double u[4]
         return 1;
     }
     if (generated) {
-        rp_force_generated_kerr_rhs(1.0, spin, &state, dx, du);
+        rp_kerr_geodesic_physic_evaluate_generated_rhs(1.0, spin, &state, dx, du);
     } else {
         rp_kerr_geodesic_physic_evaluate_corrected_rhs(1.0, spin, &state, dx, du);
     }
@@ -128,7 +133,7 @@ def native(tmp_path_factory):
         NATIVE / "src" / "geodesic" / "physic" / "kerr.c",
         NATIVE / "src" / "utils" / "numeric.c",
         NATIVE / "src" / "utils" / "tensor.c",
-        *(GENERATED / f"{stem}.c" for stem in STEMS),
+        *SOURCES.values(),
     ]
     text = "".join(f'#include "{path.as_posix()}"\n' for path in sources) + WRAPPER
     library = _jit.compile_function(

@@ -56,6 +56,7 @@ FORCE_SOURCES = [
     NATIVE / "metric" / "physic" / "kerr.c",
     NATIVE / "metric" / "kerr.c",
     NATIVE / "geodesic" / "physic" / "kerr.c",
+    NATIVE / "geodesic" / "physic" / "kerr_rhs_generated.c",
     NATIVE / "geodesic" / "physic" / "kerr_observables.c",
     NATIVE / "geodesic" / "kerr.c",
     NATIVE / "geodesic" / "initial" / "convert.c",

@@ -343,7 +343,8 @@ The external-force layer under `src/force/` (see
 `docs/development/external-forces.rst`) calls the homogeneous Kerr sources
 and adds the frame map and projection (`external.c`), the forced right-hand
 sides (`kerr_forced.c`, which uses the generated kernel
-`generated/kerr_rhs.c` when a force is active), the forced trajectory solve
+`geodesic/physic/kerr_rhs_generated.c` when a force is active), the forced
+trajectory solve
 (`solution/solve.c`) and the forced observable model (`kerr_mcmc.c`). Its
 tests under `tests/force/` share one source list; the built-in Plummer model
 test needs only its own source:
@@ -352,6 +353,7 @@ test needs only its own source:
 FORCE_SOURCES="native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/physic/kerr_observables.c \
   native/src/geodesic/initial/convert.c \
   native/src/geodesic/integrators/integrator.c \
@@ -361,7 +363,6 @@ FORCE_SOURCES="native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/geodesic/integrators/kerr.c \
   native/src/geodesic/kerr_mcmc.c native/src/geodesic/solution/solve.c \
   native/src/force/external.c native/src/force/kerr_forced.c \
-  native/src/force/generated/kerr_rhs.c \
   native/src/force/solution/solve.c native/src/force/kerr_mcmc.c"
 for test in test_external test_null_force test_active_zero_force \
     test_forced_invariants test_newtonian_limit test_forced_mcmc; do

@@ -1,4 +1,4 @@
-"""Specification of ``native/src/force/generated/kerr_rhs.{c,h}``.
+"""Specification of ``native/src/geodesic/physic/kerr_rhs_generated.{c,h}``.
 
 Optimized affine right-hand side ``dx^mu = u^mu``, ``du^mu = -Gamma^mu_(alpha
 beta) u^alpha u^beta`` of the corrected (Levi--Civita) Kerr connection,
@@ -16,7 +16,8 @@ import sympy as sp
 from relatipy._codegen import optimize
 from relatipy._codegen.kerr import kerr_symbols, simplified_geodesic_acceleration
 
-GUARD = "RELATIPY_NATIVE_FORCE_GENERATED_KERR_RHS_H"
+GUARD = "RELATIPY_NATIVE_GEODESIC_PHYSIC_KERR_RHS_GENERATED_H"
+FUNCTION = "rp_kerr_geodesic_physic_evaluate_generated_rhs"
 PARAMETERS = [
     "double mass",
     "double spin",
@@ -49,9 +50,9 @@ def optimized():
 
 def build() -> dict[str, str]:
     code = optimized()
-    function = code.c_function("rp_force_generated_kerr_rhs", PARAMETERS)
+    function = code.c_function(FUNCTION, PARAMETERS)
     header = f"""/**
- * @file kerr_rhs.h
+ * @file kerr_rhs_generated.h
  * @brief Generated corrected Kerr geodesic right-hand side.
  *
  * Same contract as `rp_kerr_geodesic_physic_evaluate_corrected_rhs`: the
@@ -67,7 +68,7 @@ def build() -> dict[str, str]:
 #ifndef {GUARD}
 #define {GUARD}
 
-#include "../../geodesic/physic/kerr.h"
+#include "kerr.h"
 
 /**
  * Affine derivatives at a prepared state.
@@ -78,21 +79,21 @@ def build() -> dict[str, str]:
  * @param du Caller-owned output of four doubles, `du^mu/dlambda`.  Neither
  *        output may alias the state.
  */
-{code.prototype("rp_force_generated_kerr_rhs", PARAMETERS)};
+{code.prototype(FUNCTION, PARAMETERS)};
 
 #endif /* {GUARD} */
 """
     source = f"""/**
- * @file kerr_rhs.c
- * @brief Generated corrected Kerr geodesic RHS; see kerr_rhs.h.
+ * @file kerr_rhs_generated.c
+ * @brief Generated corrected Kerr geodesic RHS; see kerr_rhs_generated.h.
  */
 
-#include "kerr_rhs.h"
+#include "kerr_rhs_generated.h"
 
 #include <math.h>
 
 {function}"""
     return {
-        "native/src/force/generated/kerr_rhs.h": header,
-        "native/src/force/generated/kerr_rhs.c": source,
+        "native/src/geodesic/physic/kerr_rhs_generated.h": header,
+        "native/src/geodesic/physic/kerr_rhs_generated.c": source,
     }
