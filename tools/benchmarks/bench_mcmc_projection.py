@@ -26,19 +26,19 @@ Measured on the shared 4-core development container (2026-10-25, dop853,
 ===========  ======  =====  ===============  =========  =============  =========
 rtol/atol    force   n_dim  tolerance error  call (ms)  serial eval/s  4-proc /s
 ===========  ======  =====  ===============  =========  =============  =========
-1e-9/1e-12   none    40     0.006 uas        21.8       48             123
-1e-9/1e-12   disk    43     2.6 uas          13.4       78             182
-1e-10/1e-13  none    40     0.0004 uas       22.2       45             121
-1e-10/1e-13  disk    43     0.07 uas         13.5       73             177
+1e-9/1e-12   none    40     0.006 uas        7.9        129            233
+1e-9/1e-12   disk    43     2.6 uas          13.5       75             189
+1e-10/1e-13  none    40     0.0004 uas       8.2        119            230
+1e-10/1e-13  disk    43     0.07 uas         14.9       71             183
 ===========  ======  =====  ===============  =========  =============  =========
 
-The forced path is faster than the homogeneous one because its active-force
-right-hand side is the generated Kerr kernel. ``rtol = 1e-10`` costs almost
+Both paths evaluate the generated Kerr kernel; the disk adds its table
+lookup and the projection to each right-hand side. ``rtol = 1e-10`` costs almost
 nothing here (the step count is set by the epoch spacing) and keeps the
 disk's numerical error far below 50 uas astrometry, so it is the default.
 Projection for 4 walkers per parameter (172 walkers with the disk) and
-2e4 steps, 3.4e6 evaluations: about 13 h in one process and 5.4 h with four
-processes (speed-up 2.4 on the shared machine); with an autocorrelation time
+2e4 steps, 3.4e6 evaluations: about 13 h in one process and 5.2 h with four
+processes (speed-up 2.6 on the shared machine); with an autocorrelation time
 of 300 steps that is about 1.1e4 independent samples.
 """
 

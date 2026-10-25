@@ -86,9 +86,10 @@ equatorial plane of the spin. Points to keep in mind:
   ``E' = -u_t exp(Phi)`` and ``L' = u_phi exp(Phi)`` are conserved instead.
 - A failing force callback (for example the disk at its exact centre) is a
   numerical failure: ``Solution.status == -1``.
-- A zero force reproduces :class:`~relatipy.metrics.Kerr` orbits to rounding
-  error, not bit for bit, because the forced right-hand side uses its own
-  generated Kerr kernel.
+- A zero force evaluates the same Kerr right-hand side as
+  :class:`~relatipy.metrics.Kerr`, so ``dop853`` and ``dp45`` orbits are
+  identical. ``radau`` orbits agree to the integration tolerance, because
+  the forced solve uses a finite-difference Jacobian.
 
 Forces defined at run time
 --------------------------
@@ -170,7 +171,7 @@ raise :class:`ValueError`, so the prior must exclude them. The model and the
 likelihood are picklable; each pool worker builds its own disk table once.
 
 For five S-stars with 100-150 epochs each, one likelihood call costs about
-13 ms with the thin disk and 22 ms without a force (dop853, ``rtol=1e-10``).
+15 ms with the thin disk and 8 ms without a force (dop853, ``rtol=1e-10``).
 At that tolerance the numerical error of the disk model is below 0.1 uas.
 ``tools/benchmarks/bench_mcmc_projection.py`` measures this and projects the
 cost of a full emcee run.

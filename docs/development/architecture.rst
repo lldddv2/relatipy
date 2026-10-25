@@ -45,6 +45,8 @@ geometry and geodesic right-hand sides. ``native/src/`` separates:
 
 - shared numeric utilities (``utils/``);
 - metric routines (``metric/``);
+- local geodesic physics (``geodesic/physic/``), with the generated Kerr
+  right-hand side;
 - initial-state conversion (``geodesic/initial/``);
 - solution reconstruction (``geodesic/solution/``);
 - adaptive integrators (``geodesic/integrators/``);

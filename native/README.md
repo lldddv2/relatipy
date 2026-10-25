@@ -367,8 +367,8 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
 The external-force layer under `src/force/` (see
 `docs/development/external-forces.rst`) calls the homogeneous Kerr sources
 and adds the frame map and projection (`external.c`), the forced right-hand
-sides (`kerr_forced.c`, which uses the generated kernel
-`geodesic/physic/kerr_rhs_generated.c` when a force is active), the forced
+sides (`kerr_forced.c`, with the same generated Kerr kernel
+`geodesic/physic/kerr_rhs_generated.c` as the homogeneous paths), the forced
 trajectory solve
 (`solution/solve.c`) and the forced observable model (`kerr_mcmc.c`). Its
 tests under `tests/force/` share one source list; the built-in Plummer model
