@@ -193,10 +193,14 @@ class ExternalForce:
     ) -> BoundForce:
         """Bind this force to a black-hole mass (kilograms or a quantity)."""
         mass_kg = float(u.Quantity(mass, u.kg).value)
-        callback, keepalive = self._native_callback()
-        bound = BoundForce(self, callback, self._model_size(), keepalive)
+        bound = self._handle()
         bound.update(mass_kg, self._parameter_vector(), rotation)
         return bound
+
+    def _handle(self) -> BoundForce:
+        """Return a new handle whose parameters :meth:`BoundForce.update` writes."""
+        callback, keepalive = self._native_callback()
+        return BoundForce(self, callback, self._model_size(), keepalive)
 
     def _write(
         self,
