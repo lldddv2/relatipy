@@ -1,0 +1,12 @@
+(i) start 0: chi2 1.4361 nfev 26 | M +0.637s R0 +0.088s fsp -0.641s
+(i) start 1: chi2 1.4361 nfev 21 | M +0.637s R0 +0.088s fsp -0.641s
+(i) start 2: chi2 1.4361 nfev 22 | M +0.637s R0 +0.088s fsp -0.641s
+(i) start 3: chi2 1.4361 nfev 21 | M +0.637s R0 +0.088s fsp -0.641s
+(i') start 0: chi2 0.8757 nfev 22 | M +0.109s R0 -0.368s fsp -0.407s f +0.747s
+(i') start 1: chi2 0.8757 nfev 20 | M +0.109s R0 -0.368s fsp -0.407s f +0.747s
+(i') start 2: chi2 0.8757 nfev 15 | M +0.109s R0 -0.368s fsp -0.407s f +0.747s
+(i') start 3: chi2 0.8757 nfev 21 | M +0.109s R0 -0.368s fsp -0.407s f +0.747s
+(ii) start 0: chi2 0.9498 nfev 13 | M +0.256s R0 -0.120s
+(ii) start 1: chi2 0.9498 nfev 16 | M +0.256s R0 -0.120s
+(ii) start 2: chi2 0.9498 nfev 12 | M +0.256s R0 -0.120s
+(ii) start 3: chi2 0.9498 nfev 16 | M +0.256s R0 -0.120s

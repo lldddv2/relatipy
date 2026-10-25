@@ -1,0 +1,6 @@
+S2 truth a*=0.7 axis(th,ph)=(48.0,88.6) deg; n_ast=170 (NACO 50, GRAV 120), n_rv=150
+-- full truth
+  (i) 1PN harm x fSP, f=1            chi2=   1.473 rms GRAV   2.13 uas, RV  0.77 km/s | M: +5.77e-03 (+0.64s, s=9.0e-03, +0.48pub) R0: +6.24e-04 (+0.09s, s=6.8e-03, +0.07pub) fsp: -1.51e-01 (-0.65s, s=2.3e-01, -1.26pub) [2s nfev 18]
+  (i') 1PN harm x fSP, f free        chi2=   0.889 rms GRAV   2.23 uas, RV  0.49 km/s | M: +1.12e-03 (+0.10s, s=1.1e-02, +0.09pub) R0: -3.12e-03 (-0.37s, s=8.4e-03, -0.35pub) fsp: -9.91e-02 (-0.41s, s=2.4e-01, -0.83pub) f: +1.93e-02 (+0.76s, s=2.5e-02) [2s nfev 17]
+  (ii) relatipy KerrMcmcModel a*=0   chi2=   0.950 rms GRAV   2.42 uas, RV  0.51 km/s | M: +2.29e-03 (+0.26s, s=9.0e-03, +0.19pub) R0: -8.14e-04 (-0.12s, s=6.8e-03, -0.09pub) [4s nfev 20]
+  (iii) exact a*=0 + 1st-order T     chi2=   0.001 rms GRAV   0.07 uas, RV  0.02 km/s | M: +3.18e-05 (+0.00s, s=9.0e-03, +0.00pub) R0: +3.04e-05 (+0.00s, s=6.8e-03, +0.00pub) [16s nfev 12]
