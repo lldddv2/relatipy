@@ -4,14 +4,14 @@ LT chi=0.7 spin perpM              |dL|/orbit=7.02e-04 rad  dOmega_sky=+8.47e-04
 disk 1e3 Msun CWD                  |dL|/orbit=2.12e-03 rad  dOmega_sky=+2.34e-03 di_sky=-8.45e-04 | frac of dL within +-1%P 0.013, +-5%P 0.124, +-25%P 0.625 | frac dOmega_sky(+-5%P) 0.122, di_sky 0.139
 disk 1e3 Msun P30                  |dL|/orbit=1.41e-03 rad  dOmega_sky=+1.56e-03 di_sky=-5.59e-04 | frac of dL within +-1%P 0.026, +-5%P 0.150, +-25%P 0.635 | frac dOmega_sky(+-5%P) 0.150, di_sky 0.150
 == (2) secular-only vs full Fisher (S301 100 uas, RV 1 km/s from 2030, 2026-2041; spin perp)
-secular case=a md=0.0 - rates=(i,O): rank 2/2  sN=0.118 sM=0.189 sL=inf
-secular case=a md=0.0 - rates=(i,O,w): rank 3/3  sN=0.218 sM=0.431 sL=0.063
+secular case=a md=0.0 - rates=(i,O): rank 2/2  sN=0.127 sM=0.190 sL=inf
+secular case=a md=0.0 - rates=(i,O,w): rank 3/3  sN=0.218 sM=0.363 sL=0.064
 secular case=b md=1.0 CWD rates=(i,O): rank 2/6  sN=inf sM=inf sL=inf
 secular case=b md=1.0 CWD rates=(i,O,w): rank 3/6  sN=inf sM=inf sL=inf
-secular case=c md=1.0 CWD rates=(i,O): rank 6/6  sN=1.971 sM=3.914 sL=9.770 sMd=941
-secular case=c md=1.0 CWD rates=(i,O,w): rank 6/6  sN=1.683 sM=3.360 sL=0.237 sMd=868
-secular case=c md=1.0 P30 rates=(i,O): rank 6/6  sN=1.794 sM=3.736 sL=8.631 sMd=1349
-secular case=c md=1.0 P30 rates=(i,O,w): rank 6/6  sN=0.788 sM=1.648 sL=0.120 sMd=305
-secular case=c md=0.3 CWD rates=(i,O): rank 6/6  sN=1.964 sM=3.927 sL=9.786 sMd=943
-secular case=c md=0.3 CWD rates=(i,O,w): rank 6/6  sN=1.691 sM=3.374 sL=0.400 sMd=880
+secular case=c md=1.0 CWD rates=(i,O): rank 6/6  sN=1.971 sM=3.914 sL=9.771 sMd=941
+secular case=c md=1.0 CWD rates=(i,O,w): rank 6/6  sN=1.683 sM=3.354 sL=0.237 sMd=867
+secular case=c md=1.0 P30 rates=(i,O): rank 6/6  sN=1.795 sM=3.736 sL=8.631 sMd=1349
+secular case=c md=1.0 P30 rates=(i,O,w): rank 6/6  sN=0.789 sM=1.637 sL=0.121 sMd=304
+secular case=c md=0.3 CWD rates=(i,O): rank 6/6  sN=1.964 sM=3.927 sL=9.787 sMd=943
+secular case=c md=0.3 CWD rates=(i,O,w): rank 6/6  sN=1.692 sM=3.368 sL=0.401 sMd=879
 [8s]

@@ -1,0 +1,10 @@
+case c RV 1 comp P at +1 sigma_F (1.035): chi2 along Fisher line 19601.6, profile min 1.055 (Gaussian: 1.0) it=11
+case c RV 1 comp Q at +1 sigma_F (0.139): chi2 along Fisher line 5593.5, profile min 0.254 (Gaussian: 1.0) it=49
+case c RV 1 comp L at +1 sigma_F (0.068): chi2 along Fisher line 183.9, profile min 0.931 (Gaussian: 1.0) it=80
+case a RV 1 comp P at +1 sigma_F (0.395): chi2 along Fisher line 1.0, profile min 0.999 (Gaussian: 1.0) it=2
+case a RV 1 comp Q at +1 sigma_F (0.105): chi2 along Fisher line 1.0, profile min 1.000 (Gaussian: 1.0) it=1
+case a RV 1 comp L at +1 sigma_F (0.068): chi2 along Fisher line 1.0, profile min 1.001 (Gaussian: 1.0) it=2
+case c RV 5 comp P at +1 sigma_F (1.471): chi2 along Fisher line 9204.1, profile min 10.892 (Gaussian: 1.0) it=13
+case c RV 5 comp Q at +1 sigma_F (0.212): chi2 along Fisher line 4252.2, profile min 0.099 (Gaussian: 1.0) it=57
+case c RV 5 comp L at +1 sigma_F (0.087): chi2 along Fisher line 255.4, profile min 0.297 (Gaussian: 1.0) it=39
+[67s]

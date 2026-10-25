@@ -45,9 +45,14 @@ def prof(args):
 
 if __name__ == '__main__':
     t0 = time.time()
-    jobs = [(case, s_rv, lab, k) for case, s_rv in (('c', 1.0), ('a', 1.0), ('c', 5.0)) for lab in ('P', 'Q', 'L') for k in (1.0,)]
+    if len(sys.argv) > 1 and sys.argv[1] == 'scan':
+        jobs = [(case, s_rv, lab, k) for case, s_rv in (('c', 1.0), ('c', 5.0)) for lab in ('P', 'Q', 'L') for k in (-2.0, 2.0, 4.0)]
+        out = 'profile_scan.json'
+    else:
+        jobs = [(case, s_rv, lab, k) for case, s_rv in (('c', 1.0), ('a', 1.0), ('c', 5.0)) for lab in ('P', 'Q', 'L') for k in (1.0,)]
+        out = 'profile_check.json'
     with Pool(4) as p: R = p.map(prof, jobs, chunksize=1)
-    json.dump(R, open('profile_check.json', 'w'), indent=1)
+    json.dump(R, open(out, 'w'), indent=1)
     for r in R:
         print(f"case {r['case']} RV {r['s_rv']:g} comp {r['comp']} at +{r['k']:.0f} sigma_F ({r['sigF']:.3f}): chi2 along Fisher line {r['chi2_linear']:.1f}, profile min {r['chi2_profile']:.3f} (Gaussian: {r['k']**2:.1f}) it={r['iters']}", flush=True)
     print(f"[{time.time()-t0:.0f}s]")
