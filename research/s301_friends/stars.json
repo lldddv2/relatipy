@@ -1,0 +1,100 @@
+{
+  "_about": "Truth/prior orbital elements for the S301 + friends joint fit. Angles in deg, a in mas, t_p and element_epoch in decimal Julian years. Errors are the published formal 1-sigma. Angle convention: Gillessen et al. 2009 (observer frame x = +Dec (north), y = +RA (east), z = away from observer; Omega counted from north through east; ascending node = where the star crosses the sky plane moving away from us; i > 90 deg = clockwise on the sky). This is the frame of relatipy's KerrMcmcModel (axes (Dec, RA, away)), verified in validation.md. element_epoch = osculation epoch at which the Kepler elements are converted to the initial state of the integration.",
+  "global": {
+    "M_1e6Msun": 4.2996,
+    "M_err_1e6Msun": 0.0118,
+    "R0_kpc": 8.2759,
+    "R0_err_kpc": 0.0086,
+    "source": "GRAVITY Collaboration 2024, A&A 692 A242 (arXiv:2409.12261), Table B.1, four-star fit",
+    "alternative": {
+      "M_1e6Msun": 4.297,
+      "M_err_1e6Msun": 0.012,
+      "R0_kpc": 8.277,
+      "R0_err_kpc": 0.009,
+      "source": "GRAVITY 2022 values used (fixed) for the S301 discovery fit (arXiv:2607.12664 p.6; errors from arXiv:2609.06936 p.2)"
+    },
+    "frame_offsets_naco_gravity2024": {
+      "x0_mas": -0.72370, "x0_err_mas": 0.08707,
+      "y0_mas": -0.11921, "y0_err_mas": 0.07391,
+      "vx0_mas_yr": 0.078241, "vx0_err_mas_yr": 0.005728,
+      "vy0_mas_yr": 0.040542, "vy0_err_mas_yr": 0.005620,
+      "vz0_kms": -1.9983, "vz0_err_kms": 1.3325,
+      "epoch": 2000.0,
+      "note": "NACO reference-frame parameters of the GRAVITY 2024 fit. Not applied to the mocks (mocks are generated in the Sgr A* frame)."
+    },
+    "f_SP_gravity2024": [1.1350, 0.1104]
+  },
+  "stars": {
+    "S301A": {
+      "a_mas": 83.0, "a_err_mas": 0.7,
+      "e": 0.9832, "e_err": 0.0010,
+      "i_deg": 124.09, "i_err_deg": 1.10,
+      "Omega_deg": 73.8, "Omega_err_deg": 3.5,
+      "omega_deg": 293.4, "omega_err_deg": 2.2,
+      "t_p": 2023.126, "t_p_err": 0.010,
+      "P_yr_published": [8.68, 0.11],
+      "element_epoch": 2018.785,
+      "element_epoch_note": "Osculation epoch not stated in the paper. We use the preceding apocentre t_p - P/2 (P = 8.682 yr from a, M, R0), as GRAVITY 2024 does for S2 (2010.35) and S29 (1977). Any epoch 2017-2022.9 fits the digitized points about equally (chi2 within ~3); any epoch after the 2023.13 pericentre is rejected (RMS 3 mas, chi2 ~6000): the osculating omega jumps by the ~2 deg Schwarzschild precession across pericentre. See validation.md.",
+      "chi2_published": 25.86,
+      "K_mag": 19.3,
+      "source": "GRAVITY Collaboration 2026, Nature (arXiv:2607.12664), Extended Data Table 2, first value/error pair (= solution A; adopted by arXiv:2609.06936 and by Ext. Data Fig. 5)"
+    },
+    "S301B": {
+      "a_mas": 83.0, "a_err_mas": 0.7,
+      "e": 0.9824, "e_err": 0.0011,
+      "i_deg": 122.84, "i_err_deg": 1.12,
+      "Omega_deg": 256.9, "Omega_err_deg": 3.3,
+      "omega_deg": 115.1, "omega_err_deg": 2.0,
+      "t_p": 2023.125, "t_p_err": 0.011,
+      "P_yr_published": [8.68, 0.11],
+      "element_epoch": 2018.784,
+      "element_epoch_note": "As for S301A (t_p - P/2).",
+      "chi2_published": 25.53,
+      "K_mag": 19.3,
+      "source": "arXiv:2607.12664 Extended Data Table 2, second value/error pair (= solution B). Main text p.6 quotes e = 0.9821 for B; the table gives 0.9824 (table value used).",
+      "mirror_note": "Solution B is essentially the z-mirror of A: Omega_B - Omega_A = 183.1 deg and omega_B - omega_A = -178.3 deg (both ~180 deg), with i, e, a, t_p equal within errors. (Omega, omega) -> (Omega + 180, omega + 180) leaves the sky-projected Keplerian orbit unchanged and flips the line-of-sight coordinate z -> -z, hence the sign of the radial velocity. Astrometry alone cannot separate A and B (chi2 25.86 vs 25.53); radial velocities break the degeneracy (Romer delay could in principle but does not yet). Spin effects (Lense-Thirring) are not mirror symmetric either unless the spin is mirrored too."
+    },
+    "S2": {
+      "a_mas": 125.02, "a_err_mas": 0.03,
+      "e": 0.88444, "e_err": 0.00006,
+      "i_deg": 134.67, "i_err_deg": 0.02,
+      "Omega_deg": 228.21, "Omega_err_deg": 0.03,
+      "omega_deg": 66.279, "omega_err_deg": 0.029,
+      "t_p": 2018.3789, "t_p_err": 0.0001,
+      "element_epoch": 2010.35,
+      "K_mag": 14.0,
+      "source": "GRAVITY Collaboration 2024 (arXiv:2409.12261) Table B.1; elements osculating at 2010.35 (table caption)"
+    },
+    "S29": {
+      "a_mas": 390.25, "a_err_mas": 0.94,
+      "e": 0.96880, "e_err": 0.00009,
+      "i_deg": 144.24, "i_err_deg": 0.09,
+      "Omega_deg": 4.9259, "Omega_err_deg": 0.1590,
+      "omega_deg": 203.68, "omega_err_deg": 0.17,
+      "t_p": 2021.4102, "t_p_err": null,
+      "t_p_err_note": "Prefactor lost in the PDF text layer ('x10^-4'); error of order 1e-4..1e-3 yr. Recover from the PDF.",
+      "element_epoch": 1977.0,
+      "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 1977 (table caption)"
+    },
+    "S38": {
+      "a_mas": 142.49, "a_err_mas": 0.04,
+      "e": 0.81807, "e_err": 0.00022,
+      "i_deg": 168.69, "i_err_deg": 0.19,
+      "Omega_deg": 122.43, "Omega_err_deg": 1.12,
+      "omega_deg": 40.065, "omega_err_deg": 1.118,
+      "t_p": 2022.6843, "t_p_err": 0.0008,
+      "element_epoch": 2000.0,
+      "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2000 (table caption)"
+    },
+    "S55": {
+      "a_mas": 104.24, "a_err_mas": 0.05,
+      "e": 0.72980, "e_err": 0.00018,
+      "i_deg": 159.59, "i_err_deg": 0.17,
+      "Omega_deg": 319.43, "Omega_err_deg": 0.97,
+      "omega_deg": 327.77, "omega_err_deg": 0.93,
+      "t_p": 2009.4738, "t_p_err": 0.0076,
+      "element_epoch": 2012.0,
+      "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2012 (table caption)"
+    }
+  }
+}
