@@ -23,14 +23,14 @@ repository root after building the extensions::
 Measured on the shared 4-core development container (2026-10-25, dop853,
 4-process spawn pool, 3 iterations of 2 x n_dim walkers):
 
-==========  ======  ========  ===============  ==========  ============  =========
-rtol/atol   force   n_dim     tolerance error  call (ms)   serial eval/s 4-proc /s
-==========  ======  ========  ===============  ==========  ============  =========
-1e-9/1e-12  none    40        0.006 uas        21.8        48            123
-1e-9/1e-12  disk    43        2.6 uas          13.4        78            182
-1e-10/1e-13 none    40        0.0004 uas       22.2        45            121
-1e-10/1e-13 disk    43        0.07 uas         13.5        73            177
-==========  ======  ========  ===============  ==========  ============  =========
+===========  ======  =====  ===============  =========  =============  =========
+rtol/atol    force   n_dim  tolerance error  call (ms)  serial eval/s  4-proc /s
+===========  ======  =====  ===============  =========  =============  =========
+1e-9/1e-12   none    40     0.006 uas        21.8       48             123
+1e-9/1e-12   disk    43     2.6 uas          13.4       78             182
+1e-10/1e-13  none    40     0.0004 uas       22.2       45             121
+1e-10/1e-13  disk    43     0.07 uas         13.5       73             177
+===========  ======  =====  ===============  =========  =============  =========
 
 The forced path is faster than the homogeneous one because its active-force
 right-hand side is the generated Kerr kernel. ``rtol = 1e-10`` costs almost
