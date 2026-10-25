@@ -29,7 +29,8 @@ metric, the one used by every homogeneous production path:
   (the kernel behind ``rp_kerr_null_geodesic_rhs``), so observables are
   bitwise those of ``_mcmc_core``;
 - with an active force it calls the generated kernel
-  ``rp_force_generated_kerr_rhs`` (``native/src/force/generated/kerr_rhs.c``),
+  ``rp_kerr_geodesic_physic_evaluate_generated_rhs``
+  (``native/src/geodesic/physic/kerr_rhs_generated.c``),
   the same contraction optimized symbolically: faster, and equal to the
   corrected contraction to about ``3e-15`` relative. A zero active force (a
   thin disk of zero mass) therefore agrees with the homogeneous paths to
@@ -103,8 +104,8 @@ Layout
   and projection (``external.c``), the forced right-hand sides in proper and
   coordinate time (``kerr_forced.c``) and the forced observable evaluator
   (``kerr_mcmc.c``), parallel to ``geodesic/``.
-- ``native/src/force/generated/kerr_rhs.c``: the generated Kerr kernel
-  described above.
+- ``native/src/geodesic/physic/kerr_rhs_generated.{c,h}``: the generated
+  Kerr kernel described above, beside the Kerr physics.
 - ``native/src/force/models/``: the built-in ``thin_disk`` on the generic
   ``axisymmetric_table``, with its ``elliptic`` and ``quadrature`` helpers.
 - ``native/tests/force/``: C tests, with analytic test-only models in

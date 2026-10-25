@@ -18,7 +18,8 @@ only adds files and additive exports.
   (``external_force.h``), the frame map and projected four-acceleration
   (``external.c``), the forced proper- and coordinate-time right-hand sides
   and their integrator adapters (``kerr_forced.c``), the generated Kerr
-  kernel used when a force is active (``generated/kerr_rhs.c``) and the
+  kernel used when a force is active
+  (``geodesic/physic/kerr_rhs_generated.c``) and the
   forced observable evaluator (``kerr_mcmc.c``).
 - Thin-disk model (``native/src/force/models/``): ``thin_disk`` on the
   generic ``axisymmetric_table``, with ``elliptic`` and ``quadrature``.
@@ -62,7 +63,8 @@ What was left out, and where it lives
    - ``relatipy._codegen``: the symbolic C99 optimizer, the Kerr RHS
      derivation and its verification; ``tools/codegen/`` with the
      specifications of ``kerr_rhs``, ``projection`` and ``ring_field``. The
-     generator of ``native/src/force/generated/kerr_rhs.c`` lives there.
+     generator of ``native/src/geodesic/physic/kerr_rhs_generated.c`` lives
+     there.
    - ``relatipy._jit``: the cached run-time C compiler.
    - ``rp.Force`` and ``rp.Potential``: forces defined at run time from
      SymPy expressions (``forces/compiled.py``), with the ``symbolic``
