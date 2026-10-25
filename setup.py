@@ -48,6 +48,31 @@ SOLUTION_SOURCES = [
     NATIVE / "geodesic" / "kerr.c",
 ]
 
+# The forced layer calls the homogeneous Kerr kernels, never copies them.
+FORCE_SOURCES = [
+    ROOT / "bindings" / "cython" / "_force_core.pyx",
+    NATIVE / "utils" / "numeric.c",
+    NATIVE / "utils" / "tensor.c",
+    NATIVE / "metric" / "physic" / "kerr.c",
+    NATIVE / "metric" / "kerr.c",
+    NATIVE / "geodesic" / "physic" / "kerr.c",
+    NATIVE / "geodesic" / "physic" / "kerr_observables.c",
+    NATIVE / "geodesic" / "kerr.c",
+    NATIVE / "geodesic" / "initial" / "convert.c",
+    NATIVE / "geodesic" / "initial" / "bound.c",
+    NATIVE / "geodesic" / "integrators" / "integrator.c",
+    NATIVE / "geodesic" / "integrators" / "dop853.c",
+    NATIVE / "geodesic" / "integrators" / "dp45.c",
+    NATIVE / "geodesic" / "integrators" / "radau.c",
+    NATIVE / "geodesic" / "integrators" / "kerr.c",
+    NATIVE / "geodesic" / "solution" / "solve.c",
+    NATIVE / "force" / "external.c",
+    NATIVE / "force" / "kerr_forced.c",
+    NATIVE / "force" / "solution" / "solve.c",
+    NATIVE / "force" / "kerr_mcmc.c",
+    *sorted((NATIVE / "force" / "models").glob("*.c")),
+]
+
 extensions = [
     Extension(
         name,
@@ -64,6 +89,7 @@ extensions = [
     for name, sources in (
         ("relatipy._mcmc_core", MCMC_SOURCES),
         ("relatipy._core", SOLUTION_SOURCES),
+        ("relatipy._force_core", FORCE_SOURCES),
     )
 ]
 
