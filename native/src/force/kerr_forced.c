@@ -3,12 +3,17 @@
  * @brief Forced Kerr proper- and coordinate-time right-hand sides.
  *
  * The homogeneous term is called, never copied, through the single helper
- * `evaluate_homogeneous`; replacing the Kerr kernel is a one-line change
- * there.  Validation mirrors `rp_kerr_null_geodesic_rhs` in
- * `geodesic/kerr.c`, so an inactive force reproduces it bit for bit.
+ * `evaluate_homogeneous`.  An inactive force uses the corrected contraction
+ * of `rp_kerr_null_geodesic_rhs` in `geodesic/kerr.c`, whose validation is
+ * mirrored here, so it reproduces that path bit for bit.  An active force
+ * uses the generated kernel of the same connection
+ * (`generated/kerr_rhs.c`), which agrees with the contraction to 1e-12
+ * relative and is about ten times faster.
  */
 
 #include "kerr_forced.h"
+
+#include "generated/kerr_rhs.h"
 
 #include "geodesic/jacobian.h"
 #include "../utils/tensor.h"
@@ -18,14 +23,21 @@
 
 #define STATE_DIM (2U * RP_KERR_DIM)
 
-/* The only call into the homogeneous Kerr contraction (mass one). */
+/* The only calls into a homogeneous Kerr kernel (mass one). */
 static void evaluate_homogeneous(
     double spin,
     const struct rp_kerr_geodesic_state *state,
+    int force_active,
     double coordinate_derivative[RP_KERR_DIM],
     double four_velocity_derivative[RP_KERR_DIM]
 )
 {
+    if (force_active) {
+        rp_force_generated_kerr_rhs(
+            1.0, spin, state, coordinate_derivative, four_velocity_derivative
+        );
+        return;
+    }
     rp_kerr_geodesic_physic_evaluate_corrected_rhs(
         1.0, spin, state, coordinate_derivative, four_velocity_derivative
     );
@@ -99,7 +111,8 @@ int rp_kerr_forced_rhs(
     }
 
     evaluate_homogeneous(
-        spin, &state, coordinate_derivative, four_velocity_derivative
+        spin, &state, rp_force_is_active(force),
+        coordinate_derivative, four_velocity_derivative
     );
     if (rp_force_is_active(force)) {
         force_status = rp_force_evaluate_prepared(
