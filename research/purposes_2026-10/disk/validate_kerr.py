@@ -8,7 +8,9 @@ from astropy.constants import c
 from relatipy import Kerr
 import diskdyn as dd, fc
 
-a, e, chi = 16010.0, 0.9825, 0.7
+import sys
+a = float(sys.argv[1]) if len(sys.argv)>1 else 16010.0
+e, chi = 0.9825, 0.7
 inc, Om, om = 60 * fc.DEG, 30 * fc.DEG, 90 * fc.DEG
 x0, v0 = fc.kepler_state(a, e, inc, Om, om, np.pi)        # apocentre
 P = 2 * np.pi * a ** 1.5
@@ -54,8 +56,8 @@ dE_odd = 0.5 * (np.diff(Ep) - np.diff(Em)); dE_even = 0.5 * (np.diff(Ep) + np.di
 dP_odd = 0.5 * (np.diff(Pp) - np.diff(Pm))
 p = a * (1 - e * e)
 print(f"S301 a={a} e={e} chi={chi} inc={inc/fc.DEG:.0f}deg  ({time.time()-t0:.1f}s)")
-print("per-orbit dOmega (rad): exact odd ", np.array2string(dE_odd, precision=5), " exact even", np.array2string(dE_even, precision=3))
-print("                        PN odd    ", np.array2string(dP_odd, precision=5))
+print(f"per-orbit dOmega [rad]: exact odd {dE_odd.mean():.6e} (orbit-to-orbit spread {np.ptp(dE_odd):.1e}), exact even {dE_even.mean():.4e}")
+print(f"                        PN odd    {dP_odd.mean():.6e};  p = {a*(1-e*e):.1f} r_g")
 print(f"rel diff PN/exact - 1 (odd): {np.mean(dP_odd)/np.mean(dE_odd)-1:+.2e};  analytic 4 pi chi/p^1.5 = {4*np.pi*chi/p**1.5:.5e}")
 print(f"exact even part vs -3 pi chi^2 cos(i)/p^2 = {-3*np.pi*chi**2*np.cos(inc)/p**2:.3e}")
 print(f"inclination drift per orbit: exact {np.mean(np.diff(Ip)):+.1e}, PN {np.mean(np.diff(PIp)):+.1e} rad")

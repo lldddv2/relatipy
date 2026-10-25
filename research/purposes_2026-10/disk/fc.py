@@ -27,7 +27,7 @@ TR, TZ, TP = disktab.make_table(verbose=False)
 
 def rg_au(M6): return GM_AU * 1e6 * M6
 def tg_yr(M6): return GM_S * 1e6 * M6 / YR_S
-def uas_per_rg(M6, R0): return rg_au(M6) * 1e3 / R0 * 1e6 / 1e3   # rg[AU]/(R0[pc]) arcsec -> uas
+def uas_per_rg(M6, R0): return rg_au(M6) * 1e3 / R0   # rg[AU] / (R0[kpc]*1e3 pc) arcsec * 1e6 -> uas
 
 
 def rotmat(inc, Om, om):

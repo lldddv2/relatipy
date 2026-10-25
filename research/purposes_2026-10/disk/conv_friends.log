@@ -1,0 +1,5 @@
+S301A  nstep/orbit= 3000    16.0 ms  max|dpos|=0.000 uas  max|dRV|=0.0006 km/s  n_ast=149 n_rv=74
+S2     nstep/orbit= 1500     5.1 ms  max|dpos|=0.000 uas  max|dRV|=0.0000 km/s  n_ast=111 n_rv=111
+S29    nstep/orbit= 2000     3.0 ms  max|dpos|=0.000 uas  max|dRV|=0.0000 km/s  n_ast=96 n_rv=96
+S38    nstep/orbit= 1200     2.6 ms  max|dpos|=0.000 uas  max|dRV|=0.0000 km/s  n_ast=96 n_rv=96
+S55    nstep/orbit= 1200     4.4 ms  max|dpos|=0.000 uas  max|dRV|=0.0000 km/s  n_ast=96 n_rv=96

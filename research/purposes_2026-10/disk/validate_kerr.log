@@ -1,6 +1,12 @@
-S301 a=16010.0 e=0.9825 chi=0.7 inc=60deg  (2.3s)
-per-orbit dOmega (rad): exact odd  [0.00068 0.00068]  exact even [-7.968e-06 -7.968e-06]
-                        PN odd     [0.00069 0.00069]
+S301 a=16010.0 e=0.9825 chi=0.7 inc=60deg  (0.5s)
+per-orbit dOmega [rad]: exact odd 6.848103e-04 (orbit-to-orbit spread 4.1e-10), exact even -7.9684e-06
+                        PN odd    6.907917e-04;  p = 555.4 r_g
 rel diff PN/exact - 1 (odd): +8.73e-03;  analytic 4 pi chi/p^1.5 = 6.71961e-04
 exact even part vs -3 pi chi^2 cos(i)/p^2 = -7.484e-06
 inclination drift per orbit: exact -7.2e-09, PN -7.6e-08 rad
+S301 a=48030.0 e=0.9825 chi=0.7 inc=60deg  (0.5s)
+per-orbit dOmega [rad]: exact odd 1.301315e-04 (orbit-to-orbit spread 4.0e-12), exact even -8.4908e-07
+                        PN odd    1.305091e-04;  p = 1666.3 r_g
+rel diff PN/exact - 1 (odd): +2.90e-03;  analytic 4 pi chi/p^1.5 = 1.29319e-04
+exact even part vs -3 pi chi^2 cos(i)/p^2 = -8.316e-07
+inclination drift per orbit: exact -1.6e-10, PN -1.6e-09 rad
