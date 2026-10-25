@@ -1,10 +1,10 @@
 /*
  * Benchmark of the forced Kerr layer (not a test; prints timings).
  *
- * 1. Nanoseconds per call of the homogeneous corrected RHS adapter
- *    (rp_kerr_integrator_rhs), the legacy optimized RHS for reference, and
- *    the forced adapter with no force, a Plummer sphere and a
- *    Miyamoto--Nagai disk.
+ * 1. Nanoseconds per call of the homogeneous RHS adapter
+ *    (rp_kerr_integrator_rhs, generated kernel), the generic contraction kept
+ *    as its reference for comparison, and the forced adapter with no force,
+ *    a Plummer sphere and a Miyamoto--Nagai disk.
  * 2. Time per observable evaluation of an S2-like orbit (a = 0.125 arcsec,
  *    e = 0.884, 145 arrival epochs over 30 yr, Sgr A* at 4.3e6 Msun and
  *    8.28 kpc) with rp_kerr_mcmc_evaluate and rp_kerr_forced_mcmc_evaluate.
@@ -86,8 +86,10 @@ static double sweep_packed(packed_rhs rhs, void *context)
     return now_seconds() - start;
 }
 
-static double sweep_legacy(double spin)
+/* Prepare and the generic reference contraction, without validation. */
+static double sweep_reference(double spin)
 {
+    struct rp_kerr_geodesic_state state;
     double dx[4];
     double du[4];
     double sum = 0.0;
@@ -98,11 +100,15 @@ static double sweep_legacy(double spin)
     start = now_seconds();
     for (sweep = 0U; sweep < RHS_SWEEPS; ++sweep) {
         for (i = 0U; i < POINTS; ++i) {
-            if (rp_kerr_geodesic_rhs(
-                    1.0, spin, STATES[i], STATES[i] + 4, dx, du
-                ) != RP_KERR_STATUS_OK) {
+            memcpy(state.x, STATES[i], sizeof(state.x));
+            memcpy(state.u, STATES[i] + 4, sizeof(state.u));
+            if (rp_kerr_geodesic_physic_prepare_state(1.0, spin, &state)
+                != RP_KERR_STATUS_OK) {
                 return NAN;
             }
+            rp_kerr_geodesic_physic_evaluate_corrected_rhs(
+                1.0, spin, &state, dx, du
+            );
             sum += du[1];
         }
     }
@@ -154,8 +160,8 @@ static void bench_rhs(void)
     const rp_external_force plummer_force = {test_plummer_acceleration, &plummer};
     const rp_external_force disk_force = {test_miyamoto_nagai_acceleration, &disk};
     const char *names[RHS_VARIANTS] = {
-        "homogeneous corrected (rp_kerr_integrator_rhs)",
-        "legacy optimized (rp_kerr_geodesic_rhs)",
+        "homogeneous (rp_kerr_integrator_rhs)",
+        "reference contraction (prepare + corrected)",
         "forced, NULL force",
         "forced, Plummer sphere",
         "forced, Miyamoto-Nagai disk",
@@ -186,7 +192,7 @@ static void bench_rhs(void)
     /* Interleave variants so that machine load affects all of them alike. */
     for (repeat = 0U; repeat < REPEATS; ++repeat) {
         best[0] = fmin(best[0], sweep_packed(rp_kerr_integrator_rhs, &homogeneous));
-        best[1] = fmin(best[1], sweep_legacy(spin));
+        best[1] = fmin(best[1], sweep_reference(spin));
         best[2] = fmin(best[2], sweep_packed(rp_kerr_forced_integrator_rhs, &none));
         best[3] = fmin(best[3],
             sweep_packed(rp_kerr_forced_integrator_rhs, &with_plummer));

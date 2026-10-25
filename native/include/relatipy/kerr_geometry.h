@@ -18,9 +18,7 @@
  * @note Compared with the frozen legacy RelatiPy snapshot, this reference
  * uses the opposite metric signature.  Its metric is therefore the negative
  * of the legacy numeric metric after converting legacy spin to a geometric
- * spin length.  The Christoffel evaluator intentionally reproduces the
- * explicit generated expressions in the legacy implementation rather than
- * deriving them from the metric exposed here.
+ * spin length.
  */
 
 #ifndef RELATIPY_KERR_GEOMETRY_H
@@ -111,52 +109,6 @@ rp_kerr_status rp_kerr_inverse_metric(
     double spin,
     const double coordinates[RP_KERR_DIM],
     double inverse_metric[RP_KERR_DIM][RP_KERR_DIM]
-);
-
-/**
- * Evaluate the legacy-compatible Christoffel tensor `Gamma^lambda_(mu nu)`.
- *
- * The implementation is a direct C translation of the explicit expressions
- * and lower-index symmetry assignments in the frozen legacy RelatiPy method
- * `Kerr._get_christoffel_symbols`.  It maps the legacy Schwarzschild radius
- * as `R_s = 2 * mass`; `spin` already is the length-like legacy parameter
- * `a`.
- *
- * @param mass Geometric mass `M`, with `M > 0`.
- * @param spin Spin length `a`, with `|a| <= M`.
- * @param coordinates Caller-owned input `(t, r, theta, phi)` in geometric
- *        units; angles are in radians.
- * @param christoffel Caller-owned output indexed as
- *        `christoffel[lambda][mu][nu]`.  On failure after this pointer has
- *        been validated, every component is zero.
- * @return A typed status code.
- *
- * @note This is deliberately a legacy-compatibility tensor.  It is not
- *       recomputed from metric derivatives and must not be presented as an
- *       independently corrected connection for the metric exposed above.
- * @note The legacy method provides 20 independent expressions and 12 explicit
- *       lower-index symmetry copies, producing 32 populated entries.
- *       Components absent from that method remain zero.
- *
- * @par Example
- * @code
- * double storage[RP_KERR_DIM * RP_KERR_DIM * RP_KERR_DIM] = {
- *     0.0, 8.0, 1.1, 0.3
- * };
- * rp_kerr_status status = rp_kerr_christoffel(
- *     1.0,
- *     0.5,
- *     storage,
- *     (double (*)[RP_KERR_DIM][RP_KERR_DIM])storage
- * );
- * // Input and output are permitted to overlap; storage now holds Gamma.
- * @endcode
- */
-rp_kerr_status rp_kerr_christoffel(
-    double mass,
-    double spin,
-    const double coordinates[RP_KERR_DIM],
-    double christoffel[RP_KERR_DIM][RP_KERR_DIM][RP_KERR_DIM]
 );
 
 /**

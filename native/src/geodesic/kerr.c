@@ -3,11 +3,10 @@
  * @brief Orchestration layer for experimental Kerr geodesic operations.
  *
  * This file validates and copies caller inputs, enforces output and aliasing
- * contracts, propagates typed failures, and delegates legacy-compatible and
- * corrected null-geodesic physical evaluation to `physic/kerr.c`.  The
- * corrected right-hand side evaluates the generated kernel
- * `physic/kerr_rhs_generated.c`; the generic contraction in `physic/kerr.c`
- * stays as the reference oracle of the tests.
+ * contracts, propagates typed failures, and delegates the physical
+ * evaluation to `physic/`.  The corrected right-hand side evaluates the
+ * generated kernel `physic/kerr_rhs_generated.c`; the generic contraction in
+ * `physic/kerr.c` stays as the reference oracle of the tests.
  *
  * The operation remains an internal local reference. It is not an integrator,
  * public C API, stable ABI, or decision about the canonical integration state.
@@ -75,62 +74,6 @@ rp_kerr_status rp_kerr_geodesic_jacobian(
     );
     if (!rp_tensor_is_finite(&jacobian[0][0], 4U * RP_KERR_DIM * RP_KERR_DIM)) {
         rp_tensor_zero(&jacobian[0][0], 4U * RP_KERR_DIM * RP_KERR_DIM);
-        return RP_KERR_STATUS_NUMERICAL_RANGE;
-    }
-    return RP_KERR_STATUS_OK;
-}
-
-rp_kerr_status rp_kerr_geodesic_rhs(
-    double mass,
-    double spin,
-    const double coordinates[RP_KERR_DIM],
-    const double four_velocity[RP_KERR_DIM],
-    double coordinate_derivative[RP_KERR_DIM],
-    double four_velocity_derivative[RP_KERR_DIM]
-)
-{
-    struct rp_kerr_geodesic_state state;
-    rp_kerr_status status;
-
-    if (coordinate_derivative == NULL || four_velocity_derivative == NULL) {
-        if (coordinate_derivative != NULL) {
-            rp_tensor_zero(coordinate_derivative, RP_KERR_DIM);
-        }
-        if (four_velocity_derivative != NULL) {
-            rp_tensor_zero(four_velocity_derivative, RP_KERR_DIM);
-        }
-        return RP_KERR_STATUS_NULL_POINTER;
-    }
-    if (coordinate_derivative == four_velocity_derivative) {
-        rp_tensor_zero(coordinate_derivative, RP_KERR_DIM);
-        return RP_KERR_STATUS_INVALID_PARAMETER;
-    }
-    if (coordinates == NULL || four_velocity == NULL) {
-        rp_tensor_zero(coordinate_derivative, RP_KERR_DIM);
-        rp_tensor_zero(four_velocity_derivative, RP_KERR_DIM);
-        return RP_KERR_STATUS_NULL_POINTER;
-    }
-
-    status = prepare_geodesic_state(
-        mass, spin, coordinates, four_velocity, &state
-    );
-    rp_tensor_zero(coordinate_derivative, RP_KERR_DIM);
-    rp_tensor_zero(four_velocity_derivative, RP_KERR_DIM);
-    if (status != RP_KERR_STATUS_OK) {
-        return status;
-    }
-
-    rp_kerr_geodesic_physic_evaluate_rhs(
-        mass,
-        spin,
-        &state,
-        coordinate_derivative,
-        four_velocity_derivative
-    );
-    if (!rp_tensor_is_finite(coordinate_derivative, RP_KERR_DIM)
-        || !rp_tensor_is_finite(four_velocity_derivative, RP_KERR_DIM)) {
-        rp_tensor_zero(coordinate_derivative, RP_KERR_DIM);
-        rp_tensor_zero(four_velocity_derivative, RP_KERR_DIM);
         return RP_KERR_STATUS_NUMERICAL_RANGE;
     }
     return RP_KERR_STATUS_OK;

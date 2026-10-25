@@ -116,7 +116,7 @@ rp_kerr_status rp_force_bl_to_cartesian(
 /**
  * Evaluate `f^mu` at one validated point and four-velocity.
  *
- * Applies the same validation and chart guards as `rp_kerr_geodesic_rhs`
+ * Applies the same validation and chart guards as `rp_kerr_null_geodesic_rhs`
  * (mass one, `|spin| <= 1`), then `rp_force_evaluate_prepared`.  An
  * inactive force yields a zero four-acceleration and status zero.  Returns
  * zero on success, an `rp_kerr_status` value or

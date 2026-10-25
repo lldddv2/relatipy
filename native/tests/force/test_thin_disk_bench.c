@@ -1,12 +1,14 @@
 /*
  * Timing of the thin-disk callback and table build (compile with -O3).
- * The homogeneous Kerr RHS is timed on the same path as a reference.
+ * The homogeneous Kerr RHS (generated kernel, and the generic contraction
+ * kept as its reference) is timed on the same path for comparison.
  * Reports the minimum over repetitions; fails only on a gross regression.
  */
 #define _POSIX_C_SOURCE 199309L
 #include "force/external_force.h"
 #include "force/models/thin_disk.h"
 #include "geodesic/physic/kerr.h"
+#include "geodesic/physic/kerr_rhs_generated.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -85,7 +87,7 @@ int main(void)
     double sink = 0.0;
     const double orbit = time_force(&force, x, &sink);
 
-    /* Kerr reference on the same path: prepare + corrected RHS. */
+    /* Kerr RHS on the same path: prepare + generated kernel or contraction. */
     for (int i = 0; i < POINTS; ++i) {
         const double *p = x + 3 * i;
         const double r = sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
@@ -104,21 +106,21 @@ int main(void)
         const double t1 = now();
         for (int i = 0; i < POINTS; ++i) {
             rp_kerr_geodesic_physic_prepare_state(1.0, 0.7, &states[i]);
-            rp_kerr_geodesic_physic_evaluate_corrected_rhs(1.0, 0.7, &states[i], dx, du);
+            rp_kerr_geodesic_physic_evaluate_generated_rhs(1.0, 0.7, &states[i], dx, du);
             sink += du[1];
         }
         kerr = fmin(kerr, (now() - t1) / POINTS * 1.0e9);
     }
-    double legacy = INFINITY;
+    double reference = INFINITY;
     for (int rep = 0; rep < REPEATS; ++rep) {
         double dx[4], du[4];
         const double t1 = now();
         for (int i = 0; i < POINTS; ++i) {
             rp_kerr_geodesic_physic_prepare_state(1.0, 0.7, &states[i]);
-            rp_kerr_geodesic_physic_evaluate_rhs(1.0, 0.7, &states[i], dx, du);
+            rp_kerr_geodesic_physic_evaluate_corrected_rhs(1.0, 0.7, &states[i], dx, du);
             sink += du[1];
         }
-        legacy = fmin(legacy, (now() - t1) / POINTS * 1.0e9);
+        reference = fmin(reference, (now() - t1) / POINTS * 1.0e9);
     }
 
     /* Random points from 100 r_g to 3 R_out: cache-cold worst case. */
@@ -141,8 +143,8 @@ int main(void)
 
     printf("thin disk callback: %.1f ns/call along the orbit, %.1f ns/call at random points\n",
            orbit, random);
-    printf("Kerr prepare + RHS on the same orbit: corrected %.1f ns/call, legacy optimized %.1f ns/call\n",
-           kerr, legacy);
+    printf("Kerr prepare + RHS on the same orbit: generated %.1f ns/call, reference contraction %.1f ns/call\n",
+           kerr, reference);
     printf("(checksum %.3e)\n", sink);
     free(x);
     free(states);

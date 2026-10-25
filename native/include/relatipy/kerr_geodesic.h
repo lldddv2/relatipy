@@ -3,10 +3,8 @@
  * @brief Experimental, allocation-free Kerr geodesic operations.
  *
  * This internal reference uses Boyer--Lindquist coordinates ordered as
- * `(t, r, theta, phi)`, geometrized units `G = c = 1`, and the explicit
- * legacy-compatible Christoffel expressions exposed by `kerr_geometry.h`.
- * The null-geodesic operations instead use the Levi--Civita connection of
- * the corrected Kerr metric exposed by that header.
+ * `(t, r, theta, phi)`, geometrized units `G = c = 1`, and the Levi--Civita
+ * connection of the corrected Kerr metric exposed by `kerr_geometry.h`.
  *
  * @warning This header is not a public RelatiPy API or stable ABI.  In
  * particular, it does not select `(x, u)` as the production integrator's
@@ -17,50 +15,6 @@
 #define RELATIPY_KERR_GEODESIC_H
 
 #include "relatipy/kerr_geometry.h"
-
-/**
- * Evaluate the affine Kerr geodesic right-hand side.
- *
- * For state `(x^mu, u^mu)`, the outputs are
- * `dx^mu/dlambda = u^mu` and
- * `du^mu/dlambda = -Gamma^mu_(alpha beta) u^alpha u^beta`.  The connection
- * is the explicit frozen-legacy compatibility reference used by
- * `rp_kerr_christoffel`; it is not reconstructed from metric derivatives.
- *
- * @param mass Geometric mass `M`, with `M > 0`.
- * @param spin Spin length `a`, with `|a| <= M`.
- * @param coordinates Caller-owned input `(t, r, theta, phi)` in geometric
- *        units; angles are in radians.
- * @param four_velocity Caller-owned input `(u^t, u^r, u^theta, u^phi)`.
- * @param coordinate_derivative Caller-owned four-component output `dx`.
- * @param four_velocity_derivative Caller-owned four-component output `du`.
- * @return A typed status code. `RP_KERR_STATUS_OK` is the only success code.
- *
- * @note The function allocates no memory and retains no pointer.
- * @note Input storage may overlap either output because both inputs are copied
- *       before the outputs are cleared.  The two output buffers themselves
- *       must not overlap.
- * @note A validated output buffer is zeroed on every error path.
- *
- * @par Example
- * @code
- * const double x[RP_KERR_DIM] = {0.0, 8.0, 1.1, 0.3};
- * const double u[RP_KERR_DIM] = {1.1, -0.01, 0.002, 0.02};
- * double dx[RP_KERR_DIM];
- * double du[RP_KERR_DIM];
- * rp_kerr_status status = rp_kerr_geodesic_rhs(
- *     1.0, 0.5, x, u, dx, du
- * );
- * @endcode
- */
-rp_kerr_status rp_kerr_geodesic_rhs(
-    double mass,
-    double spin,
-    const double coordinates[RP_KERR_DIM],
-    const double four_velocity[RP_KERR_DIM],
-    double coordinate_derivative[RP_KERR_DIM],
-    double four_velocity_derivative[RP_KERR_DIM]
-);
 
 /**
  * Construct an affinely scaled Kerr null tangent from constants of motion.
