@@ -97,6 +97,25 @@ evaluation fails. Proposals outside the model domain raise
 for example for a ``multiprocessing`` pool passed to an emcee
 sampler.
 
+Perturbed models
+----------------
+
+:class:`PerturbedKerrMcmcModel` and :class:`PerturbedKerrMcmcMultiModel` are
+the counterparts of :class:`KerrMcmcModel` and :class:`KerrMcmcMultiModel`
+with one :class:`~relatipy.forces.ExternalForce`. They share initial
+states, light model, units, solver settings and errors; the orbit adds the
+force. :meth:`PerturbedKerrMcmcModel.get_ra_dec_vr` takes an optional
+``force``; the legacy call appends the force block to the 13 values. The
+multi-star vector appends one final block ``force.<name>`` for each of the
+force's :attr:`~relatipy.forces.ExternalForce.parameter_names`, in its
+:attr:`~relatipy.forces.ExternalForce.parameter_units`; for a
+:class:`~relatipy.forces.ThinDisk` these are ``force.disk_mass`` in solar
+masses (or the unit given) and ``force.normal_theta`` and
+``force.normal_phi`` in radians, the normal in observer axes
+``(Dec, RA, away)``. One bound force is shared by all stars and rewritten in
+place for each proposal. :class:`KerrMcmcGaussianLikelihood` accepts the
+perturbed multi-star model; both are picklable.
+
 API
 ---
 
@@ -115,3 +134,14 @@ API
 .. autoclass:: relatipy.observables.KerrMcmcGaussianLikelihood
    :members: model
    :special-members: __call__
+
+.. autoclass:: relatipy.observables.PerturbedKerrMcmcModel
+   :members: force, n_force_parameters, set_solver, get_ra_dec_vr, __call__
+
+.. autoclass:: relatipy.observables.PerturbedKerrMcmcMultiModel
+   :members: force, stars, reference_epoch, astrometry_times, spectroscopy_times,
+      n_parameters, parameter_names, parameter_units, parameter_slices,
+      pack, unpack, set_solver, __call__
+   :inherited-members:
+   :special-members: __call__
+   :no-show-inheritance:

@@ -185,7 +185,7 @@ class Force(_CompiledForce):
 
     Parameters
     ----------
-    definition : callable, str or sequence of three str
+    definition : callable, str or sequence of str
         The three acceleration components in the orthonormal basis of
         ``coords``. A callable receives, positionally, the three coordinates,
         the three velocity components in the same basis, then the declared
