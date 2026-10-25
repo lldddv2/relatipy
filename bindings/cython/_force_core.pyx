@@ -61,16 +61,6 @@ cdef extern from "force/external.h":
         double four_acceleration[4]
     ) nogil
 
-cdef extern from "force/models/plummer.h":
-    int RP_FORCE_PLUMMER_PARAMETERS
-    int rp_force_plummer_acceleration(
-        const double *position, const double *velocity,
-        const void *model, double *acceleration
-    ) nogil
-    int rp_force_plummer_potential(
-        const double *position, const void *model, double *potential
-    ) nogil
-
 cdef extern from "geodesic/integrators/integrator.h":
     ctypedef enum rp_integrator_status:
         RP_INTEGRATOR_STATUS_OK
@@ -184,8 +174,6 @@ cdef extern from "geodesic/initial/bound.h":
 
 #: Status of a failing force callback in ``four_acceleration``.
 CALLBACK_FAILURE = RP_FORCE_STATUS_CALLBACK_FAILURE
-#: Number of doubles in the Plummer model data ``(mass, scale)``.
-PLUMMER_PARAMETERS = RP_FORCE_PLUMMER_PARAMETERS
 
 
 cdef rp_external_force _force(uintptr_t callback, uintptr_t model) noexcept:
@@ -194,39 +182,6 @@ cdef rp_external_force _force(uintptr_t callback, uintptr_t model) noexcept:
     force.evaluate = <rp_external_acceleration_fn><void *>callback
     force.model = <const void *>model
     return force
-
-
-def plummer_address():
-    """Return the address of the built-in Plummer acceleration callback."""
-    return <uintptr_t><void *>rp_force_plummer_acceleration
-
-
-def plummer_potential(
-    cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] model,
-    cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] positions,
-):
-    """Evaluate the Plummer potential at normalized Cartesian positions."""
-    cdef Py_ssize_t count = positions.shape[0]
-    cdef Py_ssize_t i
-    cdef int status = 0
-    cdef Py_ssize_t failed = -1
-    cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] output
-    if model.shape[0] != RP_FORCE_PLUMMER_PARAMETERS:
-        raise ValueError("Plummer model data must contain (mass, scale)")
-    if positions.shape[1] != 3:
-        raise ValueError("positions must have shape (n, 3)")
-    output = np.zeros(count, dtype=np.float64)
-    with nogil:
-        for i in range(count):
-            status = rp_force_plummer_potential(
-                &positions[i, 0], &model[0], &output[i]
-            )
-            if status != 0:
-                failed = i
-                break
-    if failed >= 0:
-        raise ValueError(f"Plummer potential failed at row {failed}")
-    return output
 
 
 def acceleration(
@@ -702,26 +657,11 @@ cdef extern from "force/models/thin_disk.h":
         const void *model, double *acceleration
     ) nogil
 
-cdef extern from "force/models/spheroid.h":
-    ctypedef struct rp_spheroid_params:
-        double alpha
-        double axis_ratio
-        double inner_ratio
-    void rp_spheroid_default_params(rp_spheroid_params *params) nogil
-    rp_axisymmetric_status rp_spheroid_table_build(
-        const rp_spheroid_params *params, rp_axisymmetric_table **table
-    ) nogil
-    void rp_spheroid_table_free(rp_axisymmetric_table *table) nogil
-    int rp_spheroid_acceleration(
-        const double *position, const double *velocity,
-        const void *model, double *acceleration
-    ) nogil
-
 
 cdef class AxisymmetricTable:
-    """Owner of one built thin-disk or spheroid table (read-only, shareable).
+    """Owner of one built thin-disk table (read-only, shareable).
 
-    Build with :meth:`thin_disk` or :meth:`spheroid`; the GIL is released
+    Build with :meth:`thin_disk`; the GIL is released
     while the table is built. The table is freed when this object is
     collected, so every placed model keeps a reference to it.
     """
@@ -735,10 +675,7 @@ cdef class AxisymmetricTable:
 
     def __dealloc__(self):
         if self.table != NULL:
-            if self.kind == "thin_disk":
-                rp_thin_disk_table_free(self.table)
-            else:
-                rp_spheroid_table_free(self.table)
+            rp_thin_disk_table_free(self.table)
             self.table = NULL
 
     @staticmethod
@@ -757,22 +694,6 @@ cdef class AxisymmetricTable:
         _check_table(status, owner.table)
         return owner
 
-    @staticmethod
-    def spheroid(double alpha, double axis_ratio, double inner_ratio):
-        """Build the unit spheroid table (``s_out = 1``, unit mass)."""
-        cdef AxisymmetricTable owner = AxisymmetricTable()
-        cdef rp_spheroid_params params
-        cdef rp_axisymmetric_status status
-        rp_spheroid_default_params(&params)
-        params.alpha = alpha
-        params.axis_ratio = axis_ratio
-        params.inner_ratio = inner_ratio
-        with nogil:
-            status = rp_spheroid_table_build(&params, &owner.table)
-        owner.kind = "spheroid"
-        _check_table(status, owner.table)
-        return owner
-
     @property
     def nbytes(self):
         """Heap bytes owned by the table."""
@@ -780,10 +701,8 @@ cdef class AxisymmetricTable:
 
     @property
     def callback(self):
-        """Address of the acceleration callback of this table's model kind."""
-        if self.kind == "thin_disk":
-            return <uintptr_t><void *>rp_thin_disk_acceleration
-        return <uintptr_t><void *>rp_spheroid_acceleration
+        """Address of the thin-disk acceleration callback."""
+        return <uintptr_t><void *>rp_thin_disk_acceleration
 
 
 cdef int _check_table(rp_axisymmetric_status status, rp_axisymmetric_table *table) except -1:
@@ -795,7 +714,7 @@ cdef int _check_table(rp_axisymmetric_status status, rp_axisymmetric_table *tabl
 
 
 cdef class AxisymmetricModel:
-    """One placed thin disk or spheroid: borrowed table, mass, scale, axis.
+    """One placed thin disk: borrowed table, mass, scale, axis.
 
     :attr:`address` is the ``rp_axisymmetric_model`` passed to the callback;
     :meth:`set` rewrites it in place.

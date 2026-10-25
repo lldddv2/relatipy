@@ -9,7 +9,7 @@ frame, are also re-exported here.
 from __future__ import annotations
 
 from . import coordinates, forces, geodesic, metrics, observables, plotting
-from .forces import Force, Plummer, Potential, Spheroid, ThinDisk
+from .forces import Force, Potential, ThinDisk
 from .geodesic import (
     InitialState, IntegrationError, IntegrationInfo, IntegrationTerminated,
     IntegrationWarning,
@@ -33,9 +33,7 @@ __all__ = [
     "PerturbedKerr",
     "Force",
     "Potential",
-    "Plummer",
     "ThinDisk",
-    "Spheroid",
     "KerrMcmcModel",
     "KerrMcmcMultiModel",
     "KerrMcmcGaussianLikelihood",

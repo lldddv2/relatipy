@@ -34,6 +34,8 @@ def test_package_exports_the_force_layer() -> None:
     assert rp.Force is Force and rp.Potential is Potential and rp.ThinDisk is ThinDisk
     assert rp.forces.ThinDisk is ThinDisk
     assert {"Force", "Potential", "ThinDisk", "PerturbedKerr", "forces"} <= set(rp.__all__)
+    for name in ("Plummer", "Spheroid"):
+        assert not hasattr(rp, name) and not hasattr(rp.forces, name)
 
 
 @pytest.mark.parametrize(

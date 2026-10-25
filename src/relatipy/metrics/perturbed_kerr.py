@@ -26,8 +26,8 @@ class PerturbedKerr:
     spin : float or astropy.units.Quantity
         Finite dimensionless spin in ``[0, 1]``.
     force : relatipy.forces.ExternalForce
-        Force felt by every orbit, such as a :class:`~relatipy.forces.Plummer`
-        sphere or a :class:`~relatipy.forces.Potential`.
+        Force felt by every orbit, such as a :class:`~relatipy.forces.ThinDisk`
+        or a :class:`~relatipy.forces.Potential`.
 
     Raises
     ------
@@ -62,9 +62,9 @@ class PerturbedKerr:
     Examples
     --------
     >>> from astropy import units as u
-    >>> from relatipy.forces import Plummer
+    >>> from relatipy.forces import ThinDisk
     >>> bh = PerturbedKerr(mass=4e6 * u.M_sun, spin=0.5,
-    ...                    force=Plummer(mass=4e3 * u.M_sun, radius=0.01 * u.pc))
+    ...                    force=ThinDisk(mass=1e3 * u.M_sun, r_out=1362.5 * u.au))
     >>> bh.kerr
     Kerr(mass=<Quantity 4000000. solMass>, spin=0.5)
     """

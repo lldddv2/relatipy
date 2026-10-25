@@ -8,14 +8,12 @@ perturbed observable models of :mod:`relatipy.observables`.
 
 - :class:`Force` and :class:`Potential` compile a user definition at run
   time (``relatipy[symbolic]`` and a C compiler are required).
-- :class:`Plummer` is a built-in Plummer sphere.
-- :class:`ThinDisk` and :class:`Spheroid` are the tabulated power-law disk
-  and spheroid of Piran et al. (2026).
+- :class:`ThinDisk` is the tabulated power-law thin disk of Piran et al.
+  (2026).
 """
 
-from .axisymmetric import Spheroid, ThinDisk
+from .axisymmetric import ThinDisk
 from .compiled import Force, Potential
 from .core import ExternalForce
-from .plummer import Plummer
 
-__all__ = ["ExternalForce", "Force", "Plummer", "Potential", "Spheroid", "ThinDisk"]
+__all__ = ["ExternalForce", "Force", "Potential", "ThinDisk"]
