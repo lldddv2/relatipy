@@ -488,7 +488,11 @@ rp_integrator_status rp_radau_integrate(
         if (config->maximum_step > 0.0) {
             step_magnitude = fmin(step_magnitude, config->maximum_step);
         }
-        if (!(step_magnitude >= minimum_step) || step_magnitude == 0.0) {
+        if (!(step_magnitude > 0.0) || !isfinite(step_magnitude)
+            || (step_magnitude < minimum_step
+                && !(step_magnitude == remaining
+                    && independent_variable + direction * step_magnitude
+                        == final_independent_variable))) {
             return RP_INTEGRATOR_STATUS_STEP_UNDERFLOW;
         }
         step = direction * step_magnitude;
