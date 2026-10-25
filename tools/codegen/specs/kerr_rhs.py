@@ -60,9 +60,11 @@ def build() -> dict[str, str]:
  * `du^mu/dlambda = -Gamma^mu_(alpha beta) u^alpha u^beta` of the
  * Levi--Civita connection of the Boyer--Lindquist Kerr metric, signature
  * (-,+,+,+), geometric units with explicit mass and spin length.  The
- * expression is norm-agnostic (timelike and null tangents).  It is not
- * wired into any integrator.  The function allocates nothing, retains no
- * pointer, keeps no global state and does not validate its inputs.
+ * expression is norm-agnostic (timelike and null tangents).
+ * `rp_kerr_null_geodesic_rhs`, and the Kerr integration paths built on it,
+ * evaluate this kernel; the generic contraction stays as its test
+ * reference.  The function allocates nothing, retains no pointer,
+ * keeps no global state and does not validate its inputs.
  */
 
 #ifndef {GUARD}

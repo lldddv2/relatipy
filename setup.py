@@ -16,6 +16,7 @@ MCMC_SOURCES = [
     NATIVE / "metric" / "physic" / "kerr.c",
     NATIVE / "metric" / "kerr.c",
     NATIVE / "geodesic" / "physic" / "kerr.c",
+    NATIVE / "geodesic" / "physic" / "kerr_rhs_generated.c",
     NATIVE / "geodesic" / "physic" / "kerr_observables.c",
     NATIVE / "geodesic" / "initial" / "convert.c",
     NATIVE / "geodesic" / "initial" / "bound.c",
@@ -45,6 +46,7 @@ SOLUTION_SOURCES = [
     NATIVE / "geodesic" / "integrators" / "radau.c",
     NATIVE / "geodesic" / "integrators" / "kerr.c",
     NATIVE / "geodesic" / "physic" / "kerr.c",
+    NATIVE / "geodesic" / "physic" / "kerr_rhs_generated.c",
     NATIVE / "geodesic" / "kerr.c",
 ]
 

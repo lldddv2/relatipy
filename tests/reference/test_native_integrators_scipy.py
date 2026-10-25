@@ -65,6 +65,7 @@ def native_integrators(tmp_path_factory: pytest.TempPathFactory):
         "native/src/metric/physic/kerr.c",
         "native/src/metric/kerr.c",
         "native/src/geodesic/physic/kerr.c",
+        "native/src/geodesic/physic/kerr_rhs_generated.c",
         "native/src/geodesic/kerr.c",
         "native/src/geodesic/integrators/integrator.c",
         "native/src/geodesic/integrators/dop853.c",

@@ -95,6 +95,10 @@ aliasing rules, and all three geodesic operations. The prepared affine state,
 separated null-tangent formulas, legacy-compatible optimized `dx`/`du`
 formulas, and corrected Levi--Civita contraction live in
 `src/geodesic/physic/kerr.c`, behind its own private `kerr.h`.
+`rp_kerr_null_geodesic_rhs` evaluates the corrected connection with the
+kernel `src/geodesic/physic/kerr_rhs_generated.c`, generated from
+`tools/codegen/specs/kerr_rhs.py` by `tools/codegen/generate.py`; the
+generic contraction in `physic/kerr.c` remains as its test reference.
 
 The physical and geodesic evaluators compute `sin(theta)` and `cos(theta)`
 once while preparing a point. Multiple-angle quantities are then obtained
@@ -167,9 +171,13 @@ The constants retain the affine scale explicitly: `(E, L_z, Q)` transforms as
 `(c E, c L_z, c^2 Q)` under a positive tangent rescaling by `c`.
 
 `rp_kerr_null_geodesic_rhs` deliberately does **not** use the frozen legacy
-connection. It computes analytic first derivatives of the corrected metric,
-contracts its Levi--Civita connection without materializing a rank-three
-Christoffel tensor, and advances `(x^mu, k^mu)`. Despite its historical name,
+connection. It evaluates the Levi--Civita connection of the corrected metric
+with the generated kernel `src/geodesic/physic/kerr_rhs_generated.c`, without
+materializing a rank-three Christoffel tensor, and advances `(x^mu, k^mu)`.
+The kernel agrees with the generic contraction of analytic metric
+derivatives in `physic/kerr.c`, kept as its test reference, to about `1e-14`
+relative (`tests/unit/geodesic/test_kerr_generated_rhs.c`); the analytic
+Jacobian is the derivative of the same connection. Despite its historical name,
 this contraction also accepts a timelike tangent. Its timelike use is tested
 against a connection derived independently from metric derivatives. Null
 callers normally construct their initial tangent with `rp_kerr_null_tangent`.
@@ -250,6 +258,7 @@ cc -std=c99 -Wall -Wextra -Wpedantic -Werror \
   -Inative/include native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/tests/unit/geodesic/test_kerr_geodesic.c -lm \
   -o /tmp/relatipy-native-tests/test-kerr-geodesic-c99
 /tmp/relatipy-native-tests/test-kerr-geodesic-c99
@@ -258,9 +267,20 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   -Inative/include native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/tests/unit/geodesic/test_kerr_geodesic.c -lm \
   -o /tmp/relatipy-native-tests/test-kerr-geodesic-c11
 /tmp/relatipy-native-tests/test-kerr-geodesic-c11
+
+cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
+  -Inative/include -Inative/src \
+  native/src/utils/numeric.c native/src/utils/tensor.c \
+  native/src/metric/physic/kerr.c native/src/metric/kerr.c \
+  native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
+  native/tests/unit/geodesic/test_kerr_generated_rhs.c -lm \
+  -o /tmp/relatipy-native-tests/test-kerr-generated-rhs-c11
+/tmp/relatipy-native-tests/test-kerr-generated-rhs-c11
 
 cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   -Inative/src native/src/geodesic/integrators/integrator.c \
@@ -276,6 +296,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/integrators/integrator.c \
   native/src/geodesic/integrators/dop853.c \
   native/src/geodesic/integrators/dp45.c \
@@ -290,6 +311,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/integrators/integrator.c \
   native/src/geodesic/integrators/dop853.c \
   native/src/geodesic/integrators/dp45.c \
@@ -304,6 +326,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/integrators/kerr.c \
   native/tests/unit/geodesic/test_timelike_rhs_consistency.c -lm \
   -o /tmp/relatipy-native-tests/test-timelike-rhs-c11
@@ -314,6 +337,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/physic/kerr_observables.c \
   native/src/geodesic/initial/convert.c \
   native/src/geodesic/integrators/integrator.c \
@@ -330,6 +354,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/src/geodesic/initial/convert.c \
   native/src/geodesic/initial/bound.c \
   native/src/geodesic/integrators/kerr.c \
@@ -421,6 +446,7 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   -Inative/include native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/metric/physic/kerr.c native/src/metric/kerr.c \
   native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_rhs_generated.c \
   native/tests/unit/geodesic/test_kerr_geodesic.c -lm \
   -o /tmp/relatipy-native-tests/test-kerr-geodesic-sanitized
 ASAN_OPTIONS=detect_leaks=0 \
