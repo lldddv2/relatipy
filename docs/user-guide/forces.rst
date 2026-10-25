@@ -24,38 +24,30 @@ Forces
 Every force lives in :mod:`relatipy.forces` (the common ones are also
 ``rp.<Name>``) and is an immutable value with named run-time parameters.
 
-Built-in models run without any extra dependency:
+The built-in model, the thin disk of Piran et al. (2026), runs without any
+extra dependency:
 
 .. code-block:: python
 
    from astropy import units as u
    import relatipy as rp
 
-   cluster = rp.Plummer(mass=4e3 * u.M_sun, radius=1 * u.mpc)
-
    # Piran et al. (2026) fiducial disk: Sigma ~ 1/R out to the S301 apocentre
    disk = rp.ThinDisk(mass=1e3 * u.M_sun, r_out=1362.5 * u.au)
    disk.parameter_names        # ('disk_mass', 'normal_theta', 'normal_phi')
 
-   spheroid = rp.Spheroid(mass=1e3 * u.M_sun, s_out=1362.5 * u.au,
-                          axis_ratio=0.1, slope=-2.0)
+:class:`~relatipy.forces.ThinDisk` is a razor-thin disk with
+``Sigma(R) ~ R^slope`` between ``r_in`` (default 0) and ``r_out``, each ring
+softened by ``H = softening * R'`` (default 0.01). Other mass models, such as
+a Plummer sphere, are written as a run-time
+:class:`~relatipy.forces.Potential` (see below).
 
-- :class:`~relatipy.forces.Plummer`: a sphere of mass ``m`` and scale radius
-  ``b``, ``Phi = -G m / sqrt(r^2 + b^2)``.
-- :class:`~relatipy.forces.ThinDisk`: a razor-thin disk with
-  ``Sigma(R) ~ R^slope`` between ``r_in`` (default 0) and ``r_out``, each ring
-  softened by ``H = softening * R'`` (default 0.01).
-- :class:`~relatipy.forces.Spheroid`: density ``rho ~ s^slope`` on similar
-  spheroids ``s^2 = R^2 + z^2 / q^2``; ``q = 1`` is a sphere and small ``q``
-  approaches a thin disk.
-
-The disk and spheroid read their field from a table of the unit shape, built
-in native code on first use (about 1 s and 11 MB for the disk; flat
-spheroids take longer) and cached per shape in each process. The mass, the
-outer radius and the normal are written into a small native model, so they
-change without a rebuild. The ``normal`` argument is a vector; it is stored
-as the angles ``normal_theta`` (from the third axis) and ``normal_phi``
-(from the first axis towards the second).
+The disk reads its field from a table of the unit shape, built in native
+code on first use (about 1 s and 11 MB) and cached per shape in each
+process. The mass, the outer radius and the normal are written into a small
+native model, so they change without a rebuild. The ``normal`` argument is a
+vector; it is stored as the angles ``normal_theta`` (from the third axis) and
+``normal_phi`` (from the first axis towards the second).
 
 Orbits
 ------
@@ -186,8 +178,8 @@ Accuracy notes
 
 - The thin disk's potential and acceleration are separate interpolants that
   agree to about ``1e-5`` in the softened plane, so ``E'`` and ``L'`` computed
-  from the tabulated potential hold to that level; Plummer and spheroid
-  invariants hold to the integration tolerance.
-- The spheroid's force is only continuous across its density edges.
+  from the tabulated potential hold to that level; for an analytic
+  :class:`~relatipy.forces.Potential` they hold to the integration
+  tolerance.
 - Light travel uses the straight-line Rømer model of the Kerr observable
   models; no photon is traced through the perturbed field.

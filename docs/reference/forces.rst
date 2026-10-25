@@ -26,20 +26,14 @@ dimension ``L``, time ``T`` and mass ``M`` is divided by
    * - Force
      - Run-time parameters
      - Native resources
-   * - :class:`Plummer`
-     - ``mass``, ``radius``
-     - built-in callback
    * - :class:`ThinDisk`
      - ``disk_mass``, ``normal_theta``, ``normal_phi``
      - table per (slope, ``r_in / r_out``, softening), about 1 s and 11 MB
-   * - :class:`Spheroid`
-     - ``mass``, ``normal_theta``, ``normal_phi``
-     - table per (slope, axis ratio, ``s_in / s_out``)
    * - :class:`Force`, :class:`Potential`
      - the declared ``parameters``
      - C compiled at run time, cached on disk
 
-Directions (the normal of a disk or spheroid) are in the black-hole frame
+Directions (the normal of a disk) are in the black-hole frame
 when a force is used with :class:`~relatipy.metrics.PerturbedKerr`, and in
 observer axes ``(Dec, RA, away)`` in the perturbed MCMC models. Forces are
 picklable: compiled forces carry their generated C source, tabulated forces
@@ -60,13 +54,6 @@ API
    :members: coords, source
    :no-show-inheritance:
 
-.. autoclass:: relatipy.forces.Plummer
-   :show-inheritance:
-
 .. autoclass:: relatipy.forces.ThinDisk
-   :members: normal
-   :no-show-inheritance:
-
-.. autoclass:: relatipy.forces.Spheroid
    :members: normal
    :no-show-inheritance:

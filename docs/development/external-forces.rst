@@ -30,7 +30,7 @@ metric, the one used by every homogeneous production path:
   ``rp_force_generated_kerr_rhs`` (``native/src/force/generated/kerr_rhs.c``),
   the same contraction optimized by ``relatipy._codegen``: about 2.5 times
   faster, and equal to the corrected contraction to about ``3e-15``
-  relative. A zero active force (a Plummer sphere of zero mass,
+  relative. A zero active force (a thin disk of zero mass,
   ``Potential("0")``) therefore agrees with the homogeneous paths to rounding
   error, about ``1e-13`` relative on observables, not bit for bit.
 
@@ -74,17 +74,17 @@ failure by the integrators (``Solution.status == -1``) and as an integration
 failure by the observable evaluators
 (:class:`~relatipy.geodesic.IntegrationError`, ``-inf`` in the likelihood).
 Callbacks generated at run time return one when an acceleration component is
-not finite; the tabulated models fail at the centre ``r = 0``; the Plummer
-model fails for a non-positive scale radius.
+not finite; the tabulated thin disk fails at the centre ``r = 0`` and for a
+NULL model.
 
 Model data are immutable during an integration, own no global state and are
 safe to share between threads. Units are geometric with the black-hole mass
 set to one: lengths in ``G M / c^2``, times in ``G M / c^3``. Two layouts are
 used:
 
-- parameter-only models (Plummer and every run-time force) read
+- parameter-only models (every run-time force) read
   ``const double *model``, ``model[i]`` being the ``i``-th declared parameter;
-- tabulated models read an ``rp_axisymmetric_model``: a borrowed table, the
+- the tabulated thin disk reads an ``rp_axisymmetric_model``: a borrowed table, the
   mass, the length scale and a rotation built from the symmetry axis.
 
 No Python callback runs inside an integrator.
@@ -100,11 +100,10 @@ Layout
   from the specifications in ``tools/codegen/specs/`` (``kerr_rhs``,
   ``projection``, ``ring_field``); each file names its specification and the
   command that regenerates it. Do not edit them by hand.
-- ``native/src/force/models/``: built-in models: ``plummer``, the generic
-  ``axisymmetric_table``, ``thin_disk`` and ``spheroid``, with their
-  ``elliptic`` and ``quadrature`` helpers.
-- ``native/tests/force/``: C tests; build commands are in
-  ``native/README.md``.
+- ``native/src/force/models/``: the built-in ``thin_disk`` on the generic
+  ``axisymmetric_table``, with its ``elliptic`` and ``quadrature`` helpers.
+- ``native/tests/force/``: C tests, with analytic test-only models in
+  ``force_test_models.h``; build commands are in ``native/README.md``.
 - ``bindings/cython/_force_core.pyx``: the private ``relatipy._force_core``
   extension (see :doc:`/development/architecture`).
 - ``relatipy._codegen``: symbolic optimizer that turns SymPy expressions,
@@ -119,7 +118,7 @@ Layout
   concurrent processes never load a partial file. It builds ``.so`` files and
   so supports POSIX systems only.
 - ``relatipy.forces``: public force values (``Force``, ``Potential``,
-  ``Plummer``, ``ThinDisk``, ``Spheroid``) and the private bound-force handle.
+  ``ThinDisk``) and the private bound-force handle.
 - ``relatipy.metrics.PerturbedKerr``: Kerr plus one force, with the orbit API
   of :class:`~relatipy.metrics.Kerr`; its orbits are a private ``Orbit``
   subclass (``relatipy.geodesic._forced_orbit``) that integrates through
@@ -148,13 +147,14 @@ String definitions of run-time forces are parsed with
 ``sympy.parse_expr``, which uses ``eval``; restricted names and syntax
 are checked first, but strings must still come from trusted input.
 
-Built-in models
----------------
+Built-in model
+--------------
 
-Plummer sphere
-   ``Phi = -m / sqrt(|x|^2 + b^2)`` with the mass and scale radius as the
-   two model doubles. It is the analytic model of the invariant and
-   zero-force tests.
+The library ships one built-in model, the fiducial thin disk below. Other
+mass models are written as a :class:`~relatipy.forces.Potential` or
+:class:`~relatipy.forces.Force`; the strict ``E'`` and ``L'`` tests use a
+Plummer sphere compiled that way, whose acceleration is the exact gradient of
+its potential.
 
 Thin disk
    The razor-thin power-law disk of Piran et al. (2026),
@@ -171,18 +171,6 @@ Thin disk
    acceleration are separate interpolants that agree to about ``5e-7``
    (median) and ``9e-6`` (worst) inside the softened plane, which bounds how
    well ``E'`` and ``L'`` computed from the tabulated potential are conserved.
-
-Spheroid
-   Density ``rho proportional to s^alpha`` on similar spheroids
-   ``s^2 = R^2 + z^2 / q^2`` between ``s_in`` and ``s_out``, from the homoeoid
-   sums of Binney & Tremaine, on the same table machinery with the grid
-   flattened by ``q``. ``q = 1`` reproduces ``G M(<r) / r^2`` to about
-   ``1e-14``. As ``q -> 0`` at fixed mass it tends to a razor-thin disk with
-   ``Sigma`` proportional to ``R^(alpha + 1)`` well inside the rim
-   (``alpha = -2`` matches the fiducial ``Sigma ~ 1/R`` disk there, not at
-   its edge) and without softening; the field converges as ``q^2`` above the
-   plane. The force is only continuous across a density edge. Flat tables
-   cost more (about 6 s and 22 MB at ``q = 0.05``).
 
 The Python layer caches built tables per shape in each process (a few
 shapes), and every placed model keeps its table referenced.

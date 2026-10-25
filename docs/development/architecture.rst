@@ -25,8 +25,8 @@ The package builds three private extension modules:
 * ``relatipy._force_core`` binds the external-force layer of
   :doc:`/development/external-forces`: the forced trajectory solve, with the
   outputs of ``_core.integrate_kerr``, the forced observable evaluators,
-  mirroring ``_mcmc_core``, the built-in force callbacks, and the owners of
-  the thin-disk and spheroid tables and their placed models. A force is
+  mirroring ``_mcmc_core``, and the owners of the thin-disk tables and their
+  placed models. A force is
   passed as two integers, the callback and model-data addresses, kept alive
   by the Python caller; zero selects the inactive force, bitwise the
   homogeneous path. It is used by :mod:`relatipy.forces`,
