@@ -5,15 +5,15 @@
  * SymPy 1.14.0.
  */
 /**
- * @file kerr_rhs.c
- * @brief Generated corrected Kerr geodesic RHS; see kerr_rhs.h.
+ * @file kerr_rhs_generated.c
+ * @brief Generated corrected Kerr geodesic RHS; see kerr_rhs_generated.h.
  */
 
-#include "kerr_rhs.h"
+#include "kerr_rhs_generated.h"
 
 #include <math.h>
 
-void rp_force_generated_kerr_rhs(
+void rp_kerr_geodesic_physic_evaluate_generated_rhs(
     double mass,
     double spin,
     const struct rp_kerr_geodesic_state *state,

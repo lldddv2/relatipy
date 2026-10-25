@@ -5,7 +5,7 @@
  * SymPy 1.14.0.
  */
 /**
- * @file kerr_rhs.h
+ * @file kerr_rhs_generated.h
  * @brief Generated corrected Kerr geodesic right-hand side.
  *
  * Same contract as `rp_kerr_geodesic_physic_evaluate_corrected_rhs`: the
@@ -18,10 +18,10 @@
  * pointer, keeps no global state and does not validate its inputs.
  */
 
-#ifndef RELATIPY_NATIVE_FORCE_GENERATED_KERR_RHS_H
-#define RELATIPY_NATIVE_FORCE_GENERATED_KERR_RHS_H
+#ifndef RELATIPY_NATIVE_GEODESIC_PHYSIC_KERR_RHS_GENERATED_H
+#define RELATIPY_NATIVE_GEODESIC_PHYSIC_KERR_RHS_GENERATED_H
 
-#include "../../geodesic/physic/kerr.h"
+#include "kerr.h"
 
 /**
  * Affine derivatives at a prepared state.
@@ -32,7 +32,7 @@
  * @param du Caller-owned output of four doubles, `du^mu/dlambda`.  Neither
  *        output may alias the state.
  */
-void rp_force_generated_kerr_rhs(
+void rp_kerr_geodesic_physic_evaluate_generated_rhs(
     double mass,
     double spin,
     const struct rp_kerr_geodesic_state *state,
@@ -40,4 +40,4 @@ void rp_force_generated_kerr_rhs(
     double du[RP_KERR_DIM]
 );
 
-#endif /* RELATIPY_NATIVE_FORCE_GENERATED_KERR_RHS_H */
+#endif /* RELATIPY_NATIVE_GEODESIC_PHYSIC_KERR_RHS_GENERATED_H */
