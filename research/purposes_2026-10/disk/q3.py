@@ -11,7 +11,8 @@ Pv = fc.rotmat(el301[2], el301[3], el301[4])[:, 0]; Qv = np.cross(L, Pv)
 SPIN = dirs['b45l45']
 
 def fit(args):
-    case, md, orient, s_rv, t_end = args
+    case, md, orient, s_rv, t_end = args[:5]
+    sched = args[5] if len(args) > 5 else (1.0,)
     stars, g_true, els_true, _, _ = F.build('c' if case == 'c' else 'b', s_rv=s_rv, t_end=t_end, md=md, orient=orient, spin=SPIN)
     _, g0, _, gfree, pri = F.build('c0' if case == 'c' else 'a', s_rv=s_rv, t_end=t_end, spin=SPIN)   # no-disk model layout
     ytrue = [fc.predict(s, g_true, e) for s, e in zip(stars, els_true)]
@@ -25,21 +26,29 @@ def fit(args):
         g, els = unpack(th)
         r = np.concatenate([(fc.predict(s, g, e) - y) / sg for s, e, y, sg in zip(stars, els, ytrue, sig)])
         return np.concatenate([r, w[fin] * (th - theta0)[fin]])
-    th = theta0.copy(); lam = 1e-3
-    r = resid(th); chi2 = r @ r; chi2_start = chi2
-    for it in range(30):
-        g, els = unpack(th)
-        J, _ = fc.jacobian(stars, g, els, gfree)
-        Jp = np.vstack([J, np.diag(w)[fin]])
-        A = Jp.T @ Jp; b = -Jp.T @ r
-        d = np.sqrt(np.diag(A))
-        while True:
-            step = np.linalg.solve(A / np.outer(d, d) + lam * np.eye(len(d)), b / d) / d
-            rn = resid(th + step); c2 = rn @ rn
-            if c2 < chi2: th = th + step; r = rn; dchi = chi2 - c2; chi2 = c2; lam = max(lam / 10, 1e-9); break
-            lam *= 10
-            if lam > 1e6: dchi = 0; break
-        if dchi < 1e-4: break
+    th = theta0.copy(); chi2_start = None
+    sig0 = [x.copy() for x in sig]
+    for fac in sched:   # continuation: RV errors inflated by fac, then relaxed
+      for k, s in enumerate(stars):
+        sig[k] = sig0[k].copy(); sig[k][2 * len(s.t_ast):] *= fac
+      lam = 1e-3
+      r = resid(th); chi2 = r @ r
+      if chi2_start is None: chi2_start = chi2
+      for it in range(60):
+          g, els = unpack(th)
+          J, _ = fc.jacobian(stars, g, els, gfree)
+          J = J * np.concatenate([a0 / a1 for a0, a1 in zip(sig0, sig)])[:, None]
+          Jp = np.vstack([J, np.diag(w)[fin]])
+          A = Jp.T @ Jp; b = -Jp.T @ r
+          d = np.sqrt(np.diag(A))
+          while True:
+              step = np.linalg.solve(A / np.outer(d, d) + lam * np.eye(len(d)), b / d) / d
+              rn = resid(th + step); c2 = rn @ rn
+              if c2 < chi2: th = th + step; r = rn; dchi = chi2 - c2; chi2 = c2; lam = max(lam / 10, 1e-9); break
+              lam *= 10
+              if lam > 1e6: dchi = 0; break
+          if dchi < 1e-4: break
+    sig[:] = sig0
     g, els = unpack(th)
     J, _ = fc.jacobian(stars, g, els, gfree); C, _ = F.cov_from(J, pri)
     CS = C[2:5, 2:5]; dS = g[2:5] - g_true[2:5]
@@ -53,7 +62,7 @@ def fit(args):
 
 if __name__ == '__main__':
     t0 = time.time()
-    jobs = [(case, md, orient, s_rv, t_end) for case in ('a', 'c') for md in (1.0, 0.3) for orient in ('CWD', 'R1', 'R2')
+    jobs = [(case, md, orient, s_rv, t_end, (1.0,) if s_rv is None else (1000.0, 100.0, 10.0, 1.0)) for case in ('a', 'c') for md in (1.0, 0.3) for orient in ('CWD', 'R1', 'R2')
             for (s_rv, t_end) in ((1.0, 2041.0), (None, 2041.0), (1.0, 2035.0))]
     with Pool(4) as p:
         R = p.map(fit, jobs, chunksize=1)
