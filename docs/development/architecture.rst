@@ -14,7 +14,7 @@ integrator.
 Private extensions
 ------------------
 
-The package builds two private extension modules:
+The package builds three private extension modules:
 
 * ``relatipy._core`` supports native trajectory solving, state
   reconstruction, and the Kerr radii and surface profiles used by
@@ -22,8 +22,15 @@ The package builds two private extension modules:
   :class:`~relatipy.geodesic.Solution`.
 * ``relatipy._mcmc_core`` evaluates the dedicated observable model of
   :class:`~relatipy.observables.KerrMcmcModel`.
+* ``relatipy._force_core`` binds the external-force layer of
+  :doc:`/development/external-forces`: the forced observable evaluators,
+  mirroring ``_mcmc_core``, and the owners of the thin-disk tables and their
+  placed models. A force is passed as two integers, the callback and
+  model-data addresses, kept alive by the Python caller; zero selects the
+  inactive force, bitwise the homogeneous path. It is used by
+  :mod:`relatipy.forces` and the perturbed observable models.
 
-Neither extension is public API or a stable C ABI. Arrays copied from native
+No extension is public API or a stable C ABI. Arrays copied from native
 output have their own NumPy storage and are made read-only before they reach
 public objects. A native buffer is never exposed after it is freed.
 
@@ -37,23 +44,26 @@ geometry and geodesic right-hand sides. ``native/src/`` separates:
 - metric routines (``metric/``);
 - initial-state conversion (``geodesic/initial/``);
 - solution reconstruction (``geodesic/solution/``);
-- adaptive integrators (``geodesic/integrators/``).
+- adaptive integrators (``geodesic/integrators/``);
+- the external-force layer (``force/``), with a generated Kerr kernel
+  (``force/generated/``) and the thin-disk model (``force/models/``).
 
 The native integrator names are ``dop853``, ``dp45``, ``radau``, and
 ``projection_radau``. None of these headers is installed with the package.
 
-``bindings/cython/_core.pyx`` and ``bindings/cython/_mcmc_core.pyx``:
+``bindings/cython/_core.pyx``, ``bindings/cython/_mcmc_core.pyx`` and
+``bindings/cython/_force_core.pyx``:
 
 - declare the private C interfaces;
 - validate boundary arrays;
 - release the GIL only around native calls;
 - construct NumPy results.
 
-They contain no Kerr formulas and no per-step Python callbacks. Generated
+They contain no Kerr or force formulas and no per-step Python callbacks. Generated
 ``.c`` files beside the Cython sources are build artifacts.
 
 ``setup.py`` is the active extension definition. The build backend is
-``setuptools.build_meta`` with Cython and NumPy as build requirements. Both
+``setuptools.build_meta`` with Cython and NumPy as build requirements. All
 extensions:
 
 - are compiled from the ``.pyx`` and C sources listed in ``setup.py``;

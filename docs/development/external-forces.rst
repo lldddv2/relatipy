@@ -1,0 +1,155 @@
+External forces and the thin-disk MCMC
+======================================
+
+This page fixes the contract of the external-force layer used by the
+thin-disk MCMC models: a perturbed Kerr geodesic integrated beside, not
+inside, the homogeneous Kerr path. Existing Kerr modules, integrators and the
+``_core`` and ``_mcmc_core`` extensions are not modified; the new layer only
+calls them. The user-facing description is :doc:`/user-guide/forces`.
+
+Equation of motion
+------------------
+
+In Boyer--Lindquist coordinates ``(t, r, theta, phi)``, signature
+``(-,+,+,+)`` and geometric units with the black-hole mass set to one, the
+perturbed geodesic is
+
+.. math::
+
+   \frac{du^\mu}{d\tau} + \Gamma^\mu{}_{\alpha\beta} u^\alpha u^\beta = f^\mu,
+   \qquad f^\mu = \left(g^{\mu\nu} + u^\mu u^\nu\right) F_\nu .
+
+The homogeneous term is the corrected Levi--Civita contraction of the Kerr
+metric, the one used by every homogeneous production path:
+
+- with an inactive force (a NULL force or a NULL callback) the forced
+  right-hand side calls ``rp_kerr_geodesic_physic_evaluate_corrected_rhs``
+  (the kernel behind ``rp_kerr_null_geodesic_rhs``), so observables are
+  bitwise those of ``_mcmc_core``;
+- with an active force it calls the generated kernel
+  ``rp_force_generated_kerr_rhs`` (``native/src/force/generated/kerr_rhs.c``),
+  the same contraction optimized symbolically: faster, and equal to the
+  corrected contraction to about ``3e-15`` relative. A zero active force (a
+  thin disk of zero mass) therefore agrees with the homogeneous paths to
+  rounding error, about ``1e-13`` relative on observables, not bit for bit.
+
+The generated kernel is committed C. Its header names the generator,
+``tools/codegen/generate.py`` with the specification
+``tools/codegen/specs/kerr_rhs.py``; both, and the ``relatipy._codegen``
+optimizer they use, live on the ``claude/kerr-external-forces`` branch and
+are not part of this layer. Do not edit the file by hand: regenerate it
+there.
+
+The projector keeps ``u_mu f^mu = 0``, so ``g_(mu nu) u^mu u^nu = -1`` is
+preserved. The covector ``F_nu`` is built from a Newtonian acceleration
+``a`` evaluated in the black-hole Cartesian frame
+
+.. math::
+
+   x = \sqrt{r^2 + a_*^2}\,\sin\theta\cos\phi,\quad
+   y = \sqrt{r^2 + a_*^2}\,\sin\theta\sin\phi,\quad
+   z = r\cos\theta ,
+
+as ``F_t = 0`` and ``F_i = a . dx/dx^i`` for ``i = r, theta, phi``, where
+``a_*`` is the spin length. For a potential, ``a = -grad Phi`` and
+``F_nu = -partial_nu Phi``. At ``M = 0`` these coordinates are flat oblate
+spheroidal coordinates, so the coupling reduces exactly to Newtonian motion.
+
+For a static potential that is axisymmetric about the spin axis,
+``E' = -u_t exp(Phi)`` and ``L' = u_phi exp(Phi)`` are exact invariants of
+this equation; the native tests use them to validate the projection.
+Carter's constant is not conserved, so the forced layer always rejects
+``projection_radau`` (``rp_kerr_forced_check_method``). Radau uses
+finite differences for its Jacobian.
+
+The observable evaluator integrates in coordinate time for arrival and
+coordinate samples, every proper-time derivative (force term included) being
+divided by ``u^t``, and in proper time for proper-time samples. The initial
+states, Rømer arrival solve and observation terms are those of
+``geodesic/kerr_mcmc.c``.
+
+Native callback
+---------------
+
+Every force is one native function::
+
+    typedef int (*rp_external_acceleration_fn)(
+        const double position[3],  /* black-hole Cartesian frame */
+        const double velocity[3],  /* dx/dt in the same frame */
+        const void *model,         /* read-only model data */
+        double acceleration[3]     /* Newtonian acceleration */
+    );
+
+It returns zero on success. A nonzero value is reported as
+``RP_FORCE_STATUS_CALLBACK_FAILURE`` by the forced right-hand side, as an RHS
+failure by the integrators and as an integration failure by the observable
+evaluators (:class:`~relatipy.geodesic.IntegrationError`, ``-inf`` in the
+likelihood). The tabulated thin disk fails at the centre ``r = 0`` and for a
+NULL model.
+
+Model data are immutable during an integration, own no global state and are
+safe to share between threads. Units are geometric with the black-hole mass
+set to one: lengths in ``G M / c^2``, times in ``G M / c^3``. The thin disk
+reads an ``rp_axisymmetric_model``: a borrowed table, the mass, the length
+scale and a rotation built from the symmetry axis. No Python callback runs
+inside an integrator.
+
+Layout
+------
+
+- ``native/src/force/``: callback type (``external_force.h``), the frame map
+  and projection (``external.c``), the forced right-hand sides in proper and
+  coordinate time (``kerr_forced.c``) and the forced observable evaluator
+  (``kerr_mcmc.c``), parallel to ``geodesic/``.
+- ``native/src/force/generated/kerr_rhs.c``: the generated Kerr kernel
+  described above.
+- ``native/src/force/models/``: the built-in ``thin_disk`` on the generic
+  ``axisymmetric_table``, with its ``elliptic`` and ``quadrature`` helpers.
+- ``native/tests/force/``: C tests, with analytic test-only models in
+  ``force_test_models.h``; build commands are in ``native/README.md``.
+- ``bindings/cython/_force_core.pyx``: the private ``relatipy._force_core``
+  extension (see :doc:`/development/architecture`): the two forced
+  observable evaluators, mirroring ``_mcmc_core``, the owners of thin-disk
+  tables and their placed models, and a callback evaluator for tests.
+- ``relatipy.forces``: the public ``ExternalForce`` base, ``ThinDisk`` and
+  the private bound-force handle.
+- ``relatipy.observables``: ``KerrMcmcMultiModel`` and
+  ``KerrMcmcGaussianLikelihood``, and the perturbed models
+  ``PerturbedKerrMcmcModel`` and ``PerturbedKerrMcmcMultiModel``, parallel to
+  the homogeneous ones.
+
+Python binding of a force
+-------------------------
+
+A force is an immutable value with named parameters. Binding it to a
+black-hole mass gives a private handle with three things: the callback
+address, the model-data address and a reference that keeps the table alive.
+Parameters are converted to geometric units by their dimensions (a quantity
+of length dimension ``L``, time ``T`` and mass ``M`` is divided by
+``r_g**L t_g**T M**M``) and written into the model data in place, so an MCMC
+sampler updates the mass, the disk mass or the normal between proposals
+without rebuilding a table. Directions are given in observer axes
+``(Dec, RA, away)`` and mapped through the proposal's spin frame. Handles
+are never pickled with their addresses: forces pickle by their constructor
+arguments, and tables are recreated on first use in each process.
+
+Thin disk
+---------
+
+The razor-thin power-law disk of Piran et al. (2026),
+``Sigma(R) proportional to R^alpha`` with ``alpha = -1`` between ``R_in``
+and ``R_out``, each ring softened with ``H = eps R'`` (``eps = 0.01``). Its
+acceleration is a sum of ring fields with complete elliptic integrals,
+tabulated once for unit mass and ``R_out = 1`` as the smooth combinations
+``A = -r^3 a_d / d``, ``C = -r^3 a_z / z`` and ``P = -r Phi`` and
+interpolated with tensor-product C2 cubic splines stored as bicubic Hermite
+data, with a self-similar inner continuation and an exact multipole far
+field. A table depends only on ``alpha``, ``R_in / R_out`` and ``eps``
+(about 1 s and 11 MB to build); the disk mass, ``R_out`` (any length) and
+the disk normal are model parameters. The potential and the acceleration are
+separate interpolants that agree to about ``5e-7`` (median) and ``9e-6``
+(worst) inside the softened plane, which bounds how well ``E'`` and ``L'``
+computed from the tabulated potential are conserved.
+
+The Python layer caches built tables per shape in each process (a few
+shapes), and every placed model keeps its table referenced.
