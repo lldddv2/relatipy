@@ -58,8 +58,8 @@ class PerturbedKerrMcmcMultiModel(_MultiStarBase):
     stars is updated in place with the proposal mass, force block and spin
     orientation, then each star is evaluated as a
     :class:`~relatipy.observables.PerturbedKerrMcmcModel` legacy call. With
-    an identically zero force the predictions equal those of
-    ``KerrMcmcMultiModel`` bit for bit.
+    an identically zero force the predictions agree with those of
+    ``KerrMcmcMultiModel`` to rounding error.
     :class:`~relatipy.observables.KerrMcmcGaussianLikelihood` accepts this
     model. Instances are picklable and can be sent to multiprocessing
     pools; each process binds its own handle on first use.

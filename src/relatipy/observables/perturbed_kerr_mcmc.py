@@ -93,7 +93,9 @@ class PerturbedKerrMcmcModel:
     ``KerrMcmcModel``; only the equation of motion adds the force (see
     :class:`~relatipy.metrics.PerturbedKerr`). With a force that is
     identically zero, such as a Plummer sphere of zero mass, predictions
-    equal those of ``KerrMcmcModel`` bit for bit.
+    agree with those of ``KerrMcmcModel`` to rounding error (the forced
+    right-hand side uses its own generated Kerr kernel); the tests bound the
+    difference by ``1e-10`` relative.
 
     The legacy ``__call__`` vector is the thirteen ``KerrMcmcModel``
     parameters followed by the force block, the force's
