@@ -76,3 +76,32 @@ def test_projected_calls_keep_contexts_independent():
         concurrent = list(pool.map(solve, cases))
     for actual, expected in zip(concurrent, serial, strict=True):
         np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize("sense", (1.0, -1.0), ids=("prograde", "retrograde"))
+def test_projection_keeps_circular_orbit_on_its_radius(sense):
+    """Projection must not inject a radial velocity on a circular orbit.
+
+    The angular velocity of a circular equatorial orbit is
+    ``dphi/dt = sense / (r**1.5 + sense * a)`` in ``G = c = M = 1``
+    (Teukolsky 2015, CQG 32, 124006, eq. 9.1). Recovering ``u^r`` from the
+    square root of the nearly zero radial potential drifted retrograde
+    orbits by ~1e-8 r in 20 turns; plain ``radau`` stays at ~1e-14.
+    """
+    spin, radius = 0.9, 14.5
+    metric = Kerr(mass=1 * u.Msun, spin=spin)
+    time = (G * metric.mass / c**3).to(u.s)
+    omega = sense / (radius**1.5 + sense * spin)
+    orbit = metric.orbit(
+        R=radius * metric.r_g, Theta=90 * u.deg, Phi=0 * u.rad,
+        vPhi=omega * u.rad / time,
+    )
+    period = 2 * np.pi / abs(omega)
+    solution = orbit.solve(
+        tau_span=(0 * u.s, 20 * period / float(orbit.ut.value) * time),
+        method="projection_radau", rtol=1e-12, max_step=period / 100 * time,
+    )
+    assert solution.success
+    drift = np.abs((solution.R / metric.r_g).to_value(u.one) / radius - 1)
+    assert np.max(drift) < 1e-12
+    assert np.max(np.abs((solution.uR / c).to_value(u.one))) < 1e-12
