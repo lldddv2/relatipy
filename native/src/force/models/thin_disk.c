@@ -135,8 +135,14 @@ static rp_axisymmetric_status disk_context_init(
         ? 0.0 : rp_power_coordinate(context->inner_ratio, context->beta);
     context->inverse_mass_span =
         1.0 / (rp_power_coordinate(1.0, context->beta) - context->u_inner);
-    context->zero_depth = context->inner_ratio == 0.0 && context->beta != 1.0
-        ? fmax(pow(1.0e-13, 1.0 / context->beta), 0x1p-60) : 0.0;
+    /* The ring field is smooth in R^2 = u^gamma, gamma = 2 / beta; a
+     * non-integer gamma costs Gauss-Legendre about n^-(2 gamma + 2) of the
+     * first panel's mass, so halve it until that is below 1e-13. */
+    const double gamma = 2.0 / context->beta;
+    const double target = 1.0e-13 * pow((double)params->quadrature_points, 2.0 * gamma + 2.0);
+    context->zero_depth = context->inner_ratio == 0.0
+            && fabs(gamma - round(gamma)) > 1.0e-12 && target < 1.0
+        ? fmax(pow(target, 1.0 / context->beta), 0x1p-60) : 0.0;
     if (rp_gauss_legendre(params->quadrature_points, &context->rule) != 0) {
         return RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT;
     }
