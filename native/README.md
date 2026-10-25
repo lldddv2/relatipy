@@ -1,7 +1,7 @@
 # Experimental native Kerr reference
 
-This directory contains C references for Kerr geometry, legacy-compatible and
-corrected null-geodesic right-hand sides, and native DOP853 and Radau IIA(5)
+This directory contains C references for Kerr geometry, the corrected
+(Levi--Civita) geodesic right-hand side, and native DOP853 and Radau IIA(5)
 integrators. A dedicated timelike MCMC evaluator uses these native sources
 through the private `relatipy._mcmc_core` Cython extension, built with
 `setuptools.build_meta`, to support `KerrMcmcModel`. The general `Kerr` and
@@ -38,15 +38,13 @@ intermediate or final values exceed the representable `double` range return
 ## Experimental interface
 
 The internal headers `include/relatipy/kerr_geometry.h` and
-`include/relatipy/kerr_geodesic.h` declare seven reference operations:
+`include/relatipy/kerr_geodesic.h` declare five reference operations:
 
 | Function | Caller-owned output |
 | --- | --- |
 | `rp_kerr_metric` | covariant metric `g_(mu nu)` |
 | `rp_kerr_inverse_metric` | contravariant metric `g^(mu nu)` |
-| `rp_kerr_christoffel` | legacy-compatible tensor `Gamma^lambda_(mu nu)` |
 | `rp_kerr_four_velocity` | future-directed four-velocity from `(dr/dt, dtheta/dt, dphi/dt)` |
-| `rp_kerr_geodesic_rhs` | legacy-compatible affine derivatives `(dx^mu/dlambda, du^mu/dlambda)` |
 | `rp_kerr_null_tangent` | null tangent from `(E, L_z, Q)` and radial/polar signs |
 | `rp_kerr_null_geodesic_rhs` | corrected null affine derivatives `(dx^mu/dlambda, dk^mu/dlambda)` |
 
@@ -85,16 +83,16 @@ The Kerr metric implementation is split by responsibility. The principal
 and error contracts, and dispatches each operation. Physical quantities and
 formulas live in `src/metric/physic/kerr.c`: prepared point quantities
 (`sin(theta)`, `cos(theta)`, `Sigma`, and `Delta`), the metric, inverse metric,
-legacy-compatible Christoffel tensor, and coordinate-velocity normalization.
+and coordinate-velocity normalization.
 The adjacent `physic/kerr.h` is a private implementation boundary and is not
 an installed header.
 
 The geodesic implementation mirrors the same boundary. The principal
 `src/geodesic/kerr.c` file owns validation, input copies, output initialization,
-aliasing rules, and all three geodesic operations. The prepared affine state,
-separated null-tangent formulas, legacy-compatible optimized `dx`/`du`
-formulas, and corrected Levi--Civita contraction live in
-`src/geodesic/physic/kerr.c`, behind its own private `kerr.h`.
+aliasing rules, and the geodesic operations. The prepared affine state,
+separated null-tangent formulas, and the generic Levi--Civita contraction and
+its analytic Jacobian live in `src/geodesic/physic/kerr.c`, behind its own
+private `kerr.h`.
 `rp_kerr_null_geodesic_rhs` evaluates the corrected connection with the
 kernel `src/geodesic/physic/kerr_rhs_generated.c`, generated from
 `tools/codegen/specs/kerr_rhs.py` by `tools/codegen/generate.py`; the
@@ -108,14 +106,10 @@ algebraically: `sin(2 theta) = 2 sin(theta) cos(theta)`,
 `cot(theta) = cos(theta) / sin(theta)`, so the hot evaluators make no
 additional `sin`, `cos`, or `tan` calls.
 
-The implementation is a readable reference, not the eventual optimized hot
-kernel. The metric and inverse metric use the corrected Kerr geometry. The
-Christoffel evaluator is a separate compatibility reference: it directly
-translates the 20 independent algebraic expressions and 12 lower-index
-symmetry copies in the frozen legacy method. The resulting tensor has 32
-explicitly populated entries; every component absent from that method remains
-zero. It neither evaluates metric derivatives nor reconstructs the tensor from
-the metric exposed by this interface.
+The metric and inverse metric use the corrected Kerr geometry. The
+legacy-compatible Christoffel tensor and the right-hand side that contracted
+it were removed: that frozen connection is not the Levi--Civita connection of
+this metric for nonzero spin, and no production path used it.
 
 ## Legacy provenance and sign mapping
 
@@ -135,12 +129,6 @@ module docstring. Therefore the regression test compares the new metric to the
 **negative** of the legacy matrix after mapping `R_s = 2 M`. Multiplying a
 metric globally by `-1` leaves its Levi-Civita connection unchanged.
 
-`rp_kerr_christoffel` is a literal translation of
-`Kerr._get_christoffel_symbols` in that snapshot. It maps `R_s = 2 M`; the C
-argument `spin` is the legacy method's internal, length-like `a`, not the
-dimensionless constructor argument. The translation preserves all 20
-independent expressions and all 12 symmetry assignments exactly.
-
 `rp_kerr_four_velocity` evaluates the semantic C99 candidate derived in
 `thesis/docs/v1/004-geodesica_optimizada.ipynb` from the frozen legacy metric.
 For an input `v^i = dx^i/dt`, it selects the positive `u^t` branch and returns
@@ -150,14 +138,6 @@ signature `(+,-,-,-)` and norm
 `+1`; therefore the same vector has norm `-1` under this reference's globally
 negated `(-,+,+,+)` metric. The operation requires a positive normalization
 radicand and otherwise reports a typed non-timelike-velocity failure.
-
-`rp_kerr_geodesic_rhs` evaluates the optimized semantic candidate derived in
-the same notebook. It writes `dx^mu/dlambda = u^mu` and contracts the frozen
-legacy-compatible connection directly for
-`du^mu/dlambda = -Gamma^mu_(alpha beta) u^alpha u^beta`, without allocating or
-materializing the Christoffel tensor. This is a local right-hand-side
-reference; it does not adopt `(x, u)` as the production canonical state or
-provide an integration method by itself.
 
 `rp_kerr_null_tangent` constructs an affinely scaled tangent from the null
 Kerr first integrals. With
@@ -170,14 +150,17 @@ turning point are clamped to zero with the shared scaled-epsilon predicate.
 The constants retain the affine scale explicitly: `(E, L_z, Q)` transforms as
 `(c E, c L_z, c^2 Q)` under a positive tangent rescaling by `c`.
 
-`rp_kerr_null_geodesic_rhs` deliberately does **not** use the frozen legacy
-connection. It evaluates the Levi--Civita connection of the corrected metric
-with the generated kernel `src/geodesic/physic/kerr_rhs_generated.c`, without
-materializing a rank-three Christoffel tensor, and advances `(x^mu, k^mu)`.
-The kernel agrees with the generic contraction of analytic metric
-derivatives in `physic/kerr.c`, kept as its test reference, to about `1e-14`
-relative (`tests/unit/geodesic/test_kerr_generated_rhs.c`); the analytic
-Jacobian is the derivative of the same connection. Despite its historical name,
+`rp_kerr_null_geodesic_rhs` writes `dx^mu/dlambda = k^mu` and
+`dk^mu/dlambda = -Gamma^mu_(alpha beta) k^alpha k^beta` for the Levi--Civita
+connection of the corrected metric. It evaluates the generated kernel
+`src/geodesic/physic/kerr_rhs_generated.c`, without materializing a
+rank-three Christoffel tensor. The kernel agrees with the generic contraction
+of analytic metric derivatives in `physic/kerr.c`, kept as its test
+reference, within `4 eps (r/M + (r^2 + a^2)/Delta)` of the size of the
+contracted terms (`tests/unit/geodesic/test_kerr_generated_rhs.c`); at large
+`r` that difference is the error of the generic contraction. The analytic
+Jacobian is the derivative of the same connection. It does not adopt `(x, u)`
+as the production canonical state by itself. Despite its historical name,
 this contraction also accepts a timelike tangent. Its timelike use is tested
 against a connection derived independently from metric derivatives. Null
 callers normally construct their initial tangent with `rp_kerr_null_tangent`.
@@ -218,15 +201,11 @@ numerical reference and the licensing boundary are recorded in the module's
 against SciPy's RK45 source; the source and license boundary are recorded
 in `dp45.c` and the module's `README.md`.
 
-This compatibility choice also preserves a known historical discrepancy. The
-legacy symbolic/generated Christoffel path contains a spin-sign inconsistency
-relative to the corrected numeric metric. Consequently, the tensor returned by
-`rp_kerr_christoffel` must not be presented as an independently corrected
-Levi-Civita connection of `rp_kerr_metric`. Tests compare all 64 stored tensor
-components against frozen outputs from the legacy method at three regular
-points. PyGRO is an independent oracle for the complete metric only; it is not
-used as a Christoffel oracle. The metric/inverse tests additionally verify
-their algebraic identities and the Schwarzschild limit.
+PyGRO is an optional independent oracle for the complete metric. The
+geodesic right-hand side is checked against the Levi--Civita connection of
+the Boyer--Lindquist metric, differentiated symbolically with SymPy in
+`tests/reference/test_native_geometry_peer.py`. The metric/inverse tests
+additionally verify their algebraic identities and the Schwarzschild limit.
 
 ## Direct validation
 
