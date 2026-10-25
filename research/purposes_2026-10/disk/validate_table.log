@@ -1,0 +1,16 @@
+global                     rel.err median 1.9e-07  p99 4.6e-06  max 8.1e-06
+near-plane |b|<0.05        rel.err median 9.0e-08  p99 4.0e-07  max 4.6e-07
+edge r=0.9-1.1,|b|<0.05    rel.err median 6.3e-08  p99 2.7e-07  max 3.5e-07
+r=   7.9 beta=0.0: |tab-direct|/|g|=8.5e-08  |direct-monopole|/|g|=4.0e-03
+r=   7.9 beta=0.4: |tab-direct|/|g|=5.2e-07  |direct-monopole|/|g|=3.6e-03
+r=   7.9 beta=1.2: |tab-direct|/|g|=4.1e-06  |direct-monopole|/|g|=7.0e-03
+r=   8.1 beta=0.0: |tab-direct|/|g|=3.2e-07  |direct-monopole|/|g|=3.8e-03
+r=   8.1 beta=0.4: |tab-direct|/|g|=3.8e-07  |direct-monopole|/|g|=3.4e-03
+r=   8.1 beta=1.2: |tab-direct|/|g|=5.3e-07  |direct-monopole|/|g|=6.6e-03
+r=  20.0 beta=0.0: |tab-direct|/|g|=8.2e-10  |direct-monopole|/|g|=6.3e-04
+r=  20.0 beta=0.4: |tab-direct|/|g|=2.0e-09  |direct-monopole|/|g|=5.6e-04
+r=  20.0 beta=1.2: |tab-direct|/|g|=2.2e-09  |direct-monopole|/|g|=1.1e-03
+r= 100.0 beta=0.0: |tab-direct|/|g|=1.0e-12  |direct-monopole|/|g|=2.5e-05
+r= 100.0 beta=0.4: |tab-direct|/|g|=9.5e-13  |direct-monopole|/|g|=2.3e-05
+r= 100.0 beta=1.2: |tab-direct|/|g|=5.2e-13  |direct-monopole|/|g|=4.4e-05
+symmetry: max rel |g(z)-Pg(-z)| = 1.4e-06;  |a(nd)-a(-nd)|/|a| = 2.5e-07
