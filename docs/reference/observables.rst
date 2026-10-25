@@ -6,7 +6,9 @@ Observables
 .. py:module:: relatipy.observables
 
 :mod:`relatipy.observables` provides :class:`KerrMcmcModel`, a direct model for
-Kerr astrometry and redshift predictions. It evolves a timelike Kerr geodesic
+Kerr astrometry and redshift predictions, :class:`KerrMcmcMultiModel` for
+several stars around one black hole, and :class:`KerrMcmcGaussianLikelihood`
+for their Gaussian log-likelihood. It evolves a timelike Kerr geodesic
 and applies a straight-line Rømer observation model. It does not trace photons
 or include Shapiro delay or gravitational lensing.
 
@@ -51,9 +53,65 @@ Its parameter units and order are specified in the class documentation and
 in :doc:`/user-guide/kerr-mcmc`. It returns read-only arcsec offsets and km/s
 line-of-sight velocities.
 
+Multi-star interface
+--------------------
+
+:class:`KerrMcmcMultiModel` evaluates one :class:`KerrMcmcModel` per star from
+one numeric vector. It takes mappings from star name to astrometric and
+spectroscopic epochs and one shared ``reference_epoch``;
+:meth:`KerrMcmcMultiModel.set_solver` applies the same solver to every star.
+The vector holds, in order:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Block
+     - Names
+     - Units
+   * - ``shared``
+     - ``D``, ``M``, ``xS0``, ``yS0``, ``vxS0``, ``vyS0``, ``v_LSR``
+     - kpc, million solar masses, arcsec (two), arcsec/year (two), km/s
+   * - ``spin``
+     - ``spin_dec``, ``spin_ra``, ``spin_away``
+     - dimensionless spin vector in observer axes ``(Dec, RA, away)``
+   * - one per star ``S``
+     - ``S.t_p``, ``S.a``, ``S.e``, ``S.inc``, ``S.Omega``, ``S.omega``
+     - Julian years, arcsec, dimensionless, radians (three)
+
+``parameter_names``, ``parameter_slices`` and ``parameter_units`` describe
+this layout, and :meth:`~KerrMcmcMultiModel.pack` and
+:meth:`~KerrMcmcMultiModel.unpack` convert between named values and vectors;
+``pack`` also accepts convertible scalar quantities. Calling the model returns
+a mapping from each star to its read-only ``(alpha, delta, v_los)`` arrays.
+For one star the arrays equal those of :class:`KerrMcmcModel` called with
+``(D, M, t_p, a, e, inc, Omega, omega, xS0, yS0, vxS0, vyS0, v_LSR)`` and the
+spin vector.
+
+:class:`KerrMcmcGaussianLikelihood` takes the model and, for each star, the
+observed ``alpha``, ``delta`` and ``v_los`` with their errors ``alpha_err``,
+``delta_err`` and ``v_los_err`` in arcsec and km/s. Calling it with a vector
+returns the independent Gaussian log-likelihood, or ``-inf`` when native
+evaluation fails. Proposals outside the model domain raise
+:class:`ValueError`, so a prior must exclude them. Both classes are picklable,
+for example for a ``multiprocessing`` pool passed to an emcee
+sampler.
+
 API
 ---
 
 .. autoclass:: relatipy.observables.KerrMcmcModel
    :members: set_solver, get_ra_dec_vr, __call__
    :show-inheritance:
+
+.. autoclass:: relatipy.observables.KerrMcmcMultiModel
+   :members: stars, reference_epoch, astrometry_times, spectroscopy_times,
+      n_parameters, parameter_names, parameter_units, parameter_slices,
+      pack, unpack, set_solver, __call__
+   :inherited-members:
+   :special-members: __call__
+   :no-show-inheritance:
+
+.. autoclass:: relatipy.observables.KerrMcmcGaussianLikelihood
+   :members: model
+   :special-members: __call__
