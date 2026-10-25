@@ -51,8 +51,8 @@ class PerturbedKerrMcmcMultiModel(_MultiStarBase):
     ``force.<name>`` for each of the force's
     :attr:`~relatipy.forces.ExternalForce.parameter_names`, in its
     :attr:`~relatipy.forces.ExternalForce.parameter_units`. For example a
-    :class:`~relatipy.forces.Plummer` sphere adds ``force.mass`` and
-    ``force.radius``.
+    :class:`~relatipy.forces.ThinDisk` adds ``force.disk_mass``,
+    ``force.normal_theta`` and ``force.normal_phi``.
 
     Each proposal binds nothing anew: the single force handle shared by all
     stars is updated in place with the proposal mass, force block and spin
@@ -194,7 +194,7 @@ class PerturbedKerrMcmcMultiModel(_MultiStarBase):
         ------
         ValueError
             As :meth:`KerrMcmcMultiModel.__call__`, or if a force parameter
-            is outside the force's domain (for example a negative Plummer
+            is outside the force's domain (for example a negative disk
             mass).
         relatipy.geodesic.IntegrationError
             If integration, the force callback or arrival matching fails.

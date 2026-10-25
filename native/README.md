@@ -350,8 +350,9 @@ sides (`kerr_forced.c`, with the same generated Kerr kernel
 `geodesic/physic/kerr_rhs_generated.c` as the homogeneous paths), the forced
 trajectory solve
 (`solution/solve.c`) and the forced observable model (`kerr_mcmc.c`). Its
-tests under `tests/force/` share one source list; the built-in Plummer model
-test needs only its own source:
+tests under `tests/force/` share one source list (their analytic models,
+such as a Plummer sphere and a Miyamoto--Nagai disk, are test-only and live
+in `tests/force/force_test_models.h`):
 
 ```console
 FORCE_SOURCES="native/src/utils/numeric.c native/src/utils/tensor.c \
@@ -375,26 +376,20 @@ for test in test_external test_null_force test_active_zero_force \
     native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test
   /tmp/relatipy-native-tests/$test
 done
-
-cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -Inative/include -Inative/src \
-  native/src/force/models/plummer.c native/tests/force/test_plummer_model.c \
-  -lm -o /tmp/relatipy-native-tests/test_plummer_model
-/tmp/relatipy-native-tests/test_plummer_model
 ```
 
 `tests/force/bench_forced.c` is a benchmark built with the same source list
 and run without arguments; it prints timings and checks nothing.
 
-The tabulated thin-disk and spheroid models under `src/force/models/` need
-only their own sources; the benchmark also times the Kerr right-hand side:
+The tabulated thin-disk model under `src/force/models/` needs only its own
+sources; the benchmark also times the Kerr right-hand side:
 
 ```console
 MODEL_SOURCES="native/src/force/models/elliptic.c \
   native/src/force/models/quadrature.c \
   native/src/force/models/axisymmetric_table.c \
-  native/src/force/models/thin_disk.c native/src/force/models/spheroid.c"
-for test in test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table \
-    test_thin_disk_spheroid; do
+  native/src/force/models/thin_disk.c"
+for test in test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table; do
   cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
     -Inative/include -Inative/src $MODEL_SOURCES \
     native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test

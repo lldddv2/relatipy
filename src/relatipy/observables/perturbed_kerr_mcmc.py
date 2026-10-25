@@ -92,7 +92,7 @@ class PerturbedKerrMcmcModel:
     Orbits, light travel, units, solver settings and errors are those of
     ``KerrMcmcModel``; only the equation of motion adds the force (see
     :class:`~relatipy.metrics.PerturbedKerr`). With a force that is
-    identically zero, such as a Plummer sphere of zero mass, the forced
+    identically zero, such as a thin disk of zero mass, the forced
     right-hand side equals that of ``KerrMcmcModel`` and the predictions
     agree with it to rounding error; the tests bound the difference by
     ``1e-10`` relative.

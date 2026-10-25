@@ -7,7 +7,7 @@ import pytest
 from astropy import units as u
 
 from relatipy import IntegrationError, KerrMcmcModel, PerturbedKerrMcmcModel
-from relatipy.forces import Plummer
+from relatipy.forces import ThinDisk
 
 MASS = 4.3e6 * u.M_sun
 DISTANCE = 8.2 * u.kpc
@@ -17,8 +17,11 @@ ORBIT = {
     "Omega": 4.0 * u.rad, "omega": 1.2 * u.rad, "t": 2018.4 * u.yr,
 }
 TIMES = {"t_obs": np.linspace(2024.0, 2004.0, 15) * u.yr}
-ZERO = Plummer(mass=0 * u.M_sun, radius=1 * u.mpc)
-SPHERE = Plummer(mass=4e3 * u.M_sun, radius=1 * u.mpc)
+ZERO = ThinDisk(mass=0 * u.M_sun, r_out=1362.5 * u.au)
+DISK = ThinDisk(mass=4e3 * u.M_sun, r_out=1362.5 * u.au)
+# (disk_mass, normal_theta, normal_phi)
+ZERO_BLOCK = [0.0, 0.0, 0.0]
+DISK_BLOCK = [4e3, 0.0, 0.0]
 # (D, M, t_p, a, e, inc, Omega, omega, xS0, yS0, vxS0, vyS0, v_LSR)
 LEGACY = np.array([
     8.2759, 4.2996, 2018.3789, 0.12502, 0.88444, 2.3505, 3.9830, 1.1568,
@@ -63,9 +66,9 @@ def test_force_argument_overrides_the_model_force() -> None:
     model = PerturbedKerrMcmcModel(force=ZERO)
     plain = model.get_ra_dec_vr(kerr=KERR, orbit=ORBIT, sol=TIMES, distance=DISTANCE)
     forced = model.get_ra_dec_vr(
-        kerr=KERR, orbit=ORBIT, sol=TIMES, distance=DISTANCE, force=SPHERE
+        kerr=KERR, orbit=ORBIT, sol=TIMES, distance=DISTANCE, force=DISK
     )
-    same = PerturbedKerrMcmcModel(force=SPHERE).get_ra_dec_vr(
+    same = PerturbedKerrMcmcModel(force=DISK).get_ra_dec_vr(
         kerr=KERR, orbit=ORBIT, sol=TIMES, distance=DISTANCE
     )
     for one, other in zip(forced, same):
@@ -79,10 +82,10 @@ def test_force_argument_overrides_the_model_force() -> None:
 def test_legacy_call_appends_the_force_block() -> None:
     reference = _legacy(KerrMcmcModel)(LEGACY)
     model = _legacy(PerturbedKerrMcmcModel, force=ZERO)
-    assert model.n_force_parameters == 2
-    _assert_close(model(np.append(LEGACY, [0.0, 1.0])), reference)
-    forced = model(np.append(LEGACY, [4e3, 1.0]))
-    same = _legacy(PerturbedKerrMcmcModel, force=SPHERE)(np.append(LEGACY, [4e3, 1.0]))
+    assert model.n_force_parameters == 3
+    _assert_close(model(np.append(LEGACY, ZERO_BLOCK)), reference)
+    forced = model(np.append(LEGACY, DISK_BLOCK))
+    same = _legacy(PerturbedKerrMcmcModel, force=DISK)(np.append(LEGACY, DISK_BLOCK))
     for one, other in zip(forced, same):
         np.testing.assert_array_equal(one, other)
     assert np.max(np.abs(forced[0] - reference[0])) > 1e-4
@@ -90,22 +93,20 @@ def test_legacy_call_appends_the_force_block() -> None:
 
 def test_legacy_call_validates_vector_and_force_block() -> None:
     model = _legacy(PerturbedKerrMcmcModel, force=ZERO)
-    with pytest.raises(ValueError, match="15 finite numbers"):
+    with pytest.raises(ValueError, match="16 finite numbers"):
         model(LEGACY)
     with pytest.raises(ValueError, match="mass must not be negative"):
-        model(np.append(LEGACY, [-1.0, 1.0]))
-    with pytest.raises(ValueError, match="radius must be positive"):
-        model(np.append(LEGACY, [1.0, 0.0]))
+        model(np.append(LEGACY, [-1.0, 0.0, 0.0]))
     unset = PerturbedKerrMcmcModel(*EPOCHS, reference_epoch=2000.0, force=ZERO)
     with pytest.raises(ValueError, match="set_solver"):
-        unset(np.append(LEGACY, [0.0, 1.0]))
+        unset(np.append(LEGACY, ZERO_BLOCK))
     with pytest.raises(ValueError, match="observation epochs"):
-        PerturbedKerrMcmcModel(force=ZERO)(np.append(LEGACY, [0.0, 1.0]))
+        PerturbedKerrMcmcModel(force=ZERO)(np.append(LEGACY, ZERO_BLOCK))
 
 
 def test_inputs_are_validated_like_the_kerr_model() -> None:
     with pytest.raises(TypeError, match="ExternalForce"):
-        PerturbedKerrMcmcModel(force="plummer")
+        PerturbedKerrMcmcModel(force="thin_disk")
     model = PerturbedKerrMcmcModel(force=ZERO)
     with pytest.raises(TypeError, match="ExternalForce"):
         model.get_ra_dec_vr(kerr=KERR, orbit=ORBIT, sol=TIMES, distance=DISTANCE,
@@ -119,17 +120,17 @@ def test_inputs_are_validated_like_the_kerr_model() -> None:
 
 
 def test_integration_failure_raises_integration_error() -> None:
-    model = PerturbedKerrMcmcModel(force=SPHERE)
+    model = PerturbedKerrMcmcModel(force=DISK)
     with pytest.raises(IntegrationError):
         model.get_ra_dec_vr(kerr=KERR, orbit=ORBIT, sol=TIMES | {"max_steps": 3},
                             distance=DISTANCE)
 
 
 def test_model_pickles_without_its_native_handle() -> None:
-    model = _legacy(PerturbedKerrMcmcModel, force=SPHERE)
-    vector = np.append(LEGACY, [4e3, 1.0])
+    model = _legacy(PerturbedKerrMcmcModel, force=DISK)
+    vector = np.append(LEGACY, DISK_BLOCK)
     expected = model(vector)
     restored = pickle.loads(pickle.dumps(model))
-    assert restored.force == SPHERE
+    assert restored.force == DISK
     for one, other in zip(restored(vector), expected):
         np.testing.assert_array_equal(one, other)

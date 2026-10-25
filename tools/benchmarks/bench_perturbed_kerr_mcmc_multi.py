@@ -4,10 +4,10 @@ Uses the stars, elements and epochs of ``bench_kerr_mcmc_multi.py`` and
 compares one call of:
 
 - ``KerrMcmcMultiModel`` (homogeneous);
-- ``PerturbedKerrMcmcMultiModel`` with a built-in Plummer sphere of zero
-  mass and of ``--plummer-mass`` solar masses;
-- the same sphere written as a run-time ``Potential`` (needs SymPy and a C
-  compiler; skipped otherwise).
+- ``PerturbedKerrMcmcMultiModel`` with the built-in fiducial thin disk
+  (``r_out = 1362.5 au``) of zero mass and of ``--disk-mass`` solar masses;
+- a Plummer sphere of ``--plummer-mass`` solar masses written as a run-time
+  ``Potential`` (needs SymPy and a C compiler; skipped otherwise).
 
 Per-star times come from single-star calls of the same models. Calls are
 interleaved and the median of ``--repeat`` rounds is reported. Run from the
@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from bench_kerr_mcmc_multi import ELEMENTS, EPOCHS, SHARED  # noqa: E402
 
 from relatipy import (  # noqa: E402
-    KerrMcmcMultiModel, PerturbedKerrMcmcMultiModel, Plummer, Potential,
+    KerrMcmcMultiModel, PerturbedKerrMcmcMultiModel, Potential, ThinDisk,
 )
 
 
@@ -51,13 +51,14 @@ def models(stars, args):
     astrometry = {s: np.linspace(*EPOCHS[s][0], EPOCHS[s][1]) for s in stars}
     spectroscopy = {s: np.linspace(*EPOCHS[s][2], EPOCHS[s][3]) for s in stars}
     radius = args.plummer_radius * u.mpc
-    sphere = Plummer(mass=0 * u.M_sun, radius=radius)
+    disk = ThinDisk(mass=0 * u.M_sun, r_out=1362.5 * u.au)
     cases = {"homogeneous": (KerrMcmcMultiModel(
         astrometry, spectroscopy, reference_epoch=2000.0), {})}
-    for label, mass in (("plummer zero", 0.0), ("plummer", args.plummer_mass)):
+    for label, mass in (("disk zero", 0.0), ("disk", args.disk_mass)):
         cases[label] = (PerturbedKerrMcmcMultiModel(
-            astrometry, spectroscopy, reference_epoch=2000.0, force=sphere,
-        ), {"force.mass": mass, "force.radius": args.plummer_radius})
+            astrometry, spectroscopy, reference_epoch=2000.0, force=disk,
+        ), {"force.disk_mass": mass, "force.normal_theta": 0.0,
+            "force.normal_phi": 0.0})
     try:
         potential = Potential(
             "-m / sqrt(x**2 + y**2 + z**2 + b**2)",
@@ -99,6 +100,8 @@ def main() -> None:
     parser.add_argument("--rtol", type=float, default=1e-9)
     parser.add_argument("--atol", type=float, default=1e-12)
     parser.add_argument("--spin", type=float, nargs=3, default=(0.3, -0.2, 0.5))
+    parser.add_argument("--disk-mass", type=float, default=1e3,
+                        help="thin-disk mass in solar masses")
     parser.add_argument("--plummer-mass", type=float, default=4e3,
                         help="Plummer mass in solar masses")
     parser.add_argument("--plummer-radius", type=float, default=1.0,
@@ -107,6 +110,7 @@ def main() -> None:
 
     stars = tuple(ELEMENTS)
     print(f"solver {args.method} rtol={args.rtol:g} atol={args.atol:g}; "
+          f"disk {args.disk_mass:g} Msun; "
           f"Plummer {args.plummer_mass:g} Msun, b = {args.plummer_radius:g} mpc")
     totals = interleaved(models(stars, args), args.repeat)
     print("five stars (ms, median):")

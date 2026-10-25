@@ -2,7 +2,7 @@
  * @file axisymmetric_table.h
  * @brief Tabulated Newtonian field of an axisymmetric, plane-symmetric mass.
  *
- * Private to the native force models.  A model (thin disk, spheroid, ...)
+ * Private to the native force models.  A model (such as the thin disk)
  * supplies the exact field of its unit-mass distribution with unit length
  * scale in its own frame: symmetry axis `e_z`, cylindrical radius `d`, height
  * `z`, spherical radius `r = sqrt(d^2 + z^2)` and `mu = |z| / r`.  The table
@@ -18,8 +18,8 @@
  * Grid: nonuniform nodes in `rho` and `mu`, refined geometrically towards the
  * given edges (radii with a structure width) and towards the plane `mu = 0`,
  * where `rho = sqrt(d^2 + z^2 / q^2) = r sqrt(1 + (1/q^2 - 1) mu^2)` for a
- * flattening `q` in (0, 1]: `q = 1` gives `rho = r`, and a spheroid of axis
- * ratio `q` has its surfaces at constant `rho`.
+ * flattening `q` in (0, 1]: `q = 1` gives `rho = r`, and an oblate mass
+ * stratified on similar surfaces of axis ratio `q` has them at constant `rho`.
  * Each quantity is a tensor-product C2 cubic spline (not-a-knot in `rho` and
  * at `mu = 1`; zero slope at `mu = 0`, the exact plane symmetry), broken into
  * independent radial pieces at edges declared as kinks (a density jump makes

@@ -8,77 +8,87 @@ import pytest
 from astropy import units as u
 
 import relatipy as rp
-from relatipy.forces import ExternalForce, Force, Plummer, Potential
+from relatipy.forces import ExternalForce, Force, Potential, ThinDisk
 
 
-def test_plummer_stores_parameters_with_their_units() -> None:
-    sphere = Plummer(mass=1e4 * u.M_sun, radius=0.01 * u.pc)
-    assert isinstance(sphere, ExternalForce)
-    assert sphere.parameter_names == ("mass", "radius")
-    assert dict(sphere.parameter_units) == {"mass": u.M_sun, "radius": u.pc}
-    assert sphere.parameters["mass"] == 1e4 * u.M_sun
-    assert not sphere.parameters["radius"].flags.writeable
-    assert repr(sphere) == (
-        "Plummer(mass=<Quantity 10000. solMass>, radius=<Quantity 0.01 pc>)"
+def _disk(mass=1 * u.M_sun, r_out=1 * u.au, **kwargs):
+    return ThinDisk(mass=mass, r_out=r_out, **kwargs)
+
+
+def test_thin_disk_stores_parameters_with_their_units() -> None:
+    disk = ThinDisk(mass=1e4 * u.M_sun, r_out=0.01 * u.pc)
+    assert isinstance(disk, ExternalForce)
+    assert disk.parameter_names == ("disk_mass", "normal_theta", "normal_phi")
+    assert dict(disk.parameter_units) == {
+        "disk_mass": u.M_sun, "normal_theta": u.rad, "normal_phi": u.rad,
+    }
+    assert disk.parameters["disk_mass"] == 1e4 * u.M_sun
+    assert not disk.parameters["disk_mass"].flags.writeable
+    assert repr(disk) == (
+        "ThinDisk(mass=<Quantity 10000. solMass>, r_out=<Quantity 0.01 pc>, "
+        "r_in=<Quantity 0. pc>, slope=-1.0, softening=0.01, normal=(0.0, 0.0, 1.0))"
     )
 
 
 def test_package_exports_the_force_layer() -> None:
-    assert rp.Force is Force and rp.Potential is Potential and rp.Plummer is Plummer
-    assert rp.forces.Plummer is Plummer
-    assert {"Force", "Potential", "Plummer", "PerturbedKerr", "forces"} <= set(rp.__all__)
+    assert rp.Force is Force and rp.Potential is Potential and rp.ThinDisk is ThinDisk
+    assert rp.forces.ThinDisk is ThinDisk
+    assert {"Force", "Potential", "ThinDisk", "PerturbedKerr", "forces"} <= set(rp.__all__)
+    for name in ("Plummer", "Spheroid"):
+        assert not hasattr(rp, name) and not hasattr(rp.forces, name)
 
 
 @pytest.mark.parametrize(
     ("kwargs", "error"),
     [
-        ({"mass": 1.0, "radius": 1 * u.pc}, TypeError),
-        ({"mass": 1 * u.M_sun, "radius": 1 * u.s}, u.UnitConversionError),
-        ({"mass": -1 * u.M_sun, "radius": 1 * u.pc}, ValueError),
-        ({"mass": 1 * u.M_sun, "radius": 0 * u.pc}, ValueError),
-        ({"mass": np.inf * u.M_sun, "radius": 1 * u.pc}, ValueError),
-        ({"mass": [1, 2] * u.M_sun, "radius": 1 * u.pc}, ValueError),
+        ({"mass": 1.0, "r_out": 1 * u.pc}, TypeError),
+        ({"mass": 1 * u.M_sun, "r_out": 1 * u.s}, u.UnitConversionError),
+        ({"mass": -1 * u.M_sun, "r_out": 1 * u.pc}, ValueError),
+        ({"mass": 1 * u.M_sun, "r_out": 0 * u.pc}, ValueError),
+        ({"mass": np.inf * u.M_sun, "r_out": 1 * u.pc}, ValueError),
+        ({"mass": [1, 2] * u.M_sun, "r_out": 1 * u.pc}, ValueError),
     ],
 )
-def test_plummer_rejects_invalid_parameters(kwargs, error) -> None:
+def test_thin_disk_rejects_invalid_parameters(kwargs, error) -> None:
     with pytest.raises(error):
-        Plummer(**kwargs)
+        ThinDisk(**kwargs)
 
 
 def test_forces_are_immutable() -> None:
-    sphere = Plummer(mass=1 * u.M_sun, radius=1 * u.au)
+    disk = _disk()
     with pytest.raises(AttributeError, match="immutable"):
-        sphere._parameters = {}
+        disk._parameters = {}
     with pytest.raises(AttributeError, match="immutable"):
-        del sphere._native
+        del disk._native
 
 
 def test_equality_and_hash_follow_type_and_parameters() -> None:
-    sphere = Plummer(mass=1 * u.M_sun, radius=1 * u.au)
-    assert sphere == Plummer(mass=1 * u.M_sun, radius=1 * u.au)
-    assert hash(sphere) == hash(Plummer(mass=1 * u.M_sun, radius=1 * u.au))
-    assert sphere != Plummer(mass=2 * u.M_sun, radius=1 * u.au)
-    assert sphere != "Plummer"
+    disk = _disk()
+    assert disk == _disk()
+    assert hash(disk) == hash(_disk())
+    assert disk != _disk(mass=2 * u.M_sun)
+    assert disk != _disk(r_out=2 * u.au)
+    assert disk != "ThinDisk"
 
 
 def test_with_parameters_returns_a_validated_copy() -> None:
-    sphere = Plummer(mass=1 * u.M_sun, radius=1 * u.au)
-    heavier = sphere.with_parameters(mass=3 * u.M_sun)
-    assert heavier == Plummer(mass=3 * u.M_sun, radius=1 * u.au)
-    assert sphere.parameters["mass"] == 1 * u.M_sun
+    disk = _disk()
+    heavier = disk.with_parameters(disk_mass=3 * u.M_sun)
+    assert heavier == _disk(mass=3 * u.M_sun)
+    assert disk.parameters["disk_mass"] == 1 * u.M_sun
     with pytest.raises(ValueError, match="unknown parameters: b"):
-        sphere.with_parameters(b=1 * u.au)
-    with pytest.raises(ValueError, match="radius must be positive"):
-        sphere.with_parameters(radius=-1 * u.au)
+        disk.with_parameters(b=1 * u.au)
+    with pytest.raises(ValueError, match="mass must not be negative"):
+        disk.with_parameters(disk_mass=-1 * u.M_sun)
 
 
 @pytest.mark.parametrize(
     "roundtrip",
     [copy.copy, copy.deepcopy, lambda value: pickle.loads(pickle.dumps(value))],
 )
-def test_plummer_survives_copy_and_pickle(roundtrip) -> None:
-    sphere = Plummer(mass=1 * u.M_sun, radius=1 * u.au)
-    assert roundtrip(sphere) == sphere
+def test_thin_disk_survives_copy_and_pickle(roundtrip) -> None:
+    disk = _disk(normal=(0.0, 1.0, 1.0))
+    assert roundtrip(disk) == disk
 
 
 def test_compiled_force_constructors_validate_without_sympy() -> None:

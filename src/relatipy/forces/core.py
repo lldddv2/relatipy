@@ -33,7 +33,7 @@ class ExternalForce:
 
     This base class is not instantiated directly; use
     :class:`~relatipy.forces.Force`, :class:`~relatipy.forces.Potential` or a
-    built-in model such as :class:`~relatipy.forces.Plummer`.
+    the built-in :class:`~relatipy.forces.ThinDisk`.
 
     Notes
     -----

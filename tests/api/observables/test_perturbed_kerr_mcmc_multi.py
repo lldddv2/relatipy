@@ -12,7 +12,7 @@ from relatipy import (
     KerrMcmcGaussianLikelihood, KerrMcmcMultiModel, PerturbedKerrMcmcModel,
     PerturbedKerrMcmcMultiModel,
 )
-from relatipy.forces import Plummer
+from relatipy.forces import ThinDisk
 
 SHARED = {
     "D": 8.2759, "M": 4.2996, "xS0": -7.2e-4, "yS0": -1.2e-4,
@@ -24,7 +24,7 @@ ELEMENTS = {
     "S38": (2022.6843, 0.14249, 0.81807, 168.69, 122.43, 40.065),
 }
 SOLVER = {"method": "dop853", "rtol": 1e-10, "atol": 1e-12}
-FORCE = Plummer(mass=0 * u.M_sun, radius=1 * u.mpc)
+FORCE = ThinDisk(mass=0 * u.M_sun, r_out=1362.5 * u.au)
 EPOCHS = {
     "S2": (np.linspace(2024.0, 2004.0, 12), np.linspace(2010.0, 2022.0, 5)),
     "S38": (np.linspace(2005.0, 2023.0, 10), np.array([2012.0, 2021.0])),
@@ -41,7 +41,7 @@ def _model(cls=PerturbedKerrMcmcMultiModel, stars=("S2", "S38"), **kwargs):
     return model
 
 
-def _named(stars=("S2", "S38"), force_mass=0.0, force_radius=1.0):
+def _named(stars=("S2", "S38"), force_mass=0.0, force_theta=0.0):
     values = SHARED | SPIN
     for star in stars:
         t_p, a, e, inc, node, peri = ELEMENTS[star]
@@ -50,7 +50,10 @@ def _named(stars=("S2", "S38"), force_mass=0.0, force_radius=1.0):
             f"{star}.inc": np.deg2rad(inc), f"{star}.Omega": np.deg2rad(node),
             f"{star}.omega": np.deg2rad(peri),
         }
-    return values, {"force.mass": force_mass, "force.radius": force_radius}
+    return values, {
+        "force.disk_mass": force_mass, "force.normal_theta": force_theta,
+        "force.normal_phi": 0.0,
+    }
 
 
 def _vector(model, **kwargs):
@@ -68,18 +71,23 @@ def _assert_equal(first, second):
 def test_layout_appends_the_force_block_last() -> None:
     model = _model(force=FORCE)
     homogeneous = _model(KerrMcmcMultiModel)
-    assert model.n_parameters == homogeneous.n_parameters + 2
-    assert model.parameter_names[:-2] == homogeneous.parameter_names
-    assert model.parameter_names[-2:] == ("force.mass", "force.radius")
-    assert model.parameter_units["force.mass"] == u.M_sun
-    assert model.parameter_units["force.radius"] == u.mpc
+    assert model.n_parameters == homogeneous.n_parameters + 3
+    assert model.parameter_names[:-3] == homogeneous.parameter_names
+    assert model.parameter_names[-3:] == (
+        "force.disk_mass", "force.normal_theta", "force.normal_phi"
+    )
+    assert model.parameter_units["force.disk_mass"] == u.M_sun
+    assert model.parameter_units["force.normal_theta"] == u.rad
     assert model.parameter_slices["force"] == slice(
-        model.n_parameters - 2, model.n_parameters
+        model.n_parameters - 3, model.n_parameters
     )
     assert model.force is FORCE
-    assert model.pack(
-        _named()[0] | {"force.mass": 1 * u.M_sun, "force.radius": 2 * u.au}
-    )[-1] == pytest.approx((2 * u.au).to_value(u.mpc))
+    packed = model.pack(_named()[0] | {
+        "force.disk_mass": 2e30 * u.kg, "force.normal_theta": 30 * u.deg,
+        "force.normal_phi": 0.0,
+    })
+    assert packed[-3] == pytest.approx((2e30 * u.kg).to_value(u.M_sun))
+    assert packed[-2] == pytest.approx(np.pi / 6)
 
 
 def test_zero_force_reproduces_the_homogeneous_model() -> None:
@@ -108,7 +116,7 @@ def test_one_star_equals_the_single_star_legacy_call() -> None:
         values["D"], values["M"],
         *(values[f"S2.{key}"] for key in ("t_p", "a", "e", "inc", "Omega", "omega")),
         values["xS0"], values["yS0"], values["vxS0"], values["vyS0"], values["v_LSR"],
-        4e3, 1.0,
+        4e3, 0.0, 0.0,
     ])
     _assert_equal(model(vector), {"S2": single(legacy)})
 
@@ -116,13 +124,13 @@ def test_one_star_equals_the_single_star_legacy_call() -> None:
 def test_in_place_updates_equal_fresh_models() -> None:
     model = _model(force=FORCE)
     first = _vector(model, force_mass=4e3)
-    second = _vector(model, force_mass=1e3, force_radius=0.5)
+    second = _vector(model, force_mass=1e3, force_theta=0.5)
     second[1] = 4.1
     result_first = model(first)
     result_second = model(second)
     _assert_equal(model(first), result_first)
     _assert_equal(_model(force=FORCE)(second), result_second)
-    heavier = FORCE.with_parameters(mass=1e3 * u.M_sun, radius=0.5 * u.mpc)
+    heavier = FORCE.with_parameters(disk_mass=1e3 * u.M_sun, normal_theta=0.5)
     _assert_equal(_model(force=heavier)(second), result_second)
     assert np.max(np.abs(result_first["S2"][0] - result_second["S2"][0])) > 1e-4
 
@@ -149,7 +157,7 @@ def test_force_block_is_validated_before_native_evaluation() -> None:
         PerturbedKerrMcmcMultiModel(
             {"S2": EPOCHS["S2"][0]}, {"S2": EPOCHS["S2"][1]},
             reference_epoch=2000.0, force=FORCE,
-        )(np.zeros(21))
+        )(np.zeros(22))
     with pytest.raises(TypeError, match="ExternalForce"):
         PerturbedKerrMcmcMultiModel(
             {"S2": EPOCHS["S2"][0]}, {"S2": EPOCHS["S2"][1]},
@@ -181,7 +189,7 @@ def test_likelihood_peaks_at_the_true_force_and_fails_soft() -> None:
     best = likelihood(truth)
     assert math.isfinite(best)
     lighter = truth.copy()
-    lighter[-2] = 0.0
+    lighter[-3] = 0.0
     assert likelihood(lighter) < best - 10
     unbound = truth.copy()
     unbound[likelihood.model.parameter_slices["S2"].start + 1] = 1e-9
@@ -196,7 +204,7 @@ def test_model_and_likelihood_pickle_and_run_in_a_pool() -> None:
     model = likelihood.model
     _assert_equal(pickle.loads(pickle.dumps(model))(truth), model(truth))
     lighter = truth.copy()
-    lighter[-2] = 1e3
+    lighter[-3] = 1e3
     context = multiprocessing.get_context("spawn")
     with context.Pool(2) as pool:
         results = pool.map(likelihood, [truth, lighter])

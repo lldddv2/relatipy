@@ -1,9 +1,9 @@
-"""Built-in tabulated thin disk and spheroid (Piran et al. 2026).
+"""Built-in tabulated thin disk (Piran et al. 2026).
 
-Both models evaluate an axisymmetric, plane-symmetric field from a table of
+The model evaluates an axisymmetric, plane-symmetric field from a table of
 the unit-mass distribution with unit outer radius, built once in native code
 and interpolated with C2 bicubic splines. The table depends only on the
-shape (slope, inner-to-outer radius ratio, softening or axis ratio); the
+shape (slope, inner-to-outer radius ratio and softening); the
 mass, the outer radius and the symmetry axis are written into a small
 native model at bind time and can change between MCMC proposals without a
 rebuild. Built tables are cached per shape in each process.
@@ -21,8 +21,7 @@ from astropy import units as u
 from ._bound import geometric_conversion
 from .core import ExternalForce
 
-# Tables cost about 1 s and 11 MB (thin disk) to several seconds and 22 MB
-# (flat spheroid); a few shapes are kept per process. Placed models keep
+# Tables cost about 1 s and 11 MB each; a few shapes are kept per process. Placed models keep
 # their own table alive, so eviction never invalidates a bound force.
 _TABLE_CACHE_SIZE = 4
 _TABLES: OrderedDict[tuple, object] = OrderedDict()
@@ -38,11 +37,8 @@ def _table(shape: tuple) -> object:
             return table
     from .. import _force_core
 
-    kind, *arguments = shape
-    if kind == "thin_disk":
-        table = _force_core.AxisymmetricTable.thin_disk(*arguments)
-    else:
-        table = _force_core.AxisymmetricTable.spheroid(*arguments)
+    _kind, *arguments = shape
+    table = _force_core.AxisymmetricTable.thin_disk(*arguments)
     with _TABLES_LOCK:
         table = _TABLES.setdefault(shape, table)
         _TABLES.move_to_end(shape)
@@ -92,7 +88,7 @@ def _real(value: object, name: str) -> float:
 
 
 class _TabulatedForce(ExternalForce):
-    """Shared implementation of :class:`ThinDisk` and :class:`Spheroid`."""
+    """Tabulated axisymmetric force; base of :class:`ThinDisk`."""
 
     __slots__ = ("_shape", "_outer", "_outer_conversion", "_options")
 
@@ -312,85 +308,6 @@ class ThinDisk(_TabulatedForce):
         super().__init__(
             mass, outer, ("thin_disk", alpha, ratio, eps),
             {"r_in": inner, "slope": alpha, "softening": eps}, normal, _angles,
-        )
-
-
-class Spheroid(_TabulatedForce):
-    """Oblate power-law spheroid (Piran et al. 2026, Sect. 4).
-
-    Parameters
-    ----------
-    mass : astropy.units.Quantity
-        Finite total mass, zero or positive.
-    s_out : astropy.units.Quantity
-        Finite, positive outer label ``s_out`` (the equatorial outer radius).
-    axis_ratio : float, optional
-        Axis ratio ``q`` in ``(0, 1]``, default ``1`` (a sphere).
-    s_in : astropy.units.Quantity, optional
-        Inner label in ``[0, s_out)``, default zero.
-    slope : float, optional
-        Power ``alpha`` of ``rho proportional to s^alpha`` on the similar
-        spheroids ``s^2 = R^2 + z^2 / q^2``, default ``-2``; ``s_in = 0``
-        needs ``alpha > -3``.
-    normal : array-like, optional
-        Symmetry axis, in the frames described for :class:`ThinDisk`.
-
-    Raises
-    ------
-    TypeError, ValueError, astropy.units.UnitConversionError
-        As :class:`ThinDisk`.
-
-    Notes
-    -----
-    The run-time parameters are ``mass``, ``normal_theta`` and
-    ``normal_phi``, with the angle convention of :class:`ThinDisk`. With
-    ``q = 1`` the field is that of a sphere, ``G M(<r) / r^2`` with
-    ``M(<r) = M (r / s_out)^(alpha + 3)`` inside ``s_out``. As ``q -> 0`` at
-    fixed mass it tends to a razor-thin disk with ``Sigma`` proportional to
-    ``R^(alpha + 1)`` well inside the rim and without softening. The force
-    is only continuous across the density edges. Tables of flat spheroids
-    take longer to build (about 6 s and 22 MB at ``q = 0.05``).
-
-    Examples
-    --------
-    >>> from astropy import units as u
-    >>> from relatipy.forces import Spheroid
-    >>> Spheroid(mass=1e3 * u.M_sun, s_out=1362.5 * u.au, axis_ratio=0.1).parameter_names
-    ('mass', 'normal_theta', 'normal_phi')
-    """
-
-    __slots__ = ()
-    _mass_name = "mass"
-    _outer_name = "s_out"
-
-    def __init__(
-        self,
-        *,
-        mass: u.Quantity,
-        s_out: u.Quantity,
-        axis_ratio: float = 1.0,
-        s_in: u.Quantity | None = None,
-        slope: float = -2.0,
-        normal: object = (0.0, 0.0, 1.0),
-        _angles: tuple[float, float] | None = None,
-    ) -> None:
-        """Validate the spheroid shape, mass, outer label and axis."""
-        outer = _length(s_out, "s_out")
-        inner = _length(0 * outer.unit if s_in is None else s_in, "s_in")
-        if not outer.value > 0:
-            raise ValueError("s_out must be positive")
-        ratio = float((inner / outer).to_value(u.one))
-        if not 0 <= ratio < 1:
-            raise ValueError("s_in must be in [0, s_out)")
-        q = _real(axis_ratio, "axis_ratio")
-        if not 0 < q <= 1:
-            raise ValueError("axis_ratio must be in (0, 1]")
-        alpha = _real(slope, "slope")
-        if ratio == 0 and not alpha > -3:
-            raise ValueError("slope must exceed -3 when s_in is zero")
-        super().__init__(
-            mass, outer, ("spheroid", alpha, q, ratio),
-            {"axis_ratio": q, "s_in": inner, "slope": alpha}, normal, _angles,
         )
 
 

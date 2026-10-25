@@ -9,13 +9,13 @@ from astropy import units as u
 from astropy.constants import c
 
 from relatipy import IntegrationError, Kerr, Orbit, PerturbedKerr, Solution
-from relatipy.forces import Plummer
+from relatipy.forces import ThinDisk
 
 MASS = 4e6 * u.M_sun
 SPIN = 0.6
 KERR = Kerr(mass=MASS, spin=SPIN)
-ZERO = Plummer(mass=0 * u.M_sun, radius=0.01 * u.pc)
-SPHERE = Plummer(mass=4e5 * u.M_sun, radius=100 * KERR.r_g)
+ZERO = ThinDisk(mass=0 * u.M_sun, r_out=0.01 * u.pc)
+DISK = ThinDisk(mass=4e5 * u.M_sun, r_out=400 * KERR.r_g)
 ORBIT = {
     "a": 200 * KERR.r_g, "e": 0.5, "inc": 0.7 * u.rad,
     "Omega": 0.3 * u.rad, "omega": 0.2 * u.rad,
@@ -28,18 +28,18 @@ def _solve(metric, method, **kwargs):
 
 
 def test_value_semantics_repr_and_background_metric() -> None:
-    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE)
+    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=DISK)
     assert metric.kerr == KERR
-    assert metric.force is SPHERE
+    assert metric.force is DISK
     assert metric.mass == MASS and metric.spin == SPIN
     assert metric.r_g == KERR.r_g
     assert metric.horizons == KERR.horizons
-    assert metric == PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE)
-    assert hash(metric) == hash(PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE))
+    assert metric == PerturbedKerr(mass=MASS, spin=SPIN, force=DISK)
+    assert hash(metric) == hash(PerturbedKerr(mass=MASS, spin=SPIN, force=DISK))
     assert metric != PerturbedKerr(mass=MASS, spin=SPIN, force=ZERO)
     assert metric != KERR
     assert repr(metric).startswith(
-        "PerturbedKerr(mass=<Quantity 4000000. solMass>, spin=0.6, force=Plummer("
+        "PerturbedKerr(mass=<Quantity 4000000. solMass>, spin=0.6, force=ThinDisk("
     )
     with pytest.raises(AttributeError, match="immutable"):
         metric._force = ZERO
@@ -78,7 +78,7 @@ def test_zero_force_reproduces_kerr_orbit(method) -> None:
 
 
 def test_force_changes_the_orbit_and_integrate_matches_solve() -> None:
-    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE)
+    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=DISK)
     perturbed = _solve(metric, "dop853")
     reference = _solve(KERR, "dop853")
     shift = abs(perturbed.R[-1] - reference.R[-1]) / KERR.r_g
@@ -92,7 +92,7 @@ def test_force_changes_the_orbit_and_integrate_matches_solve() -> None:
 
 
 def test_copy_keeps_the_force() -> None:
-    orbit = PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE).orbit(**ORBIT)
+    orbit = PerturbedKerr(mass=MASS, spin=SPIN, force=DISK).orbit(**ORBIT)
     clone = orbit.copy()
     first = orbit.solve(tau_span=SPAN, method="dop853")
     second = clone.solve(tau_span=SPAN, method="dop853")
@@ -110,7 +110,7 @@ def test_projection_radau_is_rejected() -> None:
 
 
 def test_numerical_failure_keeps_partial_solution_semantics() -> None:
-    orbit = PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE).orbit(**ORBIT)
+    orbit = PerturbedKerr(mass=MASS, spin=SPIN, force=DISK).orbit(**ORBIT)
     step = SPAN[1] / 2e6
     solution = orbit.solve(tau_span=SPAN, method="dp45", max_step=step)
     assert solution.status == -1 and not solution.success
@@ -125,7 +125,7 @@ def test_numerical_failure_keeps_partial_solution_semantics() -> None:
     [copy.copy, copy.deepcopy, lambda value: pickle.loads(pickle.dumps(value))],
 )
 def test_metric_orbit_and_solution_survive_copy_and_pickle(roundtrip) -> None:
-    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=SPHERE)
+    metric = PerturbedKerr(mass=MASS, spin=SPIN, force=DISK)
     assert roundtrip(metric) == metric
     orbit = metric.orbit(**ORBIT)
     solution = orbit.solve(tau_span=SPAN, method="dop853")

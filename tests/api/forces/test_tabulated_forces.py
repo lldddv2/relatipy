@@ -1,4 +1,4 @@
-"""ThinDisk and Spheroid: validation, shared tables, orientation and physics."""
+"""ThinDisk: validation, shared tables, orientation and physics."""
 
 import pickle
 
@@ -9,7 +9,7 @@ from astropy.constants import c
 
 from relatipy import (
     Kerr, KerrMcmcMultiModel, PerturbedKerr, PerturbedKerrMcmcMultiModel,
-    Spheroid, ThinDisk, _force_core,
+    ThinDisk, _force_core,
 )
 from relatipy.forces import ExternalForce
 from relatipy.geodesic.solution import constants_of_motion
@@ -42,9 +42,6 @@ def test_parameters_units_and_value_semantics() -> None:
     heavier = FIDUCIAL.with_parameters(disk_mass=2e3 * u.M_sun, normal_theta=0.3)
     assert heavier.parameters["normal_theta"].value == 0.3
     assert heavier == pickle.loads(pickle.dumps(heavier))
-    sphere = Spheroid(mass=1e3 * u.M_sun, s_out=1000 * u.au)
-    assert sphere.parameter_names == ("mass", "normal_theta", "normal_phi")
-    assert pickle.loads(pickle.dumps(sphere)) == sphere
 
 
 @pytest.mark.parametrize(
@@ -60,8 +57,6 @@ def test_parameters_units_and_value_semantics() -> None:
         (lambda: ThinDisk(mass=1 * u.M_sun, r_out=1 * u.au, softening=0), ValueError),
         (lambda: ThinDisk(mass=1 * u.M_sun, r_out=1 * u.au, normal=(0, 0, 0)), ValueError),
         (lambda: ThinDisk(mass=1 * u.M_sun, r_out=1 * u.au, normal=(0, 1)), ValueError),
-        (lambda: Spheroid(mass=1 * u.M_sun, s_out=1 * u.au, axis_ratio=0), ValueError),
-        (lambda: Spheroid(mass=1 * u.M_sun, s_out=1 * u.au, slope=-3), ValueError),
     ],
 )
 def test_invalid_shapes_are_rejected(factory, error) -> None:
@@ -80,24 +75,8 @@ def test_tables_are_shared_per_shape_and_rebuilt_lazily_after_pickle() -> None:
     np.testing.assert_array_equal(first.model_data, again.model_data)
 
 
-def test_spheroid_sphere_matches_the_enclosed_mass_field() -> None:
-    sphere = Spheroid(mass=1e3 * u.M_sun, s_out=1000 * u.au, slope=-2.0)
-    bound = sphere._bind(MASS)
-    mass, scale = bound.model_data[:2]
-    directions = np.array([[1.0, 0, 0], [0.3, -0.5, 0.8], [0, 0, -1], [0.6, 0.8, 0]])
-    directions /= np.linalg.norm(directions, axis=1)[:, None]
-    for radius in scale * np.array([1e-3, 0.05, 0.4, 0.9, 1.5, 8.0]):
-        positions = radius * directions
-        enclosed = mass * min(1.0, radius / scale)
-        expected = -enclosed * positions / radius**3
-        np.testing.assert_allclose(
-            _acceleration(bound, positions), expected, rtol=1e-10,
-            atol=1e-10 * enclosed / radius**2,
-        )
-
-
 def test_normal_rotates_the_field_and_observer_axes_map_through_the_spin() -> None:
-    aligned = Spheroid(mass=1e3 * u.M_sun, s_out=1000 * u.au, axis_ratio=0.5)
+    aligned = ThinDisk(mass=1e3 * u.M_sun, r_out=1000 * u.au, slope=-0.5)
     normal = np.array([0.3, -0.4, 0.866])
     normal /= np.linalg.norm(normal)
     tilted = aligned.with_parameters(
