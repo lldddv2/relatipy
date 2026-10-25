@@ -92,10 +92,10 @@ class PerturbedKerrMcmcModel:
     Orbits, light travel, units, solver settings and errors are those of
     ``KerrMcmcModel``; only the equation of motion adds the force, projected
     orthogonally to the four-velocity. With a force that is
-    identically zero, such as a thin disk of zero mass, predictions
-    agree with those of ``KerrMcmcModel`` to rounding error (the forced
-    right-hand side uses its own generated Kerr kernel); the tests bound the
-    difference by ``1e-10`` relative.
+    identically zero, such as a thin disk of zero mass, the forced
+    right-hand side equals that of ``KerrMcmcModel`` and the predictions
+    agree with it to rounding error; the tests bound the difference by
+    ``1e-10`` relative.
 
     The legacy ``__call__`` vector is the thirteen ``KerrMcmcModel``
     parameters followed by the force block, the force's
