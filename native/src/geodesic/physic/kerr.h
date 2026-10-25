@@ -49,7 +49,12 @@ rp_kerr_status rp_kerr_geodesic_physic_evaluate_null_tangent(
     double tangent[RP_KERR_DIM]
 );
 
-/** Evaluate the corrected Levi--Civita affine derivatives. */
+/**
+ * Evaluate the corrected Levi--Civita affine derivatives by a generic
+ * contraction of analytic metric derivatives.  Production paths evaluate the
+ * generated kernel of the same connection (`kerr_rhs_generated.h`); this
+ * readable contraction is kept as its reference oracle in the tests.
+ */
 void rp_kerr_geodesic_physic_evaluate_corrected_rhs(
     double mass,
     double spin,

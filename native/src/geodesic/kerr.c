@@ -4,7 +4,10 @@
  *
  * This file validates and copies caller inputs, enforces output and aliasing
  * contracts, propagates typed failures, and delegates legacy-compatible and
- * corrected null-geodesic physical evaluation to `physic/kerr.c`.
+ * corrected null-geodesic physical evaluation to `physic/kerr.c`.  The
+ * corrected right-hand side evaluates the generated kernel
+ * `physic/kerr_rhs_generated.c`; the generic contraction in `physic/kerr.c`
+ * stays as the reference oracle of the tests.
  *
  * The operation remains an internal local reference. It is not an integrator,
  * public C API, stable ABI, or decision about the canonical integration state.
@@ -13,6 +16,7 @@
 #include "relatipy/kerr_geodesic.h"
 #include "jacobian.h"
 #include "physic/kerr.h"
+#include "physic/kerr_rhs_generated.h"
 #include "../utils/tensor.h"
 
 #include <math.h>
@@ -225,7 +229,7 @@ rp_kerr_status rp_kerr_null_geodesic_rhs(
         return status;
     }
 
-    rp_kerr_geodesic_physic_evaluate_corrected_rhs(
+    rp_kerr_geodesic_physic_evaluate_generated_rhs(
         mass,
         spin,
         &state,
