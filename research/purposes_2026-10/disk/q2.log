@@ -4,7 +4,7 @@ LT chi=0.7 spin perpM              |dL|/orbit=7.02e-04 rad  dOmega_sky=+8.47e-04
 disk 1e3 Msun CWD                  |dL|/orbit=2.12e-03 rad  dOmega_sky=+2.34e-03 di_sky=-8.45e-04 | frac of dL within +-1%P 0.013, +-5%P 0.124, +-25%P 0.625 | frac dOmega_sky(+-5%P) 0.122, di_sky 0.139
 disk 1e3 Msun P30                  |dL|/orbit=1.41e-03 rad  dOmega_sky=+1.56e-03 di_sky=-5.59e-04 | frac of dL within +-1%P 0.026, +-5%P 0.150, +-25%P 0.635 | frac dOmega_sky(+-5%P) 0.150, di_sky 0.150
 == (2) secular-only vs full Fisher (S301 100 uas, RV 1 km/s from 2030, 2026-2041; spin perp)
-secular case=a md=0.0 - rates=(i,O): rank 2/3  sN=inf sM=inf sL=inf
+secular case=a md=0.0 - rates=(i,O): rank 2/2  sN=0.118 sM=0.189 sL=inf
 secular case=a md=0.0 - rates=(i,O,w): rank 3/3  sN=0.218 sM=0.431 sL=0.063
 secular case=b md=1.0 CWD rates=(i,O): rank 2/6  sN=inf sM=inf sL=inf
 secular case=b md=1.0 CWD rates=(i,O,w): rank 3/6  sN=inf sM=inf sL=inf

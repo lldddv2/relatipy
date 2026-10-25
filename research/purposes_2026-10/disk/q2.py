@@ -95,14 +95,18 @@ def secular_sigma(case, nrate, md=1.0, orient='CWD', s_rv=1.0, t_end=2041.0, s_a
     free = [2, 3, 4] + ([5, 6, 7] if 5 in gfree else [])
     steps = {2: 0.05, 3: 0.05, 4: 0.05, 5: 0.05, 6: 1e-3, 7: 1e-3}
     Jr = rate_jac([s.name for s in stars], g, free, nrate, steps)
+    B = np.column_stack([N, M_, L])                 # spin columns -> (S_N, S_M, S_L) basis
+    Jr[:, :3] = Jr[:, :3] @ B
+    if nrate == 2 and case == 'a':                  # plane rates cannot see S_L: solve for (S_N, S_M) only
+        Jr = Jr[:, :2]; free = free[:2]
     Fs = Jr.T @ np.linalg.inv(Cr) @ Jr
     ev = np.linalg.eigvalsh(Fs / np.outer(np.sqrt(np.diag(Fs)), np.sqrt(np.diag(Fs))))
     rank = int(np.sum(ev > 1e-10 * ev.max()))
     if rank < len(free):
         return dict(rank=rank, npar=len(free), sN=np.inf, sM=np.inf, sL=np.inf)
-    C = np.linalg.inv(Fs); CS = C[:3, :3]
-    out = dict(rank=rank, npar=len(free), sN=float(np.sqrt(N @ CS @ N)), sM=float(np.sqrt(M_ @ CS @ M_)), sL=float(np.sqrt(L @ CS @ L)))
-    if 5 in free: out['sMd'] = float(1e3 * np.sqrt(C[3, 3]))
+    C = np.linalg.inv(Fs); sg = np.sqrt(np.diag(C))
+    out = dict(rank=rank, npar=len(free), sN=float(sg[0]), sM=float(sg[1]), sL=float(sg[2]) if len(free) > 2 else np.inf)
+    if 5 in free: out['sMd'] = float(1e3 * sg[3])
     out['sig_rates_S301_urad_per_yr'] = (1e6 * np.sqrt(np.diag(Cr)[:nrate])).tolist()
     return out
 

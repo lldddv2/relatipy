@@ -69,7 +69,9 @@ def summarize(C, g, gfree, el301, cond):
     out = dict(sSx=np.sqrt(CS[0, 0]), sSy=np.sqrt(CS[1, 1]), sSz=np.sqrt(CS[2, 2]),
                sN=np.sqrt(N @ CS @ N), sM=np.sqrt(Mv @ CS @ Mv), sL=np.sqrt(L @ CS @ L),
                schi=np.sqrt(sh @ CS @ sh), sang_deg=np.degrees(np.sqrt(np.trace(Pp @ CS @ Pp)) / chi),
-               sM6=np.sqrt(C[ix[0], ix[0]]), sR0=np.sqrt(C[ix[1], ix[1]]), cond=cond)
+               sM6=np.sqrt(C[ix[0], ix[0]]), sR0=np.sqrt(C[ix[1], ix[1]]), cond=cond, CS=CS.tolist())
+    Pv = fc.rotmat(el301[2], el301[3], el301[4])[:, 0]; Qv = np.cross(L, Pv)   # apse line / minor axis
+    out.update(sP=np.sqrt(Pv @ CS @ Pv), sQ=np.sqrt(Qv @ CS @ Qv))
     if 5 in ix:
         out.update(sMd=1e3 * np.sqrt(C[ix[5], ix[5]]), sid=np.degrees(np.sqrt(C[ix[6], ix[6]])), sOd=np.degrees(np.sqrt(C[ix[7], ix[7]])))
     return out
