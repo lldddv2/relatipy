@@ -1,0 +1,98 @@
+"""Specification of ``native/src/force/generated/kerr_rhs.{c,h}``.
+
+Optimized affine right-hand side ``dx^mu = u^mu``, ``du^mu = -Gamma^mu_(alpha
+beta) u^alpha u^beta`` of the corrected (Levi--Civita) Kerr connection,
+derived symbolically from the Boyer--Lindquist metric.  Each connection
+coefficient is simplified with explicit ``Sigma`` and ``Delta`` (so its
+numerator has no large-radius cancellation) and then written with the
+prepared ``Sigma`` and ``Delta`` factors of the state, so the kernel has the
+inputs and the result of ``rp_kerr_geodesic_physic_evaluate_corrected_rhs``.
+"""
+
+from __future__ import annotations
+
+import sympy as sp
+
+from relatipy._codegen import optimize
+from relatipy._codegen.kerr import kerr_symbols, simplified_geodesic_acceleration
+
+GUARD = "RELATIPY_NATIVE_FORCE_GENERATED_KERR_RHS_H"
+PARAMETERS = [
+    "double mass",
+    "double spin",
+    "const struct rp_kerr_geodesic_state *state",
+    "double dx[RP_KERR_DIM]",
+    "double du[RP_KERR_DIM]",
+]
+
+
+def optimized():
+    """The :class:`OptimizedCode` of the generated kernel."""
+    s = kerr_symbols()
+    acceleration = simplified_geodesic_acceleration(s)
+    inputs = {
+        s.mass: None,
+        s.spin: None,
+        s.r: "state->x[1]",
+        s.sigma: "state->sigma",
+        s.delta: "state->delta",
+        **{component: f"state->u[{index}]" for index, component in enumerate(s.u)},
+    }
+    return optimize(
+        {"dx": sp.Matrix(s.u), "du": sp.Matrix(acceleration)},
+        inputs=inputs,
+        angles={s.theta: ("state->sin_theta", "state->cos_theta")},
+        polynomial_in=s.u,
+        transforms=("none", "factor_terms", "cancel", "factor"),
+    )
+
+
+def build() -> dict[str, str]:
+    code = optimized()
+    function = code.c_function("rp_force_generated_kerr_rhs", PARAMETERS)
+    header = f"""/**
+ * @file kerr_rhs.h
+ * @brief Generated corrected Kerr geodesic right-hand side.
+ *
+ * Same contract as `rp_kerr_geodesic_physic_evaluate_corrected_rhs`: the
+ * affine derivatives `dx^mu/dlambda = u^mu` and
+ * `du^mu/dlambda = -Gamma^mu_(alpha beta) u^alpha u^beta` of the
+ * Levi--Civita connection of the Boyer--Lindquist Kerr metric, signature
+ * (-,+,+,+), geometric units with explicit mass and spin length.  The
+ * expression is norm-agnostic (timelike and null tangents).  It is not
+ * wired into any integrator.  The function allocates nothing, retains no
+ * pointer, keeps no global state and does not validate its inputs.
+ */
+
+#ifndef {GUARD}
+#define {GUARD}
+
+#include "../../geodesic/physic/kerr.h"
+
+/**
+ * Affine derivatives at a prepared state.
+ * @param state State prepared by `rp_kerr_geodesic_physic_prepare_state`
+ *        with status OK: `x[1]`, `u`, `sin_theta`, `cos_theta`, `sigma` and
+ *        `delta` are read.
+ * @param dx Caller-owned output of four doubles, `dx^mu/dlambda`.
+ * @param du Caller-owned output of four doubles, `du^mu/dlambda`.  Neither
+ *        output may alias the state.
+ */
+{code.prototype("rp_force_generated_kerr_rhs", PARAMETERS)};
+
+#endif /* {GUARD} */
+"""
+    source = f"""/**
+ * @file kerr_rhs.c
+ * @brief Generated corrected Kerr geodesic RHS; see kerr_rhs.h.
+ */
+
+#include "kerr_rhs.h"
+
+#include <math.h>
+
+{function}"""
+    return {
+        "native/src/force/generated/kerr_rhs.h": header,
+        "native/src/force/generated/kerr_rhs.c": source,
+    }
