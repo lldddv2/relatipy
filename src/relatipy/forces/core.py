@@ -200,7 +200,7 @@ class ExternalForce:
     def _handle(self) -> BoundForce:
         """Return a new handle whose parameters :meth:`BoundForce.update` writes."""
         callback, keepalive = self._native_callback()
-        return BoundForce(self, callback, self._model_size(), keepalive)
+        return BoundForce(self, callback, self._new_storage(), keepalive)
 
     def _write(
         self,
@@ -213,8 +213,17 @@ class ExternalForce:
         factors, powers = self._conversions
         buffer[: factors.size] = values * factors * mass ** (-powers)
 
-    def _model_size(self) -> int:
-        return len(self._parameters)
+    def _new_storage(self) -> object:
+        """Model data of a new handle; default: one double per parameter."""
+        return np.zeros(max(len(self._parameters), 1), dtype=np.float64)
+
+    def _storage_address(self, storage: object) -> int:
+        """Address of the model data passed to the native callback."""
+        return int(storage.ctypes.data)
+
+    def _storage_data(self, storage: object) -> np.ndarray:
+        """Geometric model data, for inspection and tests."""
+        return storage
 
     def _check_vector(self, values: np.ndarray) -> np.ndarray:
         """Validate parameter values in their units; raise ``ValueError``."""

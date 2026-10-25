@@ -68,8 +68,9 @@ class BoundForce:
         Force whose parameters this handle stores.
     callback : int
         Address of the native callback.
-    size : int
-        Number of doubles in the model data.
+    storage : object
+        Model data written by the force: a float array for parameter-only
+        models, or a native placed model for tabulated ones.
     keepalive : object
         Objects the callback depends on, kept referenced by this handle.
 
@@ -81,16 +82,17 @@ class BoundForce:
     """
 
     __slots__ = (
-        "_force", "_callback", "_buffer", "_keepalive", "_mass", "_values",
-        "_rotation",
+        "_force", "_callback", "_buffer", "_address", "_keepalive", "_mass",
+        "_values", "_rotation",
     )
 
     def __init__(
-        self, force: ExternalForce, callback: int, size: int, keepalive: object
+        self, force: ExternalForce, callback: int, storage: object, keepalive: object
     ) -> None:
         self._force = force
         self._callback = int(callback)
-        self._buffer = np.zeros(max(int(size), 1), dtype=np.float64)
+        self._buffer = storage
+        self._address = int(force._storage_address(storage))
         self._keepalive = keepalive
         self._mass = math.nan
         self._values: np.ndarray | None = None
@@ -113,7 +115,7 @@ class BoundForce:
     @property
     def model(self) -> int:
         """Address of the model data passed to the callback."""
-        return int(self._buffer.ctypes.data)
+        return self._address
 
     @property
     def mass(self) -> float:
@@ -123,7 +125,7 @@ class BoundForce:
     @property
     def model_data(self) -> np.ndarray:
         """Read-only copy of the geometric model data."""
-        data = self._buffer.copy()
+        data = np.array(self._force._storage_data(self._buffer), dtype=np.float64)
         data.flags.writeable = False
         return data
 
