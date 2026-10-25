@@ -62,3 +62,5 @@ R28 S301 Fisher (a*=.7, 60 iso axes, S2 angles placeholder, 4ep/yr+30/peri): 202
     2026-40 (2 peri): 100/1 .19 (.12-.28, axis 24deg); 30/10 .33; 30/1 .12; 10/5 .12; 10/1 .079 (axis 11deg). RV 1km/s carries most info.
 R29 S301 peri RV raw errors vs static-frame ref (no bending): 1PN additive 256, 1PN+cross 100, SRxGR mult 84, relatipy 77 km/s; bending est ~80 km/s. MICADO 1 km/s -> need null geodesics.
 REFEREE (Opus) launched with full brief.
+R30 QPE a=60rg e=.1 (P=1.6h, M=4e5): 1.5PN(BL) fit 100 orbits rms 19.6 s max 36.8 s, a* 0.70->0.38 (BIASED). 300-orbit fit pending.
+R31 QPE a=60 300 orbits: rms 225 s max 544 s, a*=-0.15 (true .7). MCMC2 final a*=.949+-.025 cos=.349+-.12 ph=18.3+-6.7

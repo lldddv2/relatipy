@@ -174,10 +174,14 @@ parámetros y a* libres.
 | a = 300 r_g, e = 0.2 (P = 17.9 h) | 100 órbitas | 0.088 s / 0.43 s | 0.652 |
 | a = 300 r_g | 300 órbitas | 0.024 s / 0.09 s | 0.669 |
 
-<!-- SECTION:QPE60 -->
+| a = 60 r_g, e = 0.1 (P = 1.6 h) | 100 órbitas | 19.6 s / 36.8 s | 0.38 |
+| a = 60 r_g | 300 órbitas (~20 días) | **225 s / 544 s** | **−0.15** |
 
 A 300 r_g el 1.5PN basta para el timing: los tiempos de erupción se miden con
-errores de ~10² s. El espín sí sale sesgado (−0.03 a −0.05).
+errores de ~10² s. El espín sí sale sesgado (−0.03 a −0.05). A 60 r_g el 1.5PN
+falla por completo: los residuos son de minutos y el espín sale sin sentido.
+Queda abierto si el 3PN de QPE-FIT basta; relatipy sirve de referencia exacta
+para medirlo.
 
 ### 2.8 Integradores y la proyección (`integ_bench2.py`)
 

@@ -1,0 +1,4 @@
+a=60.0 rg e=0.1 inc=40.0deg a*=0.7 N_orb=300  P=1.60 h (M=4e5 Msun)  exact Kerr cost 0.09s, 18621 steps, 600 crossings
+  measured crossing period 2979.0 rg/c vs Kepler 2920.2 -> a0=60.803 (input 60.0)
+  fit first   100 orbits: rms=9.954e+00 rg/c =    19.610 s, max=   36.769 s | a*_fit=0.38228 (true 0.7) | nfev=93 99s
+  fit first   300 orbits: rms=1.142e+02 rg/c =   225.022 s, max=  543.980 s | a*_fit=-0.15097 (true 0.7) | nfev=202 651s
