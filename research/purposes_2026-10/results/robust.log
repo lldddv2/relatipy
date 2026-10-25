@@ -1,0 +1,25 @@
+star        mode    meth       rtol  fail/N   (random spin axis, a* U[0,1], params x(1+1e-3 N(0,1)))
+S2          t_obs   dop853    1e-12    0/150
+S2          t_obs   dop853    1e-10    0/150
+S2          t_obs   radau     1e-10    0/150
+S2          t_eval  dop853    1e-12    0/150
+S2          t_eval  dop853    1e-10    0/150
+S2          t_eval  radau     1e-10    0/150
+S62-like    t_obs   dop853    1e-12    0/150
+S62-like    t_obs   dop853    1e-10    0/150
+S62-like    t_obs   radau     1e-10    0/150
+S62-like    t_eval  dop853    1e-12    0/150
+S62-like    t_eval  dop853    1e-10    0/150
+S62-like    t_eval  radau     1e-10    0/150
+S4716-like  t_obs   dop853    1e-12    0/150
+S4716-like  t_obs   dop853    1e-10    0/150
+S4716-like  t_obs   radau     1e-10    0/150
+S4716-like  t_eval  dop853    1e-12    1/150
+S4716-like  t_eval  dop853    1e-10    0/150
+S4716-like  t_eval  radau     1e-10    0/150
+S29         t_obs   dop853    1e-12    0/150
+S29         t_obs   dop853    1e-10    0/150
+S29         t_obs   radau     1e-10    0/150
+S29         t_eval  dop853    1e-12    3/150
+S29         t_eval  dop853    1e-10    3/150
+S29         t_eval  radau     1e-10    0/150

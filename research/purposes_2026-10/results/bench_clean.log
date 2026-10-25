@@ -1,0 +1,32 @@
+=== n_epochs scan (rtol=1e-10, dop853, 1 S2 orbit=16yr) ===
+n=   10      1.38 ms      722.7 eval/s
+n=   50      2.63 ms      380.5 eval/s
+n=  100      3.78 ms      264.9 eval/s
+n=  200      6.53 ms      153.1 eval/s
+n=  500     14.45 ms       69.2 eval/s
+n= 1000     27.69 ms       36.1 eval/s
+
+=== rtol scan (n=200) ===
+rtol=   1e-13 dop853     6.96 ms      143.7 eval/s
+rtol=   1e-13 radau     15.34 ms       65.2 eval/s
+rtol=   1e-11 dop853     6.36 ms      157.2 eval/s
+rtol=   1e-11 radau     13.03 ms       76.8 eval/s
+rtol=   1e-10 dop853     6.25 ms      159.9 eval/s
+rtol=   1e-10 radau     13.96 ms       71.7 eval/s
+rtol=   1e-08 dop853     6.29 ms      158.9 eval/s
+rtol=   1e-08 radau     14.22 ms       70.3 eval/s
+rtol=   1e-06 dop853     6.12 ms      163.3 eval/s
+rtol=   1e-06 radau     12.52 ms       79.9 eval/s
+rtol=   1e-04 dop853     5.51 ms      181.6 eval/s
+rtol=   1e-04 radau     11.84 ms       84.4 eval/s
+
+=== span scan (n=200, rtol=1e-10) — S2 has ~2 orbits of data (1992-2026) ===
+span=   1.0 yr      5.43 ms      184.2 eval/s
+span=   4.0 yr      6.34 ms      157.7 eval/s
+span=  16.0 yr      6.41 ms      155.9 eval/s
+span=  34.0 yr      6.98 ms      143.2 eval/s
+span= 100.0 yr      8.62 ms      116.1 eval/s
+
+=== t_obs (Romer inversion) vs t_eval, n=200 ===
+t_eval     6.41 ms      156.1 eval/s
+t_obs      8.61 ms      116.1 eval/s

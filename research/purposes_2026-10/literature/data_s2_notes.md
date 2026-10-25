@@ -1,0 +1,36 @@
+# data_s2 progress notes (S2 / S38 / S55 / S29 astrometry + RV retrieval)
+- 2026-10-25T04:10:46Z init: scratchpad dirs created; proxy status shows prior CONNECT 403 policy denials (see below)
+- SRC cdsarc.cds.unistra.fr / vizier.cds.unistra.fr / cdsarc.u-strasbg.fr (Gillessen 2017 J/ApJ/837/30; Gillessen 2009 J/ApJ/692/1075): BLOCKED. Proxy status log: gateway 403 to CONNECT (policy denial), entries 04:06:23-04:06:24 (recorded before my first probe). Not retried, not routed around. No files downloaded.
+- SRC iopscience.iop.org (ApJ full text / data), ui.adsabs.harvard.edu, academic.oup.com, www.aanda.org, doi.org: BLOCKED (403 CONNECT, policy). Not retried.
+- SRC www.science.org (Do 2019 Science supplementary): BLOCKED (403 CONNECT, policy).
+- SRC zenodo.org: BLOCKED (403 CONNECT, policy).
+- SRC www.mpe.mpg.de, galactic.ucla.edu, www.astro.ucla.edu, www.eso.org: BLOCKED (403 CONNECT, policy).
+- SRC arxiv.org, export.arxiv.org, cdn.jsdelivr.net: BLOCKED (403 CONNECT). My own probes: arxiv.org/abs/1706.02600 + export.arxiv.org (HEAD), then arxiv.org + cdn.jsdelivr.net again (GET) -- a few repeat attempts before I recognized the pattern; stopped there. No further retries.
+- SRC api.github.com: reachable (HTTP 200 /rate_limit). github.com GET returned 403 for /sblunt/orbitize (treat as blocked for web pages; check via API/gh).
+- SRC pypi.org: reachable (200) -- not a data source for this task.
+- SRC WebSearch (index only, NOT downloaded; CDS host denied at egress): Gillessen 2017 J/ApJ/837/30 directory listing appears in search index at https://cdsarc.u-strasbg.fr/ftp/cats/J_ApJ/837/30 with table3.dat (~4.7 KB), table5.dat (~118 KB), ReadMe. Contents unverified. Existence per search index only.
+- SRC WebSearch: Gillessen 2009 candidate. Index shows CDS J/ApJ/707/L114 (single table1.dat) as an S2-orbit paper, which is ApJ 707 L114 (VLT+Keck S2 orbit), NOT ApJ 692 1075 as the brief assumed. J/ApJ/692/1075 not found in index. Unverified.
+- SRC WebSearch: Chu et al. 2018 S0-2 RV compilation, CDS J/ApJ/854/12 (table3.dat ~5.7 KB, 87 RVs, 12 new), also on B2FIND and dc.g-vo.org. Blocked host for direct download; not fetched (mirror would route around the CDS denial).
+- SRC WebSearch: Do 2019 Science supplement (DOI 10.1126/science.aav8137). Supplement not reachable (science.org denied). arXiv 1907.10731 has Table S5 (S0-2 astrometry) in PDF only.
+- SRC WebSearch: Boehle 2016 arXiv 1607.05726: S0-2 astrometry in Table 7 and LSR-corrected S0-2 RVs in Table 8, PDF only. arXiv itself denied.
+- SRC WebSearch: arXiv 2609.07693 (Yukawa paper): S55 (S0-102) 42 NACO + 27 GRAVITY astrometric points, 2 SINFONI RVs, 2004-2022. PDF only.
+- SRC WebSearch: no GitHub repo or CSV surfaced for S0-38 or S0-29 in search index.
+- NEXT: GitHub search via MCP (search_repositories/search_code); GRAVITY 2020/2022 CDS existence via WebSearch.
+- SRC WebSearch GRAVITY 2020 (A&A 636 L5, arXiv 2004.07187): no CDS/VizieR record found in index. Paper fits 14 orbital/frame parameters (best-fit values, not per-epoch data). Pre-publication copies only in index.
+- SRC WebSearch GRAVITY 2022 (A&A 657 L12, arXiv 2112.07478): no CDS/VizieR table in index. Appendix Table B.1 = best-fit parameters, not per-epoch data.
+- SRC github MCP search_repositories ("S0-2 Sgr A* orbit astrometry radial velocity data", "Galactic Center S2 S0-102 S55 S0-38 stellar orbit fit data"): 0 results.
+- SRC github MCP search_code ("S0-102" "S0-2" astrometry radial velocity): only dangause/astro-buddy data/text/pdf_texts.csv = extracted PDF text fragments (observation log lines), NOT per-epoch astrometry or RV. Not usable.
+- NEXT: check B2FIND record metadata (b2find.eudat.eu) only to see where data lives; more GitHub/PyPI-style searches for S29/S38.
+- SRC b2find.eudat.eu (B2FIND record 591c47ed-... "The orbit of S2 star around Sgr A*"): BLOCKED, 403 CONNECT (policy). Not retried.
+- SRC github MCP search_code ("S0-2 extension:csv", "Sgr A* astrometry radial velocity S2 extension:dat"): only unrelated CSVs (election data, DDR5 S-parameters, microbiome). crislu05/summer-project cluster data.csv has one S2 (=S0-2) summary row, not per-epoch data. Not usable.
+- SRC github MCP search_repositories ("S2 star orbit Sgr A*"): 0 results.
+- SRC WebSearch S29/S38: arXiv 2609.07693 snippet gives counts only: S29 95 astrometric (66 NACO, 29 GRAVITY), 19 RV (17 SINFONI, 2 GNIRS), 2002-2022; S38 133 astrometric (110 NACO, 23 GRAVITY), 9 RV (8 SINFONI, 1 ERIS), 2004-2022. arXiv 2602.19553 Table A1 = orbital elements only. No per-epoch values.
+- SRC WebSearch Zenodo: no Zenodo S2/S-star astrometry or RV dataset in the index (only unrelated Zenodo record 14327241, a Gaia RV paper). Lead only: arXiv 2606.13356 cites an S-star catalogue (its ref 75) whose host was not identified; not chased (arXiv blocked).
+- SRC WebSearch bundled-package search: no PyPI/GitHub repo bundling S-star astrometry+RV found. PyGRO (arXiv 2504.20152) S2 example takes orbital elements from Gillessen 2017 table, not raw data.
+- SRC github MCP search_repositories ("galactic center stellar orbits black hole mass fit", "S-stars orbit fitting Sagittarius A"): 0 results.
+- NEXT: code search for catalogue IDs (J/ApJ/837/30, J/ApJ/692/1075, J/ApJ/854/12) to find GitHub redistributions; then write final report. No CSVs produced (no raw source downloaded).
+- SRC github MCP search_code ("J/ApJ/837/30" etc.): hits only in layoutit/css.earth README/NOTICE files (third-party web project) citing Gillessen 2017 table3 (orbital elements) and table5 (per-epoch positions and RVs). Their README claims table5 has S2: 145 positions 1992-2016, 44 RVs; S1: 161 positions; 17 stars in table5 = S2,S1,S4,S8,S9,S12,S13,S14,S17,S18,S19,S21,S24,S31,S38,S54,S55 (S29 not in list). Snippets only, third-party, unverified against the table itself.
+- SRC github MCP get_file_contents layoutit/css.earth: DENIED by session scope (allowed repo list: lldddv2/relatipy). Not added (user did not ask), no workaround attempted. Raw css.earth files therefore NOT retrieved.
+- SRC github MCP search_code ("J/ApJ/854/12", "2017ApJ...837...30G"): 0 relevant; "S0-102" search: only a Wikipedia-text dump and a text-extraction CSV (no data).
+- Env note: gh CLI reports GH_TOKEN invalid (not used).
+- RESULT: no raw per-epoch S2/S38/S55/S29 data downloaded. No clean_*.csv written (nothing to parse; no placeholders created). Empty dirs created under data_s2/.

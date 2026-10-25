@@ -1,0 +1,49 @@
+ndim=17 walkers=40 steps=8000 logp(true)=-404.3
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 5;
+tau: [18.07494048 17.52827354 21.7208966  22.52757858 24.74407721 18.05768261
+ 16.90023288 18.44371436 19.74296267 19.38002731 17.44327204 18.05927113
+ 21.50759865 21.45777626 19.60765544 19.63906278 21.25287867]
+step 500  acc=0.33  125s  a*=0.927+-0.021  cos_th=0.467+-0.062  ph=27.0+-4.0deg  tau(glob)=[18. 18. 22. 23. 25.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 10;
+tau: [30.37094485 30.79534739 27.00504658 40.30137584 40.73908304 30.23930715
+ 25.13486382 30.10514926 27.74300328 28.30776852 25.95957513 30.30792378
+ 26.20785104 34.97900196 35.52085977 32.74008907 26.1493661 ]
+step 1000  acc=0.32  255s  a*=0.943+-0.020  cos_th=0.382+-0.089  ph=19.8+-5.2deg  tau(glob)=[30. 31. 27. 40. 41.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 15;
+tau: [35.97132676 36.49947213 36.54253706 38.8251228  42.34702509 35.85585339
+ 34.25653986 33.05390947 39.65662935 39.45257361 33.53111606 35.88103152
+ 28.27859359 39.19463908 36.59002653 33.97082627 28.2250268 ]
+step 1500  acc=0.32  370s  a*=0.945+-0.021  cos_th=0.354+-0.087  ph=18.5+-4.7deg  tau(glob)=[36. 36. 37. 39. 42.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 20;
+tau: [41.85188932 41.19149684 43.10919986 57.28925854 55.34009849 41.88499417
+ 34.48185188 41.55387302 37.42748813 35.94808011 34.32078426 41.8391161
+ 34.48862851 46.72463554 44.94777226 37.58849811 34.54844692]
+step 2000  acc=0.33  489s  a*=0.945+-0.022  cos_th=0.342+-0.088  ph=18.1+-4.5deg  tau(glob)=[42. 41. 43. 57. 55.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 25;
+tau: [39.9070484  39.22184861 45.13446912 59.93455202 58.29999199 39.93545408
+ 38.70553686 42.95091037 42.1982175  39.74562067 39.32581915 39.8876245
+ 40.71926601 49.39294309 51.05839548 42.82079686 40.60606037]
+step 2500  acc=0.33  608s  a*=0.944+-0.021  cos_th=0.347+-0.085  ph=18.2+-4.3deg  tau(glob)=[40. 39. 45. 60. 58.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 30;
+tau: [41.20827887 41.88402259 48.93041776 60.53330922 58.69019136 41.21985806
+ 42.77619263 46.29896252 45.9594865  43.99393968 43.83520215 41.1909766
+ 46.13012321 51.86988246 53.98297964 48.75171413 45.98160314]
+step 3000  acc=0.33  729s  a*=0.944+-0.021  cos_th=0.348+-0.085  ph=18.3+-4.4deg  tau(glob)=[41. 42. 49. 61. 59.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 35;
+tau: [42.66583953 43.78076058 53.01905058 63.32126837 63.17404589 42.67057825
+ 49.77784544 54.79096779 51.1876347  50.21890212 50.9678594  42.60656439
+ 50.85907176 56.30162649 58.56354601 54.32981145 50.73939473]
+step 3500  acc=0.33  848s  a*=0.945+-0.021  cos_th=0.348+-0.087  ph=18.2+-4.5deg  tau(glob)=[43. 44. 53. 63. 63.]
+The chain is shorter than 50 times the integrated autocorrelation time for 17 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 40;
+tau: [45.40037059 46.47644731 55.30029739 66.95744644 71.6046903  45.36842115
+ 56.60586905 56.14061432 51.96063905 51.57618361 55.74120314 45.39696103
+ 53.18369089 58.51478834 60.31120282 62.99844188 52.95852079]
+step 4000  acc=0.32  966s  a*=0.946+-0.021  cos_th=0.352+-0.089  ph=18.4+-4.7deg  tau(glob)=[45. 46. 55. 67. 72.]

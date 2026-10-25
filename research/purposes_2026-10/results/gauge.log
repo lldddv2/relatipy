@@ -1,0 +1,14 @@
+
+==== S2: a=1035.45 AU (24413 rg) e=0.8843 rp=2825 rg P=16.07 yr  truth a*=0.0  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  1PN harmonic                  0.910    3.659                         202  [11s]
+  1PN r->r+1 (BL)               0.010    0.037                          50  [3s]
+  1PN xf_SP harmonic            0.203    0.397          f_SP=1.04243   627  [38s]
+  1PN xf_SP r->r+1 (BL)         0.004    0.034          f_SP=1.00045    33  [1s]
+
+==== S62-like: a=749.0 AU (17659 rg) e=0.976 rp=424 rg P=9.89 yr  truth a*=0.0  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  1PN harmonic                  0.404    2.796                          42  [2s]
+  1PN r->r+1 (BL)               0.012    0.064                          47  [3s]
+  1PN xf_SP harmonic            0.398    2.756          f_SP=1.00192    37  [2s]
+  1PN xf_SP r->r+1 (BL)         0.004    0.020          f_SP=1.00276    27  [1s]

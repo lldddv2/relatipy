@@ -1,0 +1,24 @@
+
+==== S2: a=1035.45 AU (24413 rg) e=0.8843 rp=2825 rg P=16.07 yr  truth a*=0.0  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  Newtonian                    37.979  217.562                         730  [34s]
+  1PN                           0.910    3.659                         202  [11s]
+  1PN x f_SP (free)             0.203    0.397          f_SP=1.04243   627  [38s]
+
+==== S2: a=1035.45 AU (24413 rg) e=0.8843 rp=2825 rg P=16.07 yr  truth a*=0.9  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  1PN (no spin)                 1.205    4.540                         108  [5s]
+  1PN+1.5PN a*=0.9 fixed        0.915    3.648                         224  [16s]
+  1PN+1.5PN a* free             0.652    2.382  a*=2.3887 (true 0.9)   381  [30s]
+
+==== S62-like: a=749.0 AU (17659 rg) e=0.976 rp=424 rg P=9.89 yr  truth a*=0.0  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  Newtonian                   522.515 1607.086                          36  [1s]
+  1PN                           0.404    2.796                          42  [2s]
+  1PN x f_SP (free)             0.398    2.756          f_SP=1.00192    37  [2s]
+
+==== S62-like: a=749.0 AU (17659 rg) e=0.976 rp=424 rg P=9.89 yr  truth a*=0.9  n_ep=136
+  model                      rms[uas] max[uas]            phys-param  nfev
+  1PN (no spin)                 5.334   12.038                          90  [7s]
+  1PN+1.5PN a*=0.9 fixed        0.407    2.807                          39  [3s]
+  1PN+1.5PN a* free             0.403    2.784  a*=0.9111 (true 0.9)    42  [3s]

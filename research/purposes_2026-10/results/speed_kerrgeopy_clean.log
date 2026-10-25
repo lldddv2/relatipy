@@ -1,0 +1,3 @@
+KerrGeoPy StableOrbit+trajectory+200 Mino-time samples (S2-like p=5322): 15.9 ms/eval  -> 63/s
+  (no coordinate-time inversion, no Romer inversion, no sky projection, no RV: those add ~10 Newton passes)
+  + coordinate-time inversion (8 Newton passes): 42.6 ms/eval -> 23/s
