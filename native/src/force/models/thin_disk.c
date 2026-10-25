@@ -320,6 +320,7 @@ rp_axisymmetric_status rp_thin_disk_table_spec(
         spec->edge_width[spec->edge_count++] = eps * inner;
     }
     spec->plane_width = eps;
+    spec->flattening = 1.0;
     /* R_in = 0: self-similar Sigma ~ R^alpha gives a ~ r^alpha, A ~ r^(alpha+2).
      * R_in > 0: smooth interior, a ~ r, A ~ r^3. */
     spec->inner_exponent = inner > 0.0 ? 3.0 : params->alpha + 2.0;

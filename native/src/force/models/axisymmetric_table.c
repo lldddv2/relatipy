@@ -118,10 +118,14 @@ static rp_axisymmetric_status finish_axis(rp_axisymmetric_axis *axis, size_t *by
     }
     for (size_t i = 0; i + 1U < n; ++i) {
         const double h = axis->node[i + 1U] - axis->node[i];
-        if (!(h > 0.0)) {
+        /* A zero step is a kink's twin: never the first or last cell, and
+         * never two in a row, so the cell search always steps over it. */
+        const int twin = h == 0.0 && i > 0U && i + 2U < n
+            && axis->node[i] > axis->node[i - 1U];
+        if (!(h > 0.0) && !twin) {
             return RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT;
         }
-        axis->inverse_step[i] = 1.0 / h;
+        axis->inverse_step[i] = twin ? 0.0 : 1.0 / h;
     }
     /* Keys below node[1] all belong to cell 0. */
     axis->guide_base = guide_key(axis->node[1]);
@@ -150,26 +154,39 @@ static int compare_doubles(const void *a, const void *b)
     return (x > y) - (x < y);
 }
 
+/* An interior edge declared as a kink, matched within rounding. */
+static int is_kink(const rp_axisymmetric_spec *spec, double r)
+{
+    for (size_t e = 0; e < spec->edge_count; ++e) {
+        if (spec->edge_kink[e] && fabs(spec->edge_radius[e] - r) <= 1.0e-12 * r) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static rp_axisymmetric_status build_radial_axis(
     const rp_axisymmetric_spec *spec, rp_axisymmetric_axis *axis, size_t *bytes
 )
 {
+    const double grid_far = spec->radial_far / spec->flattening;
     double breaks[RP_AXISYMMETRIC_MAX_EDGES + 2U];
     size_t nb = 0;
     breaks[nb++] = spec->radial_min;
     for (size_t e = 0; e < spec->edge_count; ++e) {
         const double r = spec->edge_radius[e];
-        if (r > spec->radial_min * (1.0 + 1.0e-9) && r < spec->radial_far * (1.0 - 1.0e-9)) {
+        if (r > spec->radial_min * (1.0 + 1.0e-9) && r < grid_far * (1.0 - 1.0e-9)) {
             breaks[nb++] = r;
         }
     }
-    breaks[nb++] = spec->radial_far;
+    breaks[nb++] = grid_far;
     qsort(breaks, nb, sizeof breaks[0], compare_doubles);
 
     size_t count = 1U;
     for (size_t k = 0; k + 1U < nb; ++k) {
         if (breaks[k + 1U] > breaks[k]) {
             count += place_segment(spec, radial_spacing, breaks[k], breaks[k + 1U], NULL);
+            count += is_kink(spec, breaks[k + 1U]) ? 1U : 0U;
         }
     }
     if (count > RP_AXISYMMETRIC_MAX_NODES) {
@@ -184,9 +201,12 @@ static rp_axisymmetric_status build_radial_axis(
         if (breaks[k + 1U] > breaks[k]) {
             at += place_segment(spec, radial_spacing, breaks[k], breaks[k + 1U],
                                 axis->node + at);
+            if (is_kink(spec, breaks[k + 1U])) {
+                axis->node[at++] = breaks[k + 1U]; /* first copy of the kink */
+            }
         }
     }
-    axis->node[at++] = spec->radial_far;
+    axis->node[at++] = grid_far;
     axis->count = at;
     if (axis->count < 4U) {
         return RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT;
@@ -278,9 +298,8 @@ static void spline_slopes(
 }
 
 /*
- * Tensor-spline Hermite data of one quantity on the grid: value, d/dr,
- * d/dmu and d2/drdmu, stored at out[stride * node + offset + {0, 2, 4, 6}
- * / pitch], see pack_quantity().
+ * Tensor-spline derivatives of one quantity on the grid, d/drho, d/dnu and
+ * d2/drho dnu, each an n_r by n_mu array like the values.
  */
 static void spline_derivatives(
     size_t nr, size_t nm, const double *r, const double *mu,
@@ -288,7 +307,15 @@ static void spline_derivatives(
 )
 {
     for (size_t j = 0; j < nm; ++j) {
-        spline_slopes(nr, r, value + j * nr, 1U, d_r + j * nr, 1U, 0, work);
+        /* Independent radial pieces between kink twins. */
+        size_t start = 0;
+        for (size_t i = 0; i + 1U <= nr; ++i) {
+            if (i + 1U == nr || r[i + 1U] == r[i]) {
+                spline_slopes(i + 1U - start, r + start, value + j * nr + start, 1U,
+                              d_r + j * nr + start, 1U, 0, work);
+                start = i + 1U;
+            }
+        }
     }
     for (size_t i = 0; i < nr; ++i) {
         spline_slopes(nm, mu, value + i, nr, d_mu + i, nr, 1, work);
@@ -423,9 +450,9 @@ static double grid_p(const rp_axisymmetric_table *table, double r, double mu)
     return sp;
 }
 
-static inline double inner_scale(const rp_axisymmetric_table *table, double r)
+static inline double inner_scale(const rp_axisymmetric_table *table, double rho)
 {
-    const double x = r / table->radial_min;
+    const double x = rho / table->radial_min;
     return table->inner_exponent == 1.0 ? x : pow(x, table->inner_exponent);
 }
 
@@ -435,17 +462,34 @@ static inline double blend_weight(const rp_axisymmetric_table *table, double r)
     return s * s * s * (10.0 + s * (-15.0 + 6.0 * s));
 }
 
+/* Grid coordinates (rho, nu) of a point (r, mu); the identity when q = 1. */
+static inline void grid_coordinates(
+    const rp_axisymmetric_table *table, double r, double mu, double *rho, double *nu
+)
+{
+    if (table->flattening == 1.0) {
+        *rho = r;
+        *nu = mu;
+        return;
+    }
+    const double stretch = sqrt(1.0 + table->flattening_excess * mu * mu);
+    *rho = r * stretch;
+    *nu = fmin(mu / (table->flattening * stretch), 1.0);
+}
+
 static inline void table_ac(
     const rp_axisymmetric_table *table, double r, double mu, double *a, double *c
 )
 {
+    double rho, nu;
+    grid_coordinates(table, r, mu, &rho, &nu);
     if (r < table->radial_match) {
-        if (r >= table->radial_min) {
-            grid_ac(table, r, mu, a, c);
+        if (rho >= table->radial_min) {
+            grid_ac(table, rho, nu, a, c);
             return;
         }
-        grid_ac(table, table->radial_min, mu, a, c);
-        const double scale = inner_scale(table, r);
+        grid_ac(table, table->radial_min, nu, a, c);
+        const double scale = inner_scale(table, rho);
         *a *= scale;
         *c *= scale;
         return;
@@ -455,7 +499,7 @@ static inline void table_ac(
         return;
     }
     double ga, gc, fa, fc;
-    grid_ac(table, r, mu, &ga, &gc);
+    grid_ac(table, rho, nu, &ga, &gc);
     far_fields(table, r, mu, &fa, &fc, NULL);
     const double w = blend_weight(table, r);
     *a = ga + w * (fa - ga);
@@ -467,32 +511,35 @@ void rp_axisymmetric_table_fields(
 )
 {
     double a, c, p;
-    if (r < table->radial_min) {
-        /* A, C ~ r^k, hence a_r ~ r^(k - 2); integrate a_r inwards for Phi. */
-        const double r0 = table->radial_min;
+    double rho, nu;
+    grid_coordinates(table, r, mu, &rho, &nu);
+    if (rho < table->radial_min) {
+        /* Along the ray, A, C ~ r^k and a_r ~ r^(k - 2); integrate a_r inwards
+         * from the point r0 of the ray where rho = radial_min. */
+        const double ratio = rho / table->radial_min;
+        const double r0 = r / ratio;
         const double k = table->inner_exponent;
         double a0, c0;
-        grid_ac(table, r0, mu, &a0, &c0);
-        const double p0 = grid_p(table, r0, mu);
+        grid_ac(table, table->radial_min, nu, &a0, &c0);
+        const double p0 = grid_p(table, table->radial_min, nu);
         const double u = mu * mu;
         const double radial0 = -(a0 * (1.0 - u) + c0 * u) / (r0 * r0);
-        const double ratio = r / r0;
         const double integral = fabs(k - 1.0) < 1.0e-12
             ? -radial0 * r0 * log(ratio)
             : radial0 * r0 * (1.0 - pow(ratio, k - 1.0)) / (k - 1.0);
-        const double scale = inner_scale(table, r);
+        const double scale = inner_scale(table, rho);
         a = a0 * scale;
         c = c0 * scale;
         p = -r * (-p0 / r0 + integral);
     } else if (r < table->radial_match) {
-        grid_ac(table, r, mu, &a, &c);
-        p = grid_p(table, r, mu);
+        grid_ac(table, rho, nu, &a, &c);
+        p = grid_p(table, rho, nu);
     } else if (r >= table->radial_far) {
         far_fields(table, r, mu, &a, &c, &p);
     } else {
         double ga, gc, fa, fc, fp;
-        grid_ac(table, r, mu, &ga, &gc);
-        const double gp = grid_p(table, r, mu);
+        grid_ac(table, rho, nu, &ga, &gc);
+        const double gp = grid_p(table, rho, nu);
         far_fields(table, r, mu, &fa, &fc, &fp);
         const double w = blend_weight(table, r);
         a = ga + w * (fa - ga);
@@ -523,6 +570,7 @@ static rp_axisymmetric_status validate_spec(const rp_axisymmetric_spec *spec)
         || !finite_positive(spec->floor_step)
         || !finite_positive(spec->plane_width)
         || !finite_positive(spec->inner_exponent)
+        || !(spec->flattening > 0.0 && spec->flattening <= 1.0)
         || spec->edge_count > RP_AXISYMMETRIC_MAX_EDGES
         || spec->far_order > RP_AXISYMMETRIC_MAX_FAR_ORDER
         || spec->far_order % 2U != 0U) {
@@ -620,13 +668,17 @@ rp_axisymmetric_status rp_axisymmetric_table_build(
     }
     double *work = scratch + 12U * nodes;
 
+    const double q = spec->flattening;
     for (size_t j = 0; j < nm; ++j) {
-        const double mu = table->cosine.node[j];
-        const double sine = sqrt((1.0 - mu) * (1.0 + mu));
+        const double nu = table->cosine.node[j];
+        const double sine = sqrt((1.0 - nu) * (1.0 + nu));
         for (size_t i = 0; i < nr; ++i) {
-            const double r = table->radius.node[i];
+            const double rho = table->radius.node[i];
+            const double d = rho * sine;
+            const double z = q * rho * nu;
+            const double r = q == 1.0 ? rho : sqrt(d * d + z * z);
             double f[3];
-            if (field(r * sine, r * mu, context, f) != 0
+            if (field(d, z, context, f) != 0
                 || !isfinite(f[0]) || !isfinite(f[1]) || !isfinite(f[2])) {
                 status = RP_AXISYMMETRIC_STATUS_FIELD_FAILURE;
                 goto fail;
@@ -657,6 +709,8 @@ rp_axisymmetric_status rp_axisymmetric_table_build(
     table->radial_far = spec->radial_far;
     table->inverse_blend_width = 1.0 / (spec->radial_far - spec->radial_match);
     table->inner_exponent = spec->inner_exponent;
+    table->flattening = spec->flattening;
+    table->flattening_excess = 1.0 / (spec->flattening * spec->flattening) - 1.0;
     set_far_series(table, spec);
     *table_out = table;
     return RP_AXISYMMETRIC_STATUS_OK;

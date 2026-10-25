@@ -15,10 +15,15 @@
  *
  *     a = -(A xi + (C - A) xi_z e_z) / r^3,      Phi = -P / r.
  *
- * Grid: nonuniform nodes in `r` and in `mu`, refined geometrically towards the
- * given edges (radii with a structure width) and towards the plane `mu = 0`.
- * Each quantity is a tensor-product C2 cubic spline (not-a-knot in `r` and at
- * `mu = 1`; zero slope at `mu = 0`, the exact plane symmetry), stored as
+ * Grid: nonuniform nodes in `rho` and `nu`, refined geometrically towards the
+ * given edges (radii with a structure width) and towards the plane `nu = 0`,
+ * where `rho = sqrt(d^2 + z^2 / q^2)` and `nu = |z| / (q rho)` for a
+ * flattening `q` in (0, 1]: `q = 1` gives `rho = r`, `nu = mu`, and a
+ * spheroid of axis ratio `q` has its surfaces at constant `rho`.
+ * Each quantity is a tensor-product C2 cubic spline (not-a-knot in `rho` and
+ * at `nu = 1`; zero slope at `nu = 0`, the exact plane symmetry), broken into
+ * independent radial pieces at edges declared as kinks (a density jump makes
+ * the field only C0 there; the kink node is stored twice), and stored as
  * bicubic Hermite data (value, d/dr, d/dmu, d2/drdmu) per node, with `A` and
  * `C` interleaved so that one cell reads four 64-byte nodes.  Cells are found
  * with a guide table indexed by the leading bits of the double, so no `log`,
@@ -64,9 +69,10 @@ typedef int (*rp_axisymmetric_field_fn)(
 
 /** Grid and asymptotics of one table; every length in the unit length. */
 typedef struct {
-    double radial_min;     /**< innermost node, > 0 */
-    double radial_match;   /**< far-field blend starts, > radial_min */
-    double radial_far;     /**< far-field blend ends; outermost node */
+    double radial_min;     /**< innermost node (in rho), > 0 */
+    double radial_match;   /**< far-field blend starts (in r), > radial_min */
+    /** Far-field blend ends (in r); the grid reaches rho = radial_far / q. */
+    double radial_far;
     double radial_step;    /**< largest relative spacing h / r, in (0, 0.5] */
     double angular_step;   /**< largest spacing growth h / mu, in (0, 0.5] */
     /** Spacing at an edge or at the plane, in units of its width. */
@@ -74,7 +80,11 @@ typedef struct {
     size_t edge_count;     /**< <= RP_AXISYMMETRIC_MAX_EDGES */
     double edge_radius[RP_AXISYMMETRIC_MAX_EDGES];
     double edge_width[RP_AXISYMMETRIC_MAX_EDGES]; /**< > 0 */
-    double plane_width;    /**< width in mu of the plane structure, > 0 */
+    /** Nonzero: the field has a slope jump at this edge radius. */
+    int edge_kink[RP_AXISYMMETRIC_MAX_EDGES];
+    double plane_width;    /**< width in nu of the plane structure, > 0 */
+    /** Grid flattening q in (0, 1]; radii above are in rho. */
+    double flattening;
     /** `A, C` proportional to `r^inner_exponent` below radial_min, > 0. */
     double inner_exponent;
     /** Even order of the far series, <= RP_AXISYMMETRIC_MAX_FAR_ORDER. */
@@ -90,7 +100,8 @@ typedef struct {
 typedef struct {
     size_t count;            /**< nodes, >= 4 */
     double *node;            /**< count increasing values */
-    double *inverse_step;    /**< count - 1 values 1 / (node[i+1] - node[i]) */
+    /** count - 1 values 1 / (node[i+1] - node[i]); 0 for a kink's twin. */
+    double *inverse_step;
     uint32_t *guide;         /**< guide_count cell indices */
     size_t guide_count;
     uint64_t guide_base;     /**< key of guide[0] */
@@ -98,8 +109,8 @@ typedef struct {
 
 /** A built table.  Read-only after rp_axisymmetric_table_build(). */
 typedef struct rp_axisymmetric_table {
-    rp_axisymmetric_axis radius;
-    rp_axisymmetric_axis cosine;   /**< mu = |z| / r on [0, 1] */
+    rp_axisymmetric_axis radius;   /**< rho */
+    rp_axisymmetric_axis cosine;   /**< nu = |z| / (q rho) on [0, 1] */
     /** Node (i, j) at [8 (j n_r + i)]: A, C, A_r, C_r, A_mu, C_mu, A_rmu, C_rmu. */
     double *field;
     /** Node (i, j) at [4 (j n_r + i)]: P, P_r, P_mu, P_rmu. */
@@ -108,6 +119,8 @@ typedef struct rp_axisymmetric_table {
     double radial_match;
     double radial_far;
     double inverse_blend_width;
+    double flattening;
+    double flattening_excess;      /**< 1 / q^2 - 1 */
     double inner_exponent;
     size_t far_terms;
     /** Far series of A, C, P: coefficient [k/2][i] of r^-k u^i. */
@@ -134,7 +147,8 @@ rp_axisymmetric_status rp_axisymmetric_table_build(
 void rp_axisymmetric_table_free(rp_axisymmetric_table *table);
 
 /**
- * Interpolated `A, C, P` of the unit distribution at `r > 0`, `0 <= mu <= 1`,
+ * Interpolated `A, C, P` of the unit distribution at spherical `r > 0` and
+ * `0 <= mu <= 1`,
  * including the inner continuation and the far series.  `out` holds three
  * doubles.  Inputs are not validated.
  */
