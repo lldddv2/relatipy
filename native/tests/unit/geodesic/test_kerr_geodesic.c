@@ -213,64 +213,6 @@ static void test_null_rhs_matches_numerical_metric_connection(void)
     }
 }
 
-static void test_optimized_rhs_matches_christoffel_contraction(void)
-{
-    const double masses[3] = {1.0, 2.0, 0.75};
-    const double spins[3] = {0.5, -1.4, 0.0};
-    const double coordinates[3][RP_KERR_DIM] = {
-        {0.0, 8.0, 1.1, 0.3},
-        {0.2, 15.0, 0.8, -0.4},
-        {-1.0, 6.0, 1.35, 2.0}
-    };
-    const double coordinate_velocities[3][3] = {
-        {-0.01, 0.002, 0.02},
-        {0.015, -0.001, -0.015},
-        {-0.02, 0.003, 0.01}
-    };
-    double gamma[RP_KERR_DIM][RP_KERR_DIM][RP_KERR_DIM];
-    double four_velocity[RP_KERR_DIM];
-    double dx[RP_KERR_DIM];
-    double du[RP_KERR_DIM];
-    double expected_du;
-    size_t point;
-    size_t lambda;
-    size_t mu;
-    size_t nu;
-
-    for (point = 0; point < 3; ++point) {
-        CHECK(rp_kerr_four_velocity(
-            masses[point],
-            spins[point],
-            coordinates[point],
-            coordinate_velocities[point],
-            four_velocity
-        ) == RP_KERR_STATUS_OK);
-        CHECK(rp_kerr_christoffel(
-            masses[point], spins[point], coordinates[point], gamma)
-            == RP_KERR_STATUS_OK);
-        CHECK(rp_kerr_geodesic_rhs(
-            masses[point],
-            spins[point],
-            coordinates[point],
-            four_velocity,
-            dx,
-            du
-        ) == RP_KERR_STATUS_OK);
-
-        for (lambda = 0; lambda < RP_KERR_DIM; ++lambda) {
-            expected_du = 0.0;
-            for (mu = 0; mu < RP_KERR_DIM; ++mu) {
-                for (nu = 0; nu < RP_KERR_DIM; ++nu) {
-                    expected_du -= gamma[lambda][mu][nu]
-                        * four_velocity[mu] * four_velocity[nu];
-                }
-            }
-            CHECK_CLOSE(dx[lambda], four_velocity[lambda], 0.0, 0.0);
-            CHECK_CLOSE(du[lambda], expected_du, 5e-13, 5e-14);
-        }
-    }
-}
-
 static void check_zero_vector(const double vector[RP_KERR_DIM])
 {
     size_t index;
@@ -309,19 +251,19 @@ static void test_invalid_inputs_and_zeroed_outputs(void)
     double du[RP_KERR_DIM];
 
     fill_outputs(dx, du);
-    CHECK(rp_kerr_geodesic_rhs(1.0, 0.5, regular, regular_u, NULL, du)
+    CHECK(rp_kerr_null_geodesic_rhs(1.0, 0.5, regular, regular_u, NULL, du)
         == RP_KERR_STATUS_NULL_POINTER);
     check_zero_vector(du);
 
     fill_outputs(dx, du);
-    CHECK(rp_kerr_geodesic_rhs(1.0, 0.5, regular, regular_u, dx, NULL)
+    CHECK(rp_kerr_null_geodesic_rhs(1.0, 0.5, regular, regular_u, dx, NULL)
         == RP_KERR_STATUS_NULL_POINTER);
     check_zero_vector(dx);
 
 #define CHECK_RHS_FAILURE(expected_status, mass, spin, point, velocity)         \
     do {                                                                        \
         fill_outputs(dx, du);                                                   \
-        CHECK(rp_kerr_geodesic_rhs(                                             \
+        CHECK(rp_kerr_null_geodesic_rhs(                                        \
             (mass), (spin), (point), (velocity), dx, du)                       \
             == (expected_status));                                              \
         check_zero_vector(dx);                                                  \
@@ -352,7 +294,7 @@ static void test_invalid_inputs_and_zeroed_outputs(void)
 #undef CHECK_RHS_FAILURE
 
     fill_outputs(dx, du);
-    CHECK(rp_kerr_geodesic_rhs(1.0, 0.5, regular, regular_u, dx, dx)
+    CHECK(rp_kerr_null_geodesic_rhs(1.0, 0.5, regular, regular_u, dx, dx)
         == RP_KERR_STATUS_INVALID_PARAMETER);
     check_zero_vector(dx);
 }
@@ -415,7 +357,7 @@ static void test_input_output_overlap(void)
     CHECK(rp_kerr_four_velocity(
         1.0, 0.5, coordinates, coordinate_velocity, four_velocity)
         == RP_KERR_STATUS_OK);
-    CHECK(rp_kerr_geodesic_rhs(
+    CHECK(rp_kerr_null_geodesic_rhs(
         1.0,
         0.5,
         coordinates,
@@ -428,7 +370,7 @@ static void test_input_output_overlap(void)
         coordinate_dx[index] = coordinates[index];
         velocity_du[index] = four_velocity[index];
     }
-    CHECK(rp_kerr_geodesic_rhs(
+    CHECK(rp_kerr_null_geodesic_rhs(
         1.0,
         0.5,
         coordinate_dx,
@@ -524,7 +466,6 @@ int main(void)
     test_schwarzschild_radial_null_tangent();
     test_equatorial_kerr_null_tangent();
     test_null_rhs_matches_numerical_metric_connection();
-    test_optimized_rhs_matches_christoffel_contraction();
     test_invalid_inputs_and_zeroed_outputs();
     test_invalid_null_inputs_and_zeroed_outputs();
     test_polar_axis_rhs_domain();

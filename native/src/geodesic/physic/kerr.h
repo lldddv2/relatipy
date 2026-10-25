@@ -28,15 +28,6 @@ rp_kerr_status rp_kerr_geodesic_physic_prepare_state(
     struct rp_kerr_geodesic_state *state
 );
 
-/** Evaluate the optimized affine derivatives at a prepared state. */
-void rp_kerr_geodesic_physic_evaluate_rhs(
-    double mass,
-    double spin,
-    const struct rp_kerr_geodesic_state *state,
-    double coordinate_derivative[RP_KERR_DIM],
-    double four_velocity_derivative[RP_KERR_DIM]
-);
-
 /** Construct a null tangent from separated Kerr constants at a prepared point. */
 rp_kerr_status rp_kerr_geodesic_physic_evaluate_null_tangent(
     double spin,

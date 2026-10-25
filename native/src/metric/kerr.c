@@ -111,49 +111,6 @@ rp_kerr_status rp_kerr_inverse_metric(
     return status;
 }
 
-rp_kerr_status rp_kerr_christoffel(
-    double mass,
-    double spin,
-    const double coordinates[RP_KERR_DIM],
-    double christoffel[RP_KERR_DIM][RP_KERR_DIM][RP_KERR_DIM]
-)
-{
-    struct rp_kerr_point point;
-    rp_kerr_status status;
-
-    if (christoffel == NULL) {
-        return RP_KERR_STATUS_NULL_POINTER;
-    }
-    if (coordinates == NULL) {
-        rp_tensor_zero(
-            &christoffel[0][0][0],
-            RP_KERR_DIM * RP_KERR_DIM * RP_KERR_DIM
-        );
-        return RP_KERR_STATUS_NULL_POINTER;
-    }
-    status = prepare_point(mass, spin, coordinates, &point);
-    rp_tensor_zero(
-        &christoffel[0][0][0],
-        RP_KERR_DIM * RP_KERR_DIM * RP_KERR_DIM
-    );
-    if (status != RP_KERR_STATUS_OK) {
-        return status;
-    }
-
-    rp_kerr_physic_evaluate_christoffel(mass, spin, &point, christoffel);
-    if (!rp_tensor_is_finite(
-        &christoffel[0][0][0],
-        RP_KERR_DIM * RP_KERR_DIM * RP_KERR_DIM
-    )) {
-        rp_tensor_zero(
-            &christoffel[0][0][0],
-            RP_KERR_DIM * RP_KERR_DIM * RP_KERR_DIM
-        );
-        return RP_KERR_STATUS_NUMERICAL_RANGE;
-    }
-    return RP_KERR_STATUS_OK;
-}
-
 rp_kerr_status rp_kerr_four_velocity(
     double mass,
     double spin,

@@ -219,7 +219,6 @@ int main(void)
     double largest_norm_drift = 0.0;
     double largest_energy_drift = 0.0;
     double largest_angular_momentum_drift = 0.0;
-    double largest_legacy_difference = 0.0;
     {
         const double radii[2] = {8.0, 15.0};
         size_t case_index;
@@ -248,8 +247,6 @@ int main(void)
         double production[8];
         double independent[8];
         double constructed[4];
-        double legacy_dx[4];
-        double legacy_du[4];
         double initial[3];
         double final[3];
         size_t i;
@@ -274,12 +271,6 @@ int main(void)
                 "corrected timelike RHS versus independent connection");
             failures += !close_value(adapted[i], independent[i], 4e-9,
                 "timelike adapter versus independent connection");
-        }
-        if (rp_kerr_geodesic_rhs(1.0, spin, y, y + 4,
-            legacy_dx, legacy_du) != RP_KERR_STATUS_OK) return 2;
-        for (i = 0; i < 4; ++i) {
-            largest_legacy_difference = fmax(largest_legacy_difference,
-                fabs(legacy_du[i] - numerical[i + 4]));
         }
         invariants(spin, y, initial);
         for (i = 0; i < 8; ++i) production[i] = independent[i] = y[i];
@@ -312,9 +303,9 @@ int main(void)
     }
     (void)printf("max |RHS correction - oracle| %.3g, max |state correction - oracle| %.3g\n",
         largest_rhs_difference, largest_trajectory_difference);
-    (void)printf("max drifts: norm %.3g, E %.3g, Lz %.3g; max |legacy - correction| %.3g\n",
+    (void)printf("max drifts: norm %.3g, E %.3g, Lz %.3g\n",
         largest_norm_drift, largest_energy_drift,
-        largest_angular_momentum_drift, largest_legacy_difference);
+        largest_angular_momentum_drift);
     if (failures != 0) {
         (void)fprintf(stderr, "%d timelike consistency checks failed\n", failures);
         return 1;

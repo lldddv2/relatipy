@@ -43,14 +43,6 @@ rp_kerr_status rp_kerr_physic_evaluate_inverse_metric(
     double inverse_metric[RP_KERR_DIM][RP_KERR_DIM]
 );
 
-/** Evaluate the frozen-legacy-compatible Kerr connection. */
-void rp_kerr_physic_evaluate_christoffel(
-    double mass,
-    double spin,
-    const struct rp_kerr_point *point,
-    double christoffel[RP_KERR_DIM][RP_KERR_DIM][RP_KERR_DIM]
-);
-
 /** Convert validated coordinate velocities into a four-velocity. */
 rp_kerr_status rp_kerr_physic_evaluate_four_velocity(
     double mass,
