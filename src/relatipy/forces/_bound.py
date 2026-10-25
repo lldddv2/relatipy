@@ -4,8 +4,8 @@ A bound force owns the model memory passed to one native
 ``rp_external_acceleration_fn`` and keeps alive whatever the callback
 depends on (a compiled library, a table). Its parameters are written in
 place, so a sampler can move between proposals without rebuilding tables or
-recompiling. Handles hold raw addresses and are therefore never pickled;
-models that use them rebind after unpickling.
+recompiling. Raw addresses are never pickled: a pickled handle stores its
+force and last update and binds again when it is loaded.
 """
 
 from __future__ import annotations
@@ -80,7 +80,10 @@ class BoundForce:
     and must not run :meth:`update` concurrently.
     """
 
-    __slots__ = ("_force", "_callback", "_buffer", "_keepalive", "_mass")
+    __slots__ = (
+        "_force", "_callback", "_buffer", "_keepalive", "_mass", "_values",
+        "_rotation",
+    )
 
     def __init__(
         self, force: ExternalForce, callback: int, size: int, keepalive: object
@@ -90,6 +93,12 @@ class BoundForce:
         self._buffer = np.zeros(max(int(size), 1), dtype=np.float64)
         self._keepalive = keepalive
         self._mass = math.nan
+        self._values: np.ndarray | None = None
+        self._rotation: np.ndarray | None = None
+
+    def __reduce__(self) -> tuple:
+        """Pickle the force and the last update, not the native addresses."""
+        return _restore_bound, (self._force, self._mass, self._values, self._rotation)
 
     @property
     def force(self) -> ExternalForce:
@@ -140,3 +149,18 @@ class BoundForce:
         """
         self._force._write(self._buffer, float(mass), values, rotation)
         self._mass = float(mass)
+        self._values = np.array(values, dtype=np.float64)
+        self._rotation = None if rotation is None else np.array(rotation, dtype=np.float64)
+
+
+def _restore_bound(
+    force: ExternalForce,
+    mass: float,
+    values: np.ndarray | None,
+    rotation: np.ndarray | None,
+) -> BoundForce:
+    """Bind a pickled handle again and replay its last update."""
+    bound = force._handle()
+    if values is not None:
+        bound.update(mass, values, rotation)
+    return bound
