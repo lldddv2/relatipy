@@ -40,6 +40,19 @@ size_t rp_quadrature_cluster_breakpoints(
 );
 
 /**
+ * Refine sorted breakpoints in place: every panel `[lo, hi]` with
+ * `lo > 0` and `hi > ratio lo` is split geometrically, and when
+ * `breaks[0] == 0` and `zero_depth > 0` the first panel is split by
+ * halvings down to `zero_depth breaks[1]`, so that a coordinate map that is
+ * not smooth at zero only acts on a negligible mass.  `breaks` has
+ * RP_QUADRATURE_MAX_BREAKPOINTS capacity; refinement stops when it is full.
+ * Returns the new count.
+ */
+size_t rp_quadrature_refine_geometric(
+    double *breaks, size_t count, double ratio, double zero_depth
+);
+
+/**
  * Enclosed-mass coordinate of a power law `dM ~ x^(beta - 1) dx`:
  * `u = x^beta` (or `ln x` when `beta = 0`), so that the mass is uniform
  * in `u` and the quadrature has no endpoint singularity at `x = 0`.

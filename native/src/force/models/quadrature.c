@@ -82,6 +82,54 @@ size_t rp_quadrature_cluster_breakpoints(
     return count;
 }
 
+size_t rp_quadrature_refine_geometric(
+    double *breaks, size_t count, double ratio, double zero_depth
+)
+{
+    double refined[RP_QUADRATURE_MAX_BREAKPOINTS];
+    size_t n = 0;
+    if (count < 2U || !(ratio > 1.0)) {
+        return count;
+    }
+    refined[n++] = breaks[0];
+    for (size_t k = 0; k + 1U < count; ++k) {
+        const double lo = breaks[k];
+        const double hi = breaks[k + 1U];
+        if (lo == 0.0 && zero_depth > 0.0 && hi > 0.0) {
+            /* Halvings towards zero, written in increasing order. */
+            size_t halvings = 0;
+            for (double x = hi; x > zero_depth * hi && halvings < 200U; x *= 0.5) {
+                ++halvings;
+            }
+            for (size_t h = halvings; h >= 1U; --h) {
+                if (n + 2U >= RP_QUADRATURE_MAX_BREAKPOINTS) {
+                    break;
+                }
+                refined[n++] = ldexp(hi, -(int)h);
+            }
+        } else if (lo > 0.0 && hi > ratio * lo) {
+            const size_t pieces = (size_t)ceil(log(hi / lo) / log(ratio));
+            const double factor = pow(hi / lo, 1.0 / (double)pieces);
+            double x = lo;
+            for (size_t p = 1; p < pieces && n + 2U < RP_QUADRATURE_MAX_BREAKPOINTS; ++p) {
+                x *= factor;
+                refined[n++] = x;
+            }
+        }
+        if (n + 1U >= RP_QUADRATURE_MAX_BREAKPOINTS) {
+            break;
+        }
+        refined[n++] = hi;
+    }
+    if (refined[n - 1U] != breaks[count - 1U]) {
+        refined[n - 1U] = breaks[count - 1U]; /* keep the true end when full */
+    }
+    for (size_t k = 0; k < n; ++k) {
+        breaks[k] = refined[k];
+    }
+    return n;
+}
+
 double rp_power_coordinate(double x, double beta)
 {
     if (beta == 0.0) {

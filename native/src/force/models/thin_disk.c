@@ -94,6 +94,9 @@ typedef struct {
     double beta;               /* alpha + 2: dM ~ R^(beta - 1) dR */
     double u_inner;            /* mass coordinate at R_in */
     double inverse_mass_span;  /* 1 / (u(1) - u(R_in)) */
+    /* With R_in = 0 and alpha != -1, R = u^(1/beta) is not smooth at u = 0:
+     * the first panel is halved until it holds a mass fraction ~1e-13. */
+    double zero_depth;
     rp_gauss_rule rule;
 } disk_context;
 
@@ -132,6 +135,8 @@ static rp_axisymmetric_status disk_context_init(
         ? 0.0 : rp_power_coordinate(context->inner_ratio, context->beta);
     context->inverse_mass_span =
         1.0 / (rp_power_coordinate(1.0, context->beta) - context->u_inner);
+    context->zero_depth = context->inner_ratio == 0.0 && context->beta != 1.0
+        ? fmax(pow(1.0e-13, 1.0 / context->beta), 0x1p-60) : 0.0;
     if (rp_gauss_legendre(params->quadrature_points, &context->rule) != 0) {
         return RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT;
     }
@@ -147,11 +152,12 @@ static int disk_field(double d, double z, void *opaque, double field[3])
         return 1; /* the centre of the disk */
     }
     double breaks[RP_QUADRATURE_MAX_BREAKPOINTS];
-    const size_t nb = rp_quadrature_cluster_breakpoints(
+    size_t nb = rp_quadrature_cluster_breakpoints(
         context->inner_ratio, 1.0, d, 0.25 * width, breaks);
     if (nb < 2U) {
         return 1;
     }
+    nb = rp_quadrature_refine_geometric(breaks, nb, 2.0, context->zero_depth);
     double total[3] = {0.0, 0.0, 0.0};
     const rp_gauss_rule *rule = &context->rule;
     for (size_t k = 0; k + 1U < nb; ++k) {
