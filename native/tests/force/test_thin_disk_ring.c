@@ -171,7 +171,7 @@ static void direct_sum(void)
         check("direct unit potential", fabs(-f[2] * far - 1.0), 1.0e-9);
     }
     printf("direct sum, 16 vs 40 Gauss points: max rel %.1e\n", worst);
-    check("direct quadrature convergence", worst, 5.0e-13);
+    check("direct quadrature convergence", worst, 1.0e-13);
 
     rp_thin_disk_default_params(&base);
     base.alpha = -2.5; /* diverging mass without an inner edge */

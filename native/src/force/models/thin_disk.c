@@ -163,7 +163,9 @@ static int disk_field(double d, double z, void *opaque, double field[3])
     if (nb < 2U) {
         return 1;
     }
-    nb = rp_quadrature_refine_geometric(breaks, nb, 2.0, context->zero_depth);
+    /* Panels span a ratio of at most two in the mass coordinate. */
+    nb = rp_quadrature_refine_geometric(
+        breaks, nb, pow(2.0, 1.0 / fmax(1.0, context->beta)), context->zero_depth);
     double total[3] = {0.0, 0.0, 0.0};
     const rp_gauss_rule *rule = &context->rule;
     for (size_t k = 0; k + 1U < nb; ++k) {
