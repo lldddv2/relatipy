@@ -298,8 +298,8 @@ static void spline_slopes(
 }
 
 /*
- * Tensor-spline derivatives of one quantity on the grid, d/drho, d/dnu and
- * d2/drho dnu, each an n_r by n_mu array like the values.
+ * Tensor-spline derivatives of one quantity on the grid, d/drho, d/dmu and
+ * d2/drho dmu, each an n_r by n_mu array like the values.
  */
 static void spline_derivatives(
     size_t nr, size_t nm, const double *r, const double *mu,
@@ -462,33 +462,24 @@ static inline double blend_weight(const rp_axisymmetric_table *table, double r)
     return s * s * s * (10.0 + s * (-15.0 + 6.0 * s));
 }
 
-/* Grid coordinates (rho, nu) of a point (r, mu); the identity when q = 1. */
-static inline void grid_coordinates(
-    const rp_axisymmetric_table *table, double r, double mu, double *rho, double *nu
-)
+/* Grid radius rho of a point (r, mu); rho = r when q = 1. */
+static inline double grid_radius(const rp_axisymmetric_table *table, double r, double mu)
 {
-    if (table->flattening == 1.0) {
-        *rho = r;
-        *nu = mu;
-        return;
-    }
-    const double stretch = sqrt(1.0 + table->flattening_excess * mu * mu);
-    *rho = r * stretch;
-    *nu = fmin(mu / (table->flattening * stretch), 1.0);
+    return table->flattening == 1.0
+        ? r : r * sqrt(1.0 + table->flattening_excess * mu * mu);
 }
 
 static inline void table_ac(
     const rp_axisymmetric_table *table, double r, double mu, double *a, double *c
 )
 {
-    double rho, nu;
-    grid_coordinates(table, r, mu, &rho, &nu);
+    const double rho = grid_radius(table, r, mu);
     if (r < table->radial_match) {
         if (rho >= table->radial_min) {
-            grid_ac(table, rho, nu, a, c);
+            grid_ac(table, rho, mu, a, c);
             return;
         }
-        grid_ac(table, table->radial_min, nu, a, c);
+        grid_ac(table, table->radial_min, mu, a, c);
         const double scale = inner_scale(table, rho);
         *a *= scale;
         *c *= scale;
@@ -499,7 +490,7 @@ static inline void table_ac(
         return;
     }
     double ga, gc, fa, fc;
-    grid_ac(table, rho, nu, &ga, &gc);
+    grid_ac(table, rho, mu, &ga, &gc);
     far_fields(table, r, mu, &fa, &fc, NULL);
     const double w = blend_weight(table, r);
     *a = ga + w * (fa - ga);
@@ -511,8 +502,7 @@ void rp_axisymmetric_table_fields(
 )
 {
     double a, c, p;
-    double rho, nu;
-    grid_coordinates(table, r, mu, &rho, &nu);
+    const double rho = grid_radius(table, r, mu);
     if (rho < table->radial_min) {
         /* Along the ray, A, C ~ r^k and a_r ~ r^(k - 2); integrate a_r inwards
          * from the point r0 of the ray where rho = radial_min. */
@@ -520,8 +510,8 @@ void rp_axisymmetric_table_fields(
         const double r0 = r / ratio;
         const double k = table->inner_exponent;
         double a0, c0;
-        grid_ac(table, table->radial_min, nu, &a0, &c0);
-        const double p0 = grid_p(table, table->radial_min, nu);
+        grid_ac(table, table->radial_min, mu, &a0, &c0);
+        const double p0 = grid_p(table, table->radial_min, mu);
         const double u = mu * mu;
         const double radial0 = -(a0 * (1.0 - u) + c0 * u) / (r0 * r0);
         const double integral = fabs(k - 1.0) < 1.0e-12
@@ -532,14 +522,14 @@ void rp_axisymmetric_table_fields(
         c = c0 * scale;
         p = -r * (-p0 / r0 + integral);
     } else if (r < table->radial_match) {
-        grid_ac(table, rho, nu, &a, &c);
-        p = grid_p(table, rho, nu);
+        grid_ac(table, rho, mu, &a, &c);
+        p = grid_p(table, rho, mu);
     } else if (r >= table->radial_far) {
         far_fields(table, r, mu, &a, &c, &p);
     } else {
         double ga, gc, fa, fc, fp;
-        grid_ac(table, rho, nu, &ga, &gc);
-        const double gp = grid_p(table, rho, nu);
+        grid_ac(table, rho, mu, &ga, &gc);
+        const double gp = grid_p(table, rho, mu);
         far_fields(table, r, mu, &fa, &fc, &fp);
         const double w = blend_weight(table, r);
         a = ga + w * (fa - ga);
@@ -668,15 +658,15 @@ rp_axisymmetric_status rp_axisymmetric_table_build(
     }
     double *work = scratch + 12U * nodes;
 
-    const double q = spec->flattening;
+    const double excess = 1.0 / (spec->flattening * spec->flattening) - 1.0;
     for (size_t j = 0; j < nm; ++j) {
-        const double nu = table->cosine.node[j];
-        const double sine = sqrt((1.0 - nu) * (1.0 + nu));
+        const double mu = table->cosine.node[j];
+        const double sine = sqrt((1.0 - mu) * (1.0 + mu));
+        const double shrink = spec->flattening == 1.0 ? 1.0 : 1.0 / sqrt(1.0 + excess * mu * mu);
         for (size_t i = 0; i < nr; ++i) {
-            const double rho = table->radius.node[i];
-            const double d = rho * sine;
-            const double z = q * rho * nu;
-            const double r = q == 1.0 ? rho : sqrt(d * d + z * z);
+            const double r = table->radius.node[i] * shrink;
+            const double d = r * sine;
+            const double z = r * mu;
             double f[3];
             if (field(d, z, context, f) != 0
                 || !isfinite(f[0]) || !isfinite(f[1]) || !isfinite(f[2])) {

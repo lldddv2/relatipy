@@ -40,6 +40,15 @@ size_t rp_quadrature_cluster_breakpoints(
 );
 
 /**
+ * Merge the sorted `other` breakpoints into the sorted `breaks` (capacity
+ * RP_QUADRATURE_MAX_BREAKPOINTS), dropping duplicates; when full, the
+ * remaining points are dropped but both ends are kept.  Returns the count.
+ */
+size_t rp_quadrature_merge_breakpoints(
+    double *breaks, size_t count, const double *other, size_t other_count
+);
+
+/**
  * Refine sorted breakpoints in place: every panel `[lo, hi]` with
  * `lo > 0` and `hi > ratio lo` is split geometrically, and when
  * `breaks[0] == 0` and `zero_depth > 0` the first panel is split by

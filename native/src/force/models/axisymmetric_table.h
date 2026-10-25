@@ -15,13 +15,13 @@
  *
  *     a = -(A xi + (C - A) xi_z e_z) / r^3,      Phi = -P / r.
  *
- * Grid: nonuniform nodes in `rho` and `nu`, refined geometrically towards the
- * given edges (radii with a structure width) and towards the plane `nu = 0`,
- * where `rho = sqrt(d^2 + z^2 / q^2)` and `nu = |z| / (q rho)` for a
- * flattening `q` in (0, 1]: `q = 1` gives `rho = r`, `nu = mu`, and a
- * spheroid of axis ratio `q` has its surfaces at constant `rho`.
+ * Grid: nonuniform nodes in `rho` and `mu`, refined geometrically towards the
+ * given edges (radii with a structure width) and towards the plane `mu = 0`,
+ * where `rho = sqrt(d^2 + z^2 / q^2) = r sqrt(1 + (1/q^2 - 1) mu^2)` for a
+ * flattening `q` in (0, 1]: `q = 1` gives `rho = r`, and a spheroid of axis
+ * ratio `q` has its surfaces at constant `rho`.
  * Each quantity is a tensor-product C2 cubic spline (not-a-knot in `rho` and
- * at `nu = 1`; zero slope at `nu = 0`, the exact plane symmetry), broken into
+ * at `mu = 1`; zero slope at `mu = 0`, the exact plane symmetry), broken into
  * independent radial pieces at edges declared as kinks (a density jump makes
  * the field only C0 there; the kink node is stored twice), and stored as
  * bicubic Hermite data (value, d/dr, d/dmu, d2/drdmu) per node, with `A` and
@@ -82,7 +82,7 @@ typedef struct {
     double edge_width[RP_AXISYMMETRIC_MAX_EDGES]; /**< > 0 */
     /** Nonzero: the field has a slope jump at this edge radius. */
     int edge_kink[RP_AXISYMMETRIC_MAX_EDGES];
-    double plane_width;    /**< width in nu of the plane structure, > 0 */
+    double plane_width;    /**< width in mu of the plane structure, > 0 */
     /** Grid flattening q in (0, 1]; radii above are in rho. */
     double flattening;
     /** `A, C` proportional to `r^inner_exponent` below radial_min, > 0. */
@@ -110,7 +110,7 @@ typedef struct {
 /** A built table.  Read-only after rp_axisymmetric_table_build(). */
 typedef struct rp_axisymmetric_table {
     rp_axisymmetric_axis radius;   /**< rho */
-    rp_axisymmetric_axis cosine;   /**< nu = |z| / (q rho) on [0, 1] */
+    rp_axisymmetric_axis cosine;   /**< mu = |z| / r on [0, 1] */
     /** Node (i, j) at [8 (j n_r + i)]: A, C, A_r, C_r, A_mu, C_mu, A_rmu, C_rmu. */
     double *field;
     /** Node (i, j) at [4 (j n_r + i)]: P, P_r, P_mu, P_rmu. */

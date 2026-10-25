@@ -82,6 +82,28 @@ size_t rp_quadrature_cluster_breakpoints(
     return count;
 }
 
+size_t rp_quadrature_merge_breakpoints(
+    double *breaks, size_t count, const double *other, size_t other_count
+)
+{
+    double merged[RP_QUADRATURE_MAX_BREAKPOINTS];
+    size_t n = 0, i = 0, j = 0;
+    while ((i < count || j < other_count) && n + 1U < RP_QUADRATURE_MAX_BREAKPOINTS) {
+        const double next = j >= other_count || (i < count && breaks[i] <= other[j])
+            ? breaks[i++] : other[j++];
+        if (n == 0U || next > merged[n - 1U]) {
+            merged[n++] = next;
+        }
+    }
+    if (count > 0U && merged[n - 1U] < breaks[count - 1U]) {
+        merged[n++] = breaks[count - 1U];
+    }
+    for (size_t k = 0; k < n; ++k) {
+        breaks[k] = merged[k];
+    }
+    return n;
+}
+
 size_t rp_quadrature_refine_geometric(
     double *breaks, size_t count, double ratio, double zero_depth
 )
