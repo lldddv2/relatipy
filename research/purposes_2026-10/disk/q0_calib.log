@@ -1,0 +1,10 @@
+nuisance: M, R0, a, e, i, Omega, omega, tp (no offsets, no f_SP, no 2PN); spin Cartesian
+baseline: peri +-0.1yr, no past data         sig(chi)=0.097  sig_perp=(0.467,1.058) -> orient 66 deg (per-axis 27,61)  sM/M=1.7e-03 sR0/R0=1.3e-03
+peri campaign +-0.3 yr                       sig(chi)=0.136  sig_perp=(0.486,1.101) -> orient 69 deg (per-axis 28,63)  sM/M=1.6e-03 sR0/R0=1.2e-03
++ 19 past GRAVITY epochs (207 uas)           sig(chi)=0.088  sig_perp=(0.469,0.938) -> orient 60 deg (per-axis 27,54)  sM/M=1.5e-03 sR0/R0=1.1e-03
+spin 20 deg off the orbital pole             sig(chi)=0.172  sig_perp=(0.445,1.057) -> orient 66 deg (per-axis 26,61)  sM/M=1.7e-03 sR0/R0=1.3e-03
+astrometry only                              sig(chi)=14.466  sig_perp=(3.266,6.777) -> orient 431 deg (per-axis 187,388)  sM/M=1.4e+00 sR0/R0=4.7e-01
+RV 5 km/s                                    sig(chi)=0.180  sig_perp=(1.142,2.764) -> orient 171 deg (per-axis 65,158)  sM/M=2.6e-03 sR0/R0=1.9e-03
+30 uas + 1 km/s                              sig(chi)=0.047  sig_perp=(0.287,0.694) -> orient 43 deg (per-axis 16,40)  sM/M=6.8e-04 sR0/R0=4.9e-04
+baseline, data to 2041 (2 peri)              sig(chi)=0.054  sig_perp=(0.166,0.330) -> orient 21 deg (per-axis 10,19)  sM/M=1.2e-03 sR0/R0=9.0e-04
+[1s]
