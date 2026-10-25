@@ -1,0 +1,180 @@
+{
+ "scenario": {
+  "name": "B_rv1",
+  "description": "Truth S301B (z-mirror of A), S301 RV 1 km/s from 2030.",
+  "schedule": {
+   "s301_sigma_rv": 1.0,
+   "s301_solution": "B"
+  },
+  "chi": 0.7,
+  "spin_dir": "b45l45",
+  "seed": 20261025
+ },
+ "schedule_config": {
+  "s301_solution": "B",
+  "include_past": true,
+  "include_future": true,
+  "t_future": 2026.0,
+  "t_end": 2041.0,
+  "season": [
+   60,
+   274
+  ],
+  "ast_per_yr": 10.0,
+  "s301_sigma_ast": 0.1,
+  "friend_sigma_ast": {
+   "S2": 0.03,
+   "S29": 0.04,
+   "S38": 0.04,
+   "S55": 0.05
+  },
+  "s301_n_peri_ast": 10,
+  "s301_peri_half": 0.06,
+  "friend_n_peri_ast": 10,
+  "friend_peri_half": 0.15,
+  "s301_sigma_rv": 1.0,
+  "s301_rv_start": 2030.0,
+  "s301_rv_per_yr": 4.0,
+  "s301_n_peri_rv": 10,
+  "friend_sigma_rv": 10.0,
+  "friend_rv_per_yr": 3.0,
+  "friend_n_peri_rv": 5,
+  "s301_include_unmatched": false,
+  "s2_drop_duplicates": true,
+  "past_gravity_sigma": 0.05,
+  "past_naco_sigma": 0.5
+ },
+ "bh_truth": {
+  "M_1e6Msun": 4.2996,
+  "R0_kpc": 8.2759,
+  "chi": 0.7,
+  "spin_vec": [
+   0.9709595896485267,
+   0.23858420979104267,
+   0.017749650924692998
+  ]
+ },
+ "elements_truth": {
+  "S301B": {
+   "a_mas": 83.0,
+   "a_err_mas": 0.7,
+   "e": 0.9824,
+   "e_err": 0.0011,
+   "i_deg": 122.84,
+   "i_err_deg": 1.12,
+   "Omega_deg": 256.9,
+   "Omega_err_deg": 3.3,
+   "omega_deg": 115.1,
+   "omega_err_deg": 2.0,
+   "t_p": 2023.125,
+   "t_p_err": 0.011,
+   "P_yr_published": [
+    8.68,
+    0.11
+   ],
+   "element_epoch": 2018.784,
+   "element_epoch_note": "As for S301A (t_p - P/2).",
+   "chi2_published": 25.53,
+   "K_mag": 19.3,
+   "source": "arXiv:2607.12664 Extended Data Table 2, second value/error pair (= solution B). Main text p.6 quotes e = 0.9821 for B; the table gives 0.9824 (table value used).",
+   "mirror_note": "Solution B is essentially the z-mirror of A: Omega_B - Omega_A = 183.1 deg and omega_B - omega_A = -178.3 deg (both ~180 deg), with i, e, a, t_p equal within errors. (Omega, omega) -> (Omega + 180, omega + 180) leaves the sky-projected Keplerian orbit unchanged and flips the line-of-sight coordinate z -> -z, hence the sign of the radial velocity. Astrometry alone cannot separate A and B (chi2 25.86 vs 25.53); radial velocities break the degeneracy (Romer delay could in principle but does not yet). Spin effects (Lense-Thirring) are not mirror symmetric either unless the spin is mirrored too."
+  },
+  "S2": {
+   "a_mas": 125.02,
+   "a_err_mas": 0.03,
+   "e": 0.88444,
+   "e_err": 6e-05,
+   "i_deg": 134.67,
+   "i_err_deg": 0.02,
+   "Omega_deg": 228.21,
+   "Omega_err_deg": 0.03,
+   "omega_deg": 66.279,
+   "omega_err_deg": 0.029,
+   "t_p": 2018.3789,
+   "t_p_err": 0.0001,
+   "element_epoch": 2010.35,
+   "K_mag": 14.0,
+   "source": "GRAVITY Collaboration 2024 (arXiv:2409.12261) Table B.1; elements osculating at 2010.35 (table caption)"
+  },
+  "S29": {
+   "a_mas": 390.25,
+   "a_err_mas": 0.94,
+   "e": 0.9688,
+   "e_err": 9e-05,
+   "i_deg": 144.24,
+   "i_err_deg": 0.09,
+   "Omega_deg": 4.9259,
+   "Omega_err_deg": 0.159,
+   "omega_deg": 203.68,
+   "omega_err_deg": 0.17,
+   "t_p": 2021.4102,
+   "t_p_err": null,
+   "t_p_err_note": "Prefactor lost in the PDF text layer ('x10^-4'); error of order 1e-4..1e-3 yr. Recover from the PDF.",
+   "element_epoch": 1977.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 1977 (table caption)"
+  },
+  "S38": {
+   "a_mas": 142.49,
+   "a_err_mas": 0.04,
+   "e": 0.81807,
+   "e_err": 0.00022,
+   "i_deg": 168.69,
+   "i_err_deg": 0.19,
+   "Omega_deg": 122.43,
+   "Omega_err_deg": 1.12,
+   "omega_deg": 40.065,
+   "omega_err_deg": 1.118,
+   "t_p": 2022.6843,
+   "t_p_err": 0.0008,
+   "element_epoch": 2000.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2000 (table caption)"
+  },
+  "S55": {
+   "a_mas": 104.24,
+   "a_err_mas": 0.05,
+   "e": 0.7298,
+   "e_err": 0.00018,
+   "i_deg": 159.59,
+   "i_err_deg": 0.17,
+   "Omega_deg": 319.43,
+   "Omega_err_deg": 0.97,
+   "omega_deg": 327.77,
+   "omega_err_deg": 0.93,
+   "t_p": 2009.4738,
+   "t_p_err": 0.0076,
+   "element_epoch": 2012.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2012 (table caption)"
+  }
+ },
+ "counts": {
+  "S301B": {
+   "astrometry": 189,
+   "rv": 64
+  },
+  "S2": {
+   "astrometry": 388,
+   "rv": 163
+  },
+  "S29": {
+   "astrometry": 263,
+   "rv": 73
+  },
+  "S38": {
+   "astrometry": 301,
+   "rv": 65
+  },
+  "S55": {
+   "astrometry": 247,
+   "rv": 61
+  }
+ },
+ "forward_model": "forward.KerrForward",
+ "relatipy_version": "1.2.0",
+ "git_commit_at_generation": "b370979",
+ "units": {
+  "t": "decimal Julian yr (observed time)",
+  "ra_dec": "mas, RA positive east, Dec positive north, relative to Sgr A*",
+  "v": "km/s, positive = receding (redshift-equivalent)"
+ },
+ "noise": "independent Gaussian, sigma as listed; RNG numpy default_rng([seed, star index in ['S301A', 'S301B', 'S2', 'S29', 'S38', 'S55']])"
+}

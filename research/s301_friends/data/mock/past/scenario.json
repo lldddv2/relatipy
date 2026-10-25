@@ -1,0 +1,178 @@
+{
+ "scenario": {
+  "name": "past",
+  "description": "Data to 2026.0 only: S301 19 real epochs (207 uas, no RV); friends real/plausible past.",
+  "schedule": {
+   "include_future": false
+  },
+  "chi": 0.7,
+  "spin_dir": "b45l45",
+  "seed": 20261025
+ },
+ "schedule_config": {
+  "s301_solution": "A",
+  "include_past": true,
+  "include_future": false,
+  "t_future": 2026.0,
+  "t_end": 2041.0,
+  "season": [
+   60,
+   274
+  ],
+  "ast_per_yr": 10.0,
+  "s301_sigma_ast": 0.1,
+  "friend_sigma_ast": {
+   "S2": 0.03,
+   "S29": 0.04,
+   "S38": 0.04,
+   "S55": 0.05
+  },
+  "s301_n_peri_ast": 10,
+  "s301_peri_half": 0.06,
+  "friend_n_peri_ast": 10,
+  "friend_peri_half": 0.15,
+  "s301_sigma_rv": null,
+  "s301_rv_start": 2030.0,
+  "s301_rv_per_yr": 4.0,
+  "s301_n_peri_rv": 10,
+  "friend_sigma_rv": 10.0,
+  "friend_rv_per_yr": 3.0,
+  "friend_n_peri_rv": 5,
+  "s301_include_unmatched": false,
+  "s2_drop_duplicates": true,
+  "past_gravity_sigma": 0.05,
+  "past_naco_sigma": 0.5
+ },
+ "bh_truth": {
+  "M_1e6Msun": 4.2996,
+  "R0_kpc": 8.2759,
+  "chi": 0.7,
+  "spin_vec": [
+   0.9709595896485267,
+   0.23858420979104267,
+   0.017749650924692998
+  ]
+ },
+ "elements_truth": {
+  "S301A": {
+   "a_mas": 83.0,
+   "a_err_mas": 0.7,
+   "e": 0.9832,
+   "e_err": 0.001,
+   "i_deg": 124.09,
+   "i_err_deg": 1.1,
+   "Omega_deg": 73.8,
+   "Omega_err_deg": 3.5,
+   "omega_deg": 293.4,
+   "omega_err_deg": 2.2,
+   "t_p": 2023.126,
+   "t_p_err": 0.01,
+   "P_yr_published": [
+    8.68,
+    0.11
+   ],
+   "element_epoch": 2018.785,
+   "element_epoch_note": "Osculation epoch not stated in the paper. We use the preceding apocentre t_p - P/2 (P = 8.682 yr from a, M, R0), as GRAVITY 2024 does for S2 (2010.35) and S29 (1977). Any epoch 2017-2022.9 fits the digitized points about equally (chi2 within ~3); any epoch after the 2023.13 pericentre is rejected (RMS 3 mas, chi2 ~6000): the osculating omega jumps by the ~2 deg Schwarzschild precession across pericentre. See validation.md.",
+   "chi2_published": 25.86,
+   "K_mag": 19.3,
+   "source": "GRAVITY Collaboration 2026, Nature (arXiv:2607.12664), Extended Data Table 2, first value/error pair (= solution A; adopted by arXiv:2609.06936 and by Ext. Data Fig. 5)"
+  },
+  "S2": {
+   "a_mas": 125.02,
+   "a_err_mas": 0.03,
+   "e": 0.88444,
+   "e_err": 6e-05,
+   "i_deg": 134.67,
+   "i_err_deg": 0.02,
+   "Omega_deg": 228.21,
+   "Omega_err_deg": 0.03,
+   "omega_deg": 66.279,
+   "omega_err_deg": 0.029,
+   "t_p": 2018.3789,
+   "t_p_err": 0.0001,
+   "element_epoch": 2010.35,
+   "K_mag": 14.0,
+   "source": "GRAVITY Collaboration 2024 (arXiv:2409.12261) Table B.1; elements osculating at 2010.35 (table caption)"
+  },
+  "S29": {
+   "a_mas": 390.25,
+   "a_err_mas": 0.94,
+   "e": 0.9688,
+   "e_err": 9e-05,
+   "i_deg": 144.24,
+   "i_err_deg": 0.09,
+   "Omega_deg": 4.9259,
+   "Omega_err_deg": 0.159,
+   "omega_deg": 203.68,
+   "omega_err_deg": 0.17,
+   "t_p": 2021.4102,
+   "t_p_err": null,
+   "t_p_err_note": "Prefactor lost in the PDF text layer ('x10^-4'); error of order 1e-4..1e-3 yr. Recover from the PDF.",
+   "element_epoch": 1977.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 1977 (table caption)"
+  },
+  "S38": {
+   "a_mas": 142.49,
+   "a_err_mas": 0.04,
+   "e": 0.81807,
+   "e_err": 0.00022,
+   "i_deg": 168.69,
+   "i_err_deg": 0.19,
+   "Omega_deg": 122.43,
+   "Omega_err_deg": 1.12,
+   "omega_deg": 40.065,
+   "omega_err_deg": 1.118,
+   "t_p": 2022.6843,
+   "t_p_err": 0.0008,
+   "element_epoch": 2000.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2000 (table caption)"
+  },
+  "S55": {
+   "a_mas": 104.24,
+   "a_err_mas": 0.05,
+   "e": 0.7298,
+   "e_err": 0.00018,
+   "i_deg": 159.59,
+   "i_err_deg": 0.17,
+   "Omega_deg": 319.43,
+   "Omega_err_deg": 0.97,
+   "omega_deg": 327.77,
+   "omega_err_deg": 0.93,
+   "t_p": 2009.4738,
+   "t_p_err": 0.0076,
+   "element_epoch": 2012.0,
+   "source": "GRAVITY Collaboration 2024 Table B.1; elements osculating at 2012 (table caption)"
+  }
+ },
+ "counts": {
+  "S301A": {
+   "astrometry": 19,
+   "rv": 0
+  },
+  "S2": {
+   "astrometry": 228,
+   "rv": 113
+  },
+  "S29": {
+   "astrometry": 113,
+   "rv": 28
+  },
+  "S38": {
+   "astrometry": 151,
+   "rv": 20
+  },
+  "S55": {
+   "astrometry": 87,
+   "rv": 11
+  }
+ },
+ "forward_model": "forward.KerrForward",
+ "relatipy_version": "1.2.0",
+ "git_commit_at_generation": "b370979",
+ "units": {
+  "t": "decimal Julian yr (observed time)",
+  "ra_dec": "mas, RA positive east, Dec positive north, relative to Sgr A*",
+  "v": "km/s, positive = receding (redshift-equivalent)"
+ },
+ "noise": "independent Gaussian, sigma as listed; RNG numpy default_rng([seed, star index in ['S301A', 'S301B', 'S2', 'S29', 'S38', 'S55']])"
+}
