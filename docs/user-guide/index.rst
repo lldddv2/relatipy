@@ -11,4 +11,5 @@ cover.
    installation
    usage
    kerr-mcmc
+   forces
    scope-and-limits

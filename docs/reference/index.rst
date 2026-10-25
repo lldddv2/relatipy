@@ -16,6 +16,8 @@ Main classes
    relatipy.geodesic.State
    relatipy.coordinates.KerrOrbitalElements
    relatipy.observables.KerrMcmcModel
+   relatipy.observables.PerturbedKerrMcmcMultiModel
+   relatipy.forces.ThinDisk
 
 Modules
 -------
@@ -25,12 +27,15 @@ Modules
 
    * - :doc:`metrics`
      - Kerr metric: mass, spin, horizons, and characteristic radii.
+   * - :doc:`forces`
+     - External forces on a Kerr geodesic: the tabulated thin disk.
    * - :doc:`geodesic`
      - Orbits, integration controls, states, solutions, and integration outcomes.
    * - :doc:`coordinates`
      - Coordinate, velocity, and orbital-element value objects for initial conditions.
    * - :doc:`observables`
-     - Astrometry and line-of-sight velocity predictions for sampler workflows.
+     - Astrometry and line-of-sight velocity predictions for sampler workflows,
+       for one or several stars, with or without an external force.
    * - :doc:`plotting`
      - Static and interactive figures from stored solutions and observables.
 
@@ -39,6 +44,7 @@ Modules
    :maxdepth: 2
 
    metrics
+   forces
    geodesic
    coordinates
    observables
