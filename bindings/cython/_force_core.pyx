@@ -665,3 +665,202 @@ def evaluate_general(
     if status != RP_KERR_MCMC_OK:
         raise RuntimeError("unknown Kerr observable backend status")
     return output
+
+
+cdef extern from "force/models/axisymmetric_table.h":
+    ctypedef enum rp_axisymmetric_status:
+        RP_AXISYMMETRIC_STATUS_OK
+        RP_AXISYMMETRIC_STATUS_ALLOCATION_FAILURE
+    ctypedef struct rp_axisymmetric_table:
+        size_t bytes
+    ctypedef struct rp_axisymmetric_model:
+        const rp_axisymmetric_table *table
+        double mass
+        double length_scale
+        double inverse_length_scale
+        double rotation[3][3]
+    rp_axisymmetric_status rp_axisymmetric_model_init(
+        rp_axisymmetric_model *model, const rp_axisymmetric_table *table,
+        double mass, double length_scale, const double normal[3]
+    ) nogil
+    int rp_axisymmetric_potential(
+        const double *position, const void *model, double *potential
+    ) nogil
+
+cdef extern from "force/models/thin_disk.h":
+    ctypedef struct rp_thin_disk_params:
+        double alpha
+        double inner_ratio
+        double softening
+    void rp_thin_disk_default_params(rp_thin_disk_params *params) nogil
+    rp_axisymmetric_status rp_thin_disk_table_build(
+        const rp_thin_disk_params *params, rp_axisymmetric_table **table
+    ) nogil
+    void rp_thin_disk_table_free(rp_axisymmetric_table *table) nogil
+    int rp_thin_disk_acceleration(
+        const double *position, const double *velocity,
+        const void *model, double *acceleration
+    ) nogil
+
+cdef extern from "force/models/spheroid.h":
+    ctypedef struct rp_spheroid_params:
+        double alpha
+        double axis_ratio
+        double inner_ratio
+    void rp_spheroid_default_params(rp_spheroid_params *params) nogil
+    rp_axisymmetric_status rp_spheroid_table_build(
+        const rp_spheroid_params *params, rp_axisymmetric_table **table
+    ) nogil
+    void rp_spheroid_table_free(rp_axisymmetric_table *table) nogil
+    int rp_spheroid_acceleration(
+        const double *position, const double *velocity,
+        const void *model, double *acceleration
+    ) nogil
+
+
+cdef class AxisymmetricTable:
+    """Owner of one built thin-disk or spheroid table (read-only, shareable).
+
+    Build with :meth:`thin_disk` or :meth:`spheroid`; the GIL is released
+    while the table is built. The table is freed when this object is
+    collected, so every placed model keeps a reference to it.
+    """
+
+    cdef rp_axisymmetric_table *table
+    cdef readonly str kind
+
+    def __cinit__(self):
+        self.table = NULL
+        self.kind = ""
+
+    def __dealloc__(self):
+        if self.table != NULL:
+            if self.kind == "thin_disk":
+                rp_thin_disk_table_free(self.table)
+            else:
+                rp_spheroid_table_free(self.table)
+            self.table = NULL
+
+    @staticmethod
+    def thin_disk(double alpha, double inner_ratio, double softening):
+        """Build the unit thin-disk table (``R_out = 1``, unit mass)."""
+        cdef AxisymmetricTable owner = AxisymmetricTable()
+        cdef rp_thin_disk_params params
+        cdef rp_axisymmetric_status status
+        rp_thin_disk_default_params(&params)
+        params.alpha = alpha
+        params.inner_ratio = inner_ratio
+        params.softening = softening
+        with nogil:
+            status = rp_thin_disk_table_build(&params, &owner.table)
+        owner.kind = "thin_disk"
+        _check_table(status, owner.table)
+        return owner
+
+    @staticmethod
+    def spheroid(double alpha, double axis_ratio, double inner_ratio):
+        """Build the unit spheroid table (``s_out = 1``, unit mass)."""
+        cdef AxisymmetricTable owner = AxisymmetricTable()
+        cdef rp_spheroid_params params
+        cdef rp_axisymmetric_status status
+        rp_spheroid_default_params(&params)
+        params.alpha = alpha
+        params.axis_ratio = axis_ratio
+        params.inner_ratio = inner_ratio
+        with nogil:
+            status = rp_spheroid_table_build(&params, &owner.table)
+        owner.kind = "spheroid"
+        _check_table(status, owner.table)
+        return owner
+
+    @property
+    def nbytes(self):
+        """Heap bytes owned by the table."""
+        return int(self.table.bytes) if self.table != NULL else 0
+
+    @property
+    def callback(self):
+        """Address of the acceleration callback of this table's model kind."""
+        if self.kind == "thin_disk":
+            return <uintptr_t><void *>rp_thin_disk_acceleration
+        return <uintptr_t><void *>rp_spheroid_acceleration
+
+
+cdef int _check_table(rp_axisymmetric_status status, rp_axisymmetric_table *table) except -1:
+    if status == RP_AXISYMMETRIC_STATUS_ALLOCATION_FAILURE:
+        raise MemoryError("native force table allocation failed")
+    if status != RP_AXISYMMETRIC_STATUS_OK or table == NULL:
+        raise RuntimeError(f"native force table build failed (status {<int>status})")
+    return 0
+
+
+cdef class AxisymmetricModel:
+    """One placed thin disk or spheroid: borrowed table, mass, scale, axis.
+
+    :attr:`address` is the ``rp_axisymmetric_model`` passed to the callback;
+    :meth:`set` rewrites it in place.
+    """
+
+    cdef rp_axisymmetric_model model
+    cdef readonly AxisymmetricTable table
+
+    def __cinit__(self, AxisymmetricTable table not None):
+        if table.table == NULL:
+            raise ValueError("table is not built")
+        self.table = table
+        memset(&self.model, 0, sizeof(self.model))
+        self.model.table = table.table
+        self.model.length_scale = 1.0
+        self.model.inverse_length_scale = 1.0
+        self.model.rotation[0][0] = 1.0
+        self.model.rotation[1][1] = 1.0
+        self.model.rotation[2][2] = 1.0
+
+    @property
+    def address(self):
+        """Address of the native model data."""
+        return <uintptr_t><void *>&self.model
+
+    def set(self, double mass, double length_scale, normal):
+        """Place the model: geometric mass and length, unit black-hole axis."""
+        cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] axis
+        cdef rp_axisymmetric_status status
+        axis = np.ascontiguousarray(normal, dtype=np.float64)
+        if axis.ndim != 1 or axis.shape[0] != 3:
+            raise ValueError("normal must have shape (3,)")
+        status = rp_axisymmetric_model_init(
+            &self.model, self.table.table, mass, length_scale, &axis[0]
+        )
+        if status != RP_AXISYMMETRIC_STATUS_OK:
+            raise ValueError(
+                f"invalid placed force model (native status {<int>status})"
+            )
+
+    @property
+    def parameters(self):
+        """``(mass, length_scale, n_x, n_y, n_z)`` of the placed model."""
+        return np.array([
+            self.model.mass, self.model.length_scale,
+            self.model.rotation[2][0], self.model.rotation[2][1],
+            self.model.rotation[2][2],
+        ], dtype=np.float64)
+
+    def potential(self, cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] positions):
+        """Interpolated potential at normalized black-hole-frame positions."""
+        cdef Py_ssize_t count = positions.shape[0]
+        cdef Py_ssize_t i
+        cdef Py_ssize_t failed = -1
+        cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] output
+        if positions.shape[1] != 3:
+            raise ValueError("positions must have shape (n, 3)")
+        output = np.zeros(count, dtype=np.float64)
+        with nogil:
+            for i in range(count):
+                if rp_axisymmetric_potential(
+                    &positions[i, 0], &self.model, &output[i]
+                ) != 0:
+                    failed = i
+                    break
+        if failed >= 0:
+            raise ValueError(f"force potential failed at row {failed}")
+        return output
