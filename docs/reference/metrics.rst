@@ -5,8 +5,8 @@ Kerr metric
 
 .. py:module:: relatipy.metrics
 
-RelatiPy currently provides one public metric frontend,
-:class:`~relatipy.metrics.Kerr`.  A metric is an immutable value: its mass
+RelatiPy provides the metric frontend :class:`~relatipy.metrics.Kerr` and
+its perturbed counterpart :class:`~relatipy.metrics.PerturbedKerr`.  A metric is an immutable value: its mass
 sets the conversion between the native geometric calculation and public
 physical quantities, while ``spin`` is the dimensionless Kerr spin parameter.
 The public frontend accepts ``0 <= spin <= 1``.  It does not presently expose
@@ -47,6 +47,19 @@ See :doc:`/user-guide/usage` for supported field
 combinations and units.  The first public frontend is scalar; batch orbit
 construction is not implemented.
 
+Kerr with an external force
+---------------------------
+
+:class:`~relatipy.metrics.PerturbedKerr` composes an immutable
+:class:`~relatipy.metrics.Kerr` (:attr:`~relatipy.metrics.PerturbedKerr.kerr`)
+with one :class:`~relatipy.forces.ExternalForce`. Its
+:meth:`~relatipy.metrics.PerturbedKerr.orbit` accepts the same initial
+conditions as :meth:`Kerr.orbit <relatipy.metrics.Kerr.orbit>` and returns an
+:class:`~relatipy.geodesic.Orbit` whose solutions are ordinary
+:class:`~relatipy.geodesic.Solution` objects integrated with the force.
+``projection_radau`` is rejected because a force does not conserve Carter's
+constant. See :doc:`/user-guide/forces`.
+
 API
 ---
 
@@ -57,3 +70,6 @@ API
 .. autoclass:: relatipy.metrics.Horizons
    :members:
    :show-inheritance:
+
+.. autoclass:: relatipy.metrics.PerturbedKerr
+   :members: kerr, force, mass, spin, r_g, horizons, orbit

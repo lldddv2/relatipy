@@ -339,6 +339,71 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
 /tmp/relatipy-native-tests/test-constants-of-motion-c11
 ```
 
+The external-force layer under `src/force/` (see
+`docs/development/external-forces.rst`) calls the homogeneous Kerr sources
+and adds the frame map and projection (`external.c`), the forced right-hand
+sides (`kerr_forced.c`, which uses the generated kernel
+`generated/kerr_rhs.c` when a force is active), the forced trajectory solve
+(`solution/solve.c`) and the forced observable model (`kerr_mcmc.c`). Its
+tests under `tests/force/` share one source list; the built-in Plummer model
+test needs only its own source:
+
+```console
+FORCE_SOURCES="native/src/utils/numeric.c native/src/utils/tensor.c \
+  native/src/metric/physic/kerr.c native/src/metric/kerr.c \
+  native/src/geodesic/physic/kerr.c native/src/geodesic/kerr.c \
+  native/src/geodesic/physic/kerr_observables.c \
+  native/src/geodesic/initial/convert.c \
+  native/src/geodesic/integrators/integrator.c \
+  native/src/geodesic/integrators/dop853.c \
+  native/src/geodesic/integrators/dp45.c \
+  native/src/geodesic/integrators/radau.c \
+  native/src/geodesic/integrators/kerr.c \
+  native/src/geodesic/kerr_mcmc.c native/src/geodesic/solution/solve.c \
+  native/src/force/external.c native/src/force/kerr_forced.c \
+  native/src/force/generated/kerr_rhs.c \
+  native/src/force/solution/solve.c native/src/force/kerr_mcmc.c"
+for test in test_external test_null_force test_active_zero_force \
+    test_forced_invariants test_newtonian_limit test_forced_mcmc; do
+  cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+    -Inative/include -Inative/src $FORCE_SOURCES \
+    native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test
+  /tmp/relatipy-native-tests/$test
+done
+
+cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -Inative/include -Inative/src \
+  native/src/force/models/plummer.c native/tests/force/test_plummer_model.c \
+  -lm -o /tmp/relatipy-native-tests/test_plummer_model
+/tmp/relatipy-native-tests/test_plummer_model
+```
+
+`tests/force/bench_forced.c` is a benchmark built with the same source list
+and run without arguments; it prints timings and checks nothing.
+
+The tabulated thin-disk and spheroid models under `src/force/models/` need
+only their own sources; the benchmark also times the Kerr right-hand side:
+
+```console
+MODEL_SOURCES="native/src/force/models/elliptic.c \
+  native/src/force/models/quadrature.c \
+  native/src/force/models/axisymmetric_table.c \
+  native/src/force/models/thin_disk.c native/src/force/models/spheroid.c"
+for test in test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table \
+    test_thin_disk_spheroid; do
+  cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+    -Inative/include -Inative/src $MODEL_SOURCES \
+    native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test
+  /tmp/relatipy-native-tests/$test
+done
+
+cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -Inative/include -Inative/src \
+  $MODEL_SOURCES native/src/utils/numeric.c native/src/utils/tensor.c \
+  native/src/metric/physic/kerr.c native/src/geodesic/physic/kerr.c \
+  native/tests/force/test_thin_disk_bench.c -lm \
+  -o /tmp/relatipy-native-tests/test_thin_disk_bench
+/tmp/relatipy-native-tests/test_thin_disk_bench
+```
+
 On compilers that provide AddressSanitizer and UndefinedBehaviorSanitizer:
 
 ```console

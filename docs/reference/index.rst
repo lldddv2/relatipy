@@ -11,11 +11,13 @@ Main classes
 .. autosummary::
 
    relatipy.metrics.Kerr
+   relatipy.metrics.PerturbedKerr
    relatipy.geodesic.Orbit
    relatipy.geodesic.Solution
    relatipy.geodesic.State
    relatipy.coordinates.KerrOrbitalElements
    relatipy.observables.KerrMcmcModel
+   relatipy.observables.PerturbedKerrMcmcMultiModel
 
 Modules
 -------
@@ -24,7 +26,11 @@ Modules
    :widths: 30 70
 
    * - :doc:`metrics`
-     - Kerr metric: mass, spin, horizons, and characteristic radii.
+     - Kerr metric: mass, spin, horizons, and characteristic radii; Kerr
+       plus an external force.
+   * - :doc:`forces`
+     - External forces and potentials: built-in models and run-time
+       compiled definitions.
    * - :doc:`geodesic`
      - Orbits, integration controls, states, solutions, and integration outcomes.
    * - :doc:`coordinates`
@@ -39,6 +45,7 @@ Modules
    :maxdepth: 2
 
    metrics
+   forces
    geodesic
    coordinates
    observables
