@@ -70,6 +70,7 @@ FORCE_SOURCES = [
     NATIVE / "force" / "kerr_forced.c",
     NATIVE / "force" / "solution" / "solve.c",
     NATIVE / "force" / "kerr_mcmc.c",
+    *sorted((NATIVE / "force" / "generated").glob("*.c")),
     *sorted((NATIVE / "force" / "models").glob("*.c")),
 ]
 
