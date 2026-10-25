@@ -45,8 +45,9 @@ geometry and geodesic right-hand sides. ``native/src/`` separates:
 - initial-state conversion (``geodesic/initial/``);
 - solution reconstruction (``geodesic/solution/``);
 - adaptive integrators (``geodesic/integrators/``);
-- the external-force layer (``force/``), with a generated Kerr kernel
-  (``force/generated/``) and the thin-disk model (``force/models/``).
+- the external-force layer (``force/``), with the thin-disk model
+  (``force/models/``); its generated Kerr kernel lives in
+  ``geodesic/physic/kerr_rhs_generated.{c,h}``.
 
 The native integrator names are ``dop853``, ``dp45``, ``radau``, and
 ``projection_radau``. None of these headers is installed with the package.
