@@ -5,8 +5,8 @@ import pytest
 from astropy import constants as const
 from astropy import units as u
 
-from relatipy import _core, _force_core, _mcmc_core
-from relatipy.forces import Plummer
+from relatipy import _core, _force_core, _jit, _mcmc_core
+from relatipy.forces import Potential, ThinDisk
 from relatipy.forces._bound import BoundForce, geometric_conversion
 
 SPIN = 0.6
@@ -18,8 +18,25 @@ POSITIONS = np.array([[8.0, -3.0, 1.5], [-120.0, 40.0, -300.0]])
 VELOCITIES = np.zeros((2, 3))
 
 
-def _plummer(mass: float, scale: float) -> np.ndarray:
-    return np.array([mass, scale], dtype=np.float64)
+DISK = ThinDisk(mass=4e3 * u.M_sun, r_out=1 * u.mpc)
+
+
+def _compiles() -> bool:
+    try:
+        import sympy  # noqa: F401
+
+        _jit.compiler_command()
+    except (ImportError, _jit.CompilerNotFoundError):
+        return False
+    return True
+
+
+needs_compiled = pytest.mark.skipif(not _compiles(), reason="needs SymPy and a C compiler")
+
+
+def _plummer_potential() -> Potential:
+    return Potential("-m / sqrt(x**2 + y**2 + z**2 + b**2)",
+                     parameters={"m": 4e3 * u.M_sun, "b": 1 * u.mpc})
 
 
 @pytest.mark.parametrize("method", ["dop853", "dp45", "radau"])
@@ -49,16 +66,15 @@ def test_null_force_is_bitwise_the_homogeneous_observables() -> None:
     )
 
 
-def test_plummer_callback_and_potential_match_the_formula() -> None:
-    model = _plummer(0.03, 4.0)
+@needs_compiled
+def test_compiled_callback_matches_the_formula() -> None:
+    sphere = Potential("-m / sqrt(x**2 + y**2 + z**2 + b**2)",
+                       parameters={"m": 0.03, "b": 4.0})
+    bound = sphere._bind(4e6 * u.M_sun)
     d2 = np.sum(POSITIONS**2, axis=1) + 16.0
     np.testing.assert_allclose(
-        _force_core.acceleration(_force_core.plummer_address(), model.ctypes.data,
-                                 POSITIONS, VELOCITIES),
+        _force_core.acceleration(bound.callback, bound.model, POSITIONS, VELOCITIES),
         -0.03 * POSITIONS / d2[:, None] ** 1.5, rtol=1e-15,
-    )
-    np.testing.assert_allclose(
-        _force_core.plummer_potential(model, POSITIONS), -0.03 / np.sqrt(d2), rtol=1e-15
     )
 
 
@@ -74,27 +90,28 @@ def test_bl_to_cartesian_uses_the_oblate_black_hole_frame() -> None:
 
 
 def test_failing_callback_maps_to_the_existing_errors() -> None:
-    address = _force_core.plummer_address()
-    invalid = _plummer(0.01, 0.0)
+    # The thin-disk callback fails on a NULL model.
+    address = DISK._bind(4e6 * u.M_sun).callback
+    invalid = 0
     with pytest.raises(RuntimeError, match="callback failed at row 0"):
-        _force_core.acceleration(address, invalid.ctypes.data, POSITIONS, VELOCITIES)
+        _force_core.acceleration(address, invalid, POSITIONS, VELOCITIES)
     with pytest.raises(RuntimeError, match="external force callback failed"):
-        _force_core.four_acceleration(SPIN, address, invalid.ctypes.data,
+        _force_core.four_acceleration(SPIN, address, invalid,
                                       STATE[:4], STATE[4:])
     assert _force_core.CALLBACK_FAILURE == 32
     taus, states, stats, status = _force_core.integrate_kerr(
-        SPIN, address, invalid.ctypes.data, STATE, *SPAN, "dop853", 1e-10, 1e-12
+        SPIN, address, invalid, STATE, *SPAN, "dop853", 1e-10, 1e-12
     )
     assert status == -1 and stats["native_status"] == 4 and len(taus) == 1
     rotation = np.eye(3)
     with pytest.raises(RuntimeError, match="callback failure"):
         _force_core.evaluate(
-            SPIN, address, invalid.ctypes.data, rotation, 4000.0, 0.8, 0.7, 0.3,
+            SPIN, address, invalid, rotation, 4000.0, 0.8, 0.7, 0.3,
             0.2, np.array([1.0]), 1e-8, 0, 0, 0, 0, 0, 0, 0, 1e-10, 1e-12, 1000,
         )
     with pytest.raises(RuntimeError, match="callback failure"):
         _force_core.evaluate_general(
-            SPIN, address, invalid.ctypes.data, rotation, "elements",
+            SPIN, address, invalid, rotation, "elements",
             np.array([0.0, 4000.0, 0.8, 0.7, 0.3, 0.2, 0.0]), np.array([1.0]),
             0.0, 0, 1e-8, 0, 1e-10, 1e-12, 1000,
         )
@@ -141,11 +158,31 @@ def test_geometric_conversion_uses_length_time_and_mass_dimensions() -> None:
 
 
 def test_in_place_update_equals_a_fresh_binding() -> None:
-    sphere = Plummer(mass=4e3 * u.M_sun, radius=1 * u.mpc)
-    bound = sphere._bind(4.3e6 * u.M_sun)
+    bound = DISK._bind(4.3e6 * u.M_sun)
     assert isinstance(bound, BoundForce)
     address = bound.model
-    other = Plummer(mass=1e3 * u.M_sun, radius=2 * u.mpc)
+    other = DISK.with_parameters(disk_mass=1e3 * u.M_sun, normal_theta=0.5, normal_phi=1.0)
+    bound.update((4.1e6 * u.M_sun).to_value(u.kg), np.array([1e3, 0.5, 1.0]))
+    assert bound.model == address
+    np.testing.assert_array_equal(
+        bound.model_data, other._bind(4.1e6 * u.M_sun).model_data
+    )
+    r_g = const.G * 4.1e6 * u.M_sun / const.c**2
+    normal = [np.sin(0.5) * np.cos(1.0), np.sin(0.5) * np.sin(1.0), np.cos(0.5)]
+    np.testing.assert_allclose(
+        bound.model_data, [1e3 / 4.1e6, (1 * u.mpc / r_g).decompose(), *normal],
+        rtol=1e-12,
+    )
+    assert bound.callback == DISK._native_callback()[1].callback
+    assert not bound.model_data.flags.writeable
+
+
+@needs_compiled
+def test_in_place_update_of_parameter_storage_equals_a_fresh_binding() -> None:
+    sphere = _plummer_potential()
+    bound = sphere._bind(4.3e6 * u.M_sun)
+    address = bound.model
+    other = sphere.with_parameters(m=1e3 * u.M_sun, b=2 * u.mpc)
     bound.update((4.1e6 * u.M_sun).to_value(u.kg), np.array([1e3, 2.0]))
     assert bound.model == address
     np.testing.assert_array_equal(
@@ -156,5 +193,5 @@ def test_in_place_update_equals_a_fresh_binding() -> None:
         [1e3 / 4.1e6, (2 * u.mpc / (const.G * 4.1e6 * u.M_sun / const.c**2)).decompose()],
         rtol=1e-12,
     )
-    assert bound.callback == _force_core.plummer_address()
+    assert bound.callback == sphere._native_callback()[0]
     assert not bound.model_data.flags.writeable
