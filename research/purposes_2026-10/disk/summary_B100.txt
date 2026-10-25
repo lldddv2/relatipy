@@ -1,0 +1,20 @@
+results_B.json: S301 future astrometry 100 uas; entries sigma_perp(rms of 2 comps)/sigma_par [chi units], median over 6 spins
+case                 2035/RV-    2035/RV20     2035/RV5     2035/RV1     2041/RV-    2041/RV20     2041/RV5     2041/RV1
+a                  2.89/0.25    2.71/0.20    2.40/0.17    1.18/0.13    1.32/0.15    1.24/0.10    0.95/0.09    0.36/0.07 
+a_noprior          4.18/14.69   2.73/0.20    2.42/0.18    1.18/0.14    1.45/9.20    1.24/0.10    0.95/0.09    0.36/0.07 
+b CWD 1000         5.33/4.19    4.60/2.21    3.94/1.60    2.78/1.01    3.72/2.40    3.20/1.54    2.63/1.20    1.72/0.75 
+b CWD 300                                                                                                               
+b P30 1000                                                                                                              
+b P30 300                                                                                                               
+c0                 2.77/0.23    2.65/0.20    2.34/0.16    1.17/0.13    1.16/0.11    1.11/0.10    0.89/0.09    0.36/0.07 
+c CWD 1000         3.10/0.25    2.96/0.22    2.66/0.19    1.60/0.16    1.80/0.11    1.70/0.10    1.47/0.09    1.09/0.07 
+c CWD 300                                                                                                               
+c P30 1000                                                                                                              
+c P30 300                                                                                                               
+
+fiducial column 2041/RV1: per-case spread over the 6 spins (max/min of sigma_N), sigma(chi) range, ang err range [deg], sigma(Md) [Msun], sigma(i_d,O_d) [deg]
+a - 0            sN=0.262 (max/min 1.004) sM=0.444 sL=0.070 schi 0.07-0.46 ang 21-42deg sM/M=9.6e-04
+a_noprior - 0    sN=0.262 (max/min 1.004) sM=0.444 sL=0.072 schi 0.07-0.46 ang 21-42deg sM/M=1.4e-03
+b CWD 1000       sN=1.181 (max/min 1.008) sM=2.129 sL=0.746 schi 0.54-2.38 ang 75-204deg sM/M=1.4e-03 sMd=8197 sid=175.4 sOd=340.1
+c0 - 0           sN=0.259 (max/min 1.005) sM=0.438 sL=0.068 schi 0.07-0.45 ang 20-42deg sM/M=3.5e-04
+c CWD 1000       sN=0.742 (max/min 1.009) sM=1.349 sL=0.072 schi 0.07-1.41 ang 50-126deg sM/M=3.5e-04 sMd=159 sid=67.5 sOd=24.2

@@ -1,0 +1,19 @@
+case c RV 1 comp P at +-2 sigma_F (1.035): chi2 along Fisher line 61712.8, profile min 4.263 (Gaussian: 4.0) it=9
+case c RV 1 comp P at +2 sigma_F (1.035): chi2 along Fisher line 308329.7, profile min 6.691 (Gaussian: 4.0) it=70
+case c RV 1 comp P at +4 sigma_F (1.035): chi2 along Fisher line 975027.6, profile min 37.038 (Gaussian: 16.0) it=80
+case c RV 1 comp Q at +-2 sigma_F (0.139): chi2 along Fisher line 59181.0, profile min 4.598 (Gaussian: 4.0) it=10
+case c RV 1 comp Q at +2 sigma_F (0.139): chi2 along Fisher line 276369.0, profile min 5.393 (Gaussian: 4.0) it=80
+case c RV 1 comp Q at +4 sigma_F (0.139): chi2 along Fisher line 939392.5, profile min 34.351 (Gaussian: 16.0) it=80
+case c RV 1 comp L at +-2 sigma_F (0.068): chi2 along Fisher line 936.9, profile min 3.965 (Gaussian: 4.0) it=16
+case c RV 1 comp L at +2 sigma_F (0.068): chi2 along Fisher line 6163.3, profile min 2.922 (Gaussian: 4.0) it=80
+case c RV 1 comp L at +4 sigma_F (0.068): chi2 along Fisher line 60738.9, profile min 16.199 (Gaussian: 16.0) it=55
+case c RV 5 comp P at +-2 sigma_F (1.471): chi2 along Fisher line 20085.9, profile min 5.502 (Gaussian: 4.0) it=11
+case c RV 5 comp P at +2 sigma_F (1.471): chi2 along Fisher line 33578.0, profile min 8.270 (Gaussian: 4.0) it=80
+case c RV 5 comp P at +4 sigma_F (1.471): chi2 along Fisher line 106164.3, profile min 40.548 (Gaussian: 16.0) it=71
+case c RV 5 comp Q at +-2 sigma_F (0.212): chi2 along Fisher line 8909.6, profile min 5.054 (Gaussian: 4.0) it=18
+case c RV 5 comp Q at +2 sigma_F (0.212): chi2 along Fisher line 23077.0, profile min 4.368 (Gaussian: 4.0) it=80
+case c RV 5 comp Q at +4 sigma_F (0.212): chi2 along Fisher line 72812.1, profile min 26.364 (Gaussian: 16.0) it=20
+case c RV 5 comp L at +-2 sigma_F (0.087): chi2 along Fisher line 455.2, profile min 3.968 (Gaussian: 4.0) it=13
+case c RV 5 comp L at +2 sigma_F (0.087): chi2 along Fisher line 2305.1, profile min 2.380 (Gaussian: 4.0) it=80
+case c RV 5 comp L at +4 sigma_F (0.087): chi2 along Fisher line 17227.0, profile min 22.772 (Gaussian: 16.0) it=17
+[194s]
