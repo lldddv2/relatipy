@@ -15,7 +15,9 @@ from .geodesic import (
     Orbit, Solution, State, Termination,
 )
 from .metrics import Kerr
-from .observables import KerrMcmcModel
+from .observables import (
+    KerrMcmcGaussianLikelihood, KerrMcmcModel, KerrMcmcMultiModel,
+)
 from .plotting import plot_sols
 
 __all__ = [
@@ -26,6 +28,8 @@ __all__ = [
     "plotting",
     "Kerr",
     "KerrMcmcModel",
+    "KerrMcmcMultiModel",
+    "KerrMcmcGaussianLikelihood",
     "Orbit",
     "State",
     "InitialState",
