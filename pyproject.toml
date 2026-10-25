@@ -22,6 +22,9 @@ dependencies = [
     "nbformat>=4.2",  # Plotly display in notebooks
 ]
 
+[project.optional-dependencies]
+symbolic = ["sympy>=1.12"]
+
 [project.urls]
 Homepage = "https://github.com/lldddv2/relatipy"
 Documentation = "https://relatipy.readthedocs.io/en/latest/"
