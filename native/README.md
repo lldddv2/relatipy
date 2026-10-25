@@ -380,6 +380,30 @@ cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -Inative/include -Inative/src \
 `tests/force/bench_forced.c` is a benchmark built with the same source list
 and run without arguments; it prints timings and checks nothing.
 
+The tabulated thin-disk and spheroid models under `src/force/models/` need
+only their own sources; the benchmark also times the Kerr right-hand side:
+
+```console
+MODEL_SOURCES="native/src/force/models/elliptic.c \
+  native/src/force/models/quadrature.c \
+  native/src/force/models/axisymmetric_table.c \
+  native/src/force/models/thin_disk.c native/src/force/models/spheroid.c"
+for test in test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table \
+    test_thin_disk_spheroid; do
+  cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+    -Inative/include -Inative/src $MODEL_SOURCES \
+    native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test
+  /tmp/relatipy-native-tests/$test
+done
+
+cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -Inative/include -Inative/src \
+  $MODEL_SOURCES native/src/utils/numeric.c native/src/utils/tensor.c \
+  native/src/metric/physic/kerr.c native/src/geodesic/physic/kerr.c \
+  native/tests/force/test_thin_disk_bench.c -lm \
+  -o /tmp/relatipy-native-tests/test_thin_disk_bench
+/tmp/relatipy-native-tests/test_thin_disk_bench
+```
+
 On compilers that provide AddressSanitizer and UndefinedBehaviorSanitizer:
 
 ```console
