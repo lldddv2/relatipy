@@ -50,7 +50,7 @@ redirects = {
 
 root_doc = "index"
 language = "en"
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
+exclude_patterns = ["tutorials/00-resumen.ipynb", "_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
 
 # Every Python cross-reference must resolve; the strict build uses ``-n``.
 nitpicky = True
