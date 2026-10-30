@@ -146,6 +146,116 @@ static void test_turning_points(void)
     }
 }
 
+/* Far from the hole the Lz row of J grows as r^2: unscaled, its J J^T pivot
+ * dropped the independent E row, E stayed off by ~1e-10 after a step of a
+ * loose tolerance (rtol 1e-6) and the projection failed. */
+static void test_large_radius_loose_step(void)
+{
+    const double pi = acos(-1.0);
+    const double radii[3] = {1.0e3, 5.0e3, 2.0e4};
+    const double nudges[2] = {1.0e-7, -1.0e-6};
+    size_t orbit;
+    size_t nudge;
+
+    for (orbit = 0U; orbit < 3U; ++orbit) {
+        const double radius = radii[orbit];
+        const double coordinate_velocity[3] = {
+            0.1 / sqrt(radius), 0.0, 0.9 / pow(radius, 1.5)
+        };
+
+        for (nudge = 0U; nudge < 2U; ++nudge) {
+            rp_kerr_integrator_context context = {.mass = 1.0, .spin = 0.5};
+            double state[8];
+
+            make_state(radius, 0.5 * pi, coordinate_velocity, state);
+            assert(rp_kerr_integrator_prepare_projection(&context, state) == 0);
+            state[1] *= 1.0 + nudges[nudge];
+            state[4] *= 1.0 + nudges[nudge];
+            state[5] *= 1.0 - nudges[nudge];
+            state[7] *= 1.0 + nudges[nudge];
+            assert(rp_kerr_integrator_project(0.0, state, &context) == 0);
+            check_invariants(&context, state);
+        }
+    }
+}
+
+static double norm_residual(
+    const rp_kerr_integrator_context *context,
+    const double state[8]
+)
+{
+    double metric[4][4];
+    double norm = 1.0;
+    size_t mu;
+    size_t nu;
+
+    assert(rp_kerr_metric(
+        context->mass, context->spin, state, metric
+    ) == RP_KERR_STATUS_OK);
+    for (mu = 0U; mu < 4U; ++mu) {
+        for (nu = 0U; nu < 4U; ++nu) {
+            norm += metric[mu][nu] * state[4U + mu] * state[4U + nu];
+        }
+    }
+    return fabs(norm);
+}
+
+/* At a far radial turning point the norm gradient is nearly a combination of
+ * the E and Lz gradients. Factored first, the norm made Lz the dropped row,
+ * and Newton then broke Lz; now the norm is dropped and left at its residual
+ * after the step, while E, Lz and Q are restored. */
+static void test_far_turning_point(void)
+{
+    const double pi = acos(-1.0);
+    const double radii[2] = {9.0e3, 2.0e4};
+    const double nudges[2] = {1.0e-10, -1.0e-7};
+    size_t orbit;
+    size_t nudge;
+
+    for (orbit = 0U; orbit < 2U; ++orbit) {
+        const double radius = radii[orbit];
+        const double coordinate_velocity[3] = {
+            0.0, 0.0, 0.7 / pow(radius, 1.5)
+        };
+
+        for (nudge = 0U; nudge < 2U; ++nudge) {
+            rp_kerr_integrator_context context = {.mass = 1.0, .spin = 0.5};
+            double state[8];
+            double restored[8];
+            double inverse[4][4];
+            double energy;
+            double angular_momentum;
+            double metric[4][4];
+
+            make_state(radius, 0.5 * pi, coordinate_velocity, state);
+            assert(rp_kerr_integrator_prepare_projection(&context, state) == 0);
+            state[1] *= 1.0 + nudges[nudge];
+            state[5] = nudges[nudge];
+            state[4] *= 1.0 - nudges[nudge];
+            state[7] *= 1.0 + nudges[nudge];
+            /* The norm after restoring E and Lz exactly, before Newton. */
+            memcpy(restored, state, sizeof(restored));
+            assert(rp_kerr_inverse_metric(
+                context.mass, context.spin, restored, inverse
+            ) == RP_KERR_STATUS_OK);
+            restored[4] = -inverse[0][0] * context.E0
+                + inverse[0][3] * context.Lz0;
+            restored[7] = -inverse[3][0] * context.E0
+                + inverse[3][3] * context.Lz0;
+            assert(rp_kerr_integrator_project(0.0, state, &context) == 0);
+            assert(rp_kerr_metric(
+                context.mass, context.spin, state, metric
+            ) == RP_KERR_STATUS_OK);
+            energy = -(metric[0][0] * state[4] + metric[0][3] * state[7]);
+            angular_momentum = metric[3][0] * state[4] + metric[3][3] * state[7];
+            assert(fabs(energy - context.E0) < 2.0e-11);
+            assert(fabs(angular_momentum - context.Lz0) < 2.0e-11);
+            assert(norm_residual(&context, state)
+                <= fmax(norm_residual(&context, restored), 1.0e-10));
+        }
+    }
+}
+
 static void test_invalid_and_horizon(void)
 {
     const double coordinate_velocity[3] = {-0.01, 0.002, 0.02};
@@ -228,6 +338,8 @@ int main(void)
     test_general_and_signs();
     test_turning_points();
     test_circular_rounding();
+    test_large_radius_loose_step();
+    test_far_turning_point();
     test_invalid_and_horizon();
     test_independent_contexts();
     return 0;
