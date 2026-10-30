@@ -11,6 +11,7 @@ integrator. Use a force with the perturbed observable models of
 """
 
 from .axisymmetric import ThinDisk
+from .compiled import Force, Potential, elliptic_e, elliptic_k, integral
 from .core import ExternalForce
 
-__all__ = ["ExternalForce", "ThinDisk"]
+__all__ = ["ExternalForce", "Force", "Potential", "ThinDisk", "elliptic_e", "elliptic_k", "integral"]

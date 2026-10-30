@@ -29,7 +29,7 @@ def _acceleration(bound, positions):
 def test_package_exports_the_thin_disk() -> None:
     assert rp.ThinDisk is ThinDisk and rp.forces.ThinDisk is ThinDisk
     assert {"ThinDisk", "forces"} <= set(rp.__all__)
-    for name in ("Force", "Potential", "Plummer", "Spheroid", "PerturbedKerr"):
+    for name in ("Plummer", "Spheroid", "PerturbedKerr"):
         assert not hasattr(rp, name) and not hasattr(rp.forces, name)
 
 
