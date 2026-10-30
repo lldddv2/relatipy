@@ -139,6 +139,12 @@ static const size_t PROJECTION_FREE[6] = {1U, 2U, 4U, 5U, 6U, 7U};
 /* J J^T pivots below this fraction of its largest diagonal are dropped. */
 #define PROJECTION_PIVOT_CUTOFF 1.0e-12
 #define PROJECTION_MAX_ITERATIONS 16
+/* Factorization order of the constraints (norm, E, Lz, Q): E and Lz first.
+ * They are restored exactly and stay independent, while the norm gradient
+ * in (u^t, u^phi) is 2 u_mu, a combination of theirs; when its remaining
+ * part (u^r and the radial potential) is negligible, the norm is the
+ * constraint dropped, not Lz. */
+static const size_t PROJECTION_ORDER[4] = {1U, 2U, 0U, 3U};
 
 /*
  * Residuals (norm + 1, E - E0, Lz - Lz0, Q - Q0) of y, the summed magnitude
@@ -246,17 +252,22 @@ static void projection_residuals(
     jacobian[3][4] += 2.0 * polar_momentum * sigma;
 }
 
-/* Largest residual relative to the rounding scale of its own terms. */
+/* Largest residual relative to the rounding scale of its own terms, over
+ * every constraint (selected == NULL) or those with selected[i] == wanted. */
 static double projection_error(
     const double residual[4],
-    const double magnitude[4]
+    const double magnitude[4],
+    const int selected[4],
+    int wanted
 )
 {
     double error = 0.0;
     size_t i;
 
     for (i = 0U; i < 4U; ++i) {
-        error = fmax(error, fabs(residual[i]) / magnitude[i]);
+        if (selected == NULL || selected[i] == wanted) {
+            error = fmax(error, fabs(residual[i]) / magnitude[i]);
+        }
     }
     return isfinite(error) ? error : INFINITY;
 }
@@ -280,6 +291,9 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
     double gram[4][4];
     double lower[4][4] = {{0.0}};
     double pivot[4];
+    double weight[4];
+    int dropped[4];
+    double dropped_limit;
     double z[4];
     double increment[4];
     double lambda[4] = {0.0, 0.0, 0.0, 0.0};
@@ -333,7 +347,8 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
         candidate[i] = y[i];
     }
     projection_residuals(context, y, residual, magnitude, jacobian);
-    if (projection_error(residual, magnitude) <= PROJECTION_CONVERGED) {
+    if (projection_error(residual, magnitude, NULL, 0)
+        <= PROJECTION_CONVERGED) {
         return 0;
     }
 
@@ -355,7 +370,7 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
         candidate[i] = y[i];
     }
     projection_residuals(context, y, residual, magnitude, jacobian);
-    previous_error = projection_error(residual, magnitude);
+    previous_error = projection_error(residual, magnitude, NULL, 0);
     if (previous_error <= PROJECTION_CONVERGED) {
         for (i = 0U; i < 6U; ++i) {
             state[PROJECTION_FREE[i]] = y[i];
@@ -370,12 +385,32 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
      * L D L^T; a negligible pivot drops its constraint direction, so a
      * degenerate invariant set (Q on the equator, circular orbits) does
      * not amplify rounding into the state.
+     *
+     * Each constraint row is first scaled to unit norm. Scaling a
+     * constraint leaves the projection unchanged, but makes the pivot
+     * cutoff measure linear dependence rather than units: unscaled, the
+     * Lz row grows as r^2 and dropped the independent E row at r ~ 10^3.
+     * Rows are factored in PROJECTION_ORDER: row i below is constraint
+     * PROJECTION_ORDER[i].
      */
+    for (i = 0U; i < 4U; ++i) {
+        double row = 0.0;
+
+        for (j = 0U; j < 6U; ++j) {
+            row += jacobian[i][j] * jacobian[i][j];
+        }
+        row = sqrt(row);
+        weight[i] = row > 0.0 && isfinite(row) ? 1.0 / row : 0.0;
+        for (j = 0U; j < 6U; ++j) {
+            jacobian[i][j] *= weight[i];
+        }
+    }
     for (i = 0U; i < 4U; ++i) {
         for (k = 0U; k <= i; ++k) {
             gram[i][k] = 0.0;
             for (j = 0U; j < 6U; ++j) {
-                gram[i][k] += jacobian[i][j] * jacobian[k][j];
+                gram[i][k] += jacobian[PROJECTION_ORDER[i]][j]
+                    * jacobian[PROJECTION_ORDER[k]][j];
             }
         }
         largest = fmax(largest, gram[i][i]);
@@ -396,13 +431,25 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
             }
             lower[j][i] = pivot[i] != 0.0 ? entry / pivot[i] : 0.0;
         }
+        dropped[PROJECTION_ORDER[i]] = pivot[i] == 0.0;
     }
+    /* Newton cannot move along a dropped constraint: it is left at its
+     * residual after the step, which the iteration must not worsen. */
+    dropped_limit = fmax(
+        projection_error(residual, magnitude, dropped, 1), PROJECTION_ACCEPTED
+    );
+    previous_error = projection_error(residual, magnitude, dropped, 0);
 
     for (iteration = 0; iteration < PROJECTION_MAX_ITERATIONS; ++iteration) {
         double error;
 
         for (i = 0U; i < 4U; ++i) {
-            z[i] = -residual[i];
+            const size_t row = PROJECTION_ORDER[i];
+
+            /* A residual already at its rounding level drives no step: in
+             * a nearly degenerate row it would be amplified by the scale. */
+            z[i] = fabs(residual[row]) <= PROJECTION_CONVERGED * magnitude[row]
+                ? 0.0 : -weight[row] * residual[row];
             for (k = 0U; k < i; ++k) {
                 z[i] -= lower[i][k] * z[k];
             }
@@ -420,7 +467,7 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
         for (i = 0U; i < 6U; ++i) {
             candidate[i] = y[i];
             for (k = 0U; k < 4U; ++k) {
-                candidate[i] += jacobian[k][i] * lambda[k];
+                candidate[i] += jacobian[PROJECTION_ORDER[k]][i] * lambda[k];
             }
             if (!isfinite(candidate[i])) {
                 return (int)RP_KERR_STATUS_NON_TIMELIKE_VELOCITY;
@@ -430,11 +477,14 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
             return (int)RP_KERR_STATUS_NON_TIMELIKE_VELOCITY;
         }
         projection_residuals(context, candidate, residual, magnitude, scratch);
-        error = projection_error(residual, magnitude);
-        /* Converged, or stagnating at the rounding floor of a dropped
-         * (degenerate) direction with a small error: accept. */
-        if (error <= PROJECTION_CONVERGED
-            || (error > 0.5 * previous_error && error <= PROJECTION_ACCEPTED)) {
+        error = projection_error(residual, magnitude, dropped, 0);
+        /* The kept constraints converged, or stagnate at their rounding
+         * floor with a small error, and the dropped ones did not worsen. */
+        if ((error <= PROJECTION_CONVERGED
+                || (error > 0.5 * previous_error
+                    && error <= PROJECTION_ACCEPTED))
+            && projection_error(residual, magnitude, dropped, 1)
+                <= dropped_limit) {
             for (i = 0U; i < 6U; ++i) {
                 state[PROJECTION_FREE[i]] = candidate[i];
             }
@@ -442,7 +492,9 @@ int rp_kerr_integrator_project(double tau, double state[], void *opaque_context)
         }
         previous_error = error;
     }
-    if (previous_error <= PROJECTION_ACCEPTED) {
+    if (previous_error <= PROJECTION_ACCEPTED
+        && projection_error(residual, magnitude, dropped, 1)
+            <= dropped_limit) {
         for (i = 0U; i < 6U; ++i) {
             state[PROJECTION_FREE[i]] = candidate[i];
         }
