@@ -219,16 +219,16 @@ class ExternalForce:
         raise NotImplementedError
 
     def _new_storage(self) -> object:
-        """Model data of a new handle."""
-        raise NotImplementedError
+        """Model data of a new handle; default: one double per parameter."""
+        return np.zeros(max(len(self._parameters), 1), dtype=np.float64)
 
     def _storage_address(self, storage: object) -> int:
         """Address of the model data passed to the native callback."""
-        raise NotImplementedError
+        return int(storage.ctypes.data)
 
     def _storage_data(self, storage: object) -> np.ndarray:
         """Geometric model data, for inspection and tests."""
-        raise NotImplementedError
+        return storage
 
     def _write(
         self,
@@ -237,5 +237,6 @@ class ExternalForce:
         values: np.ndarray,
         rotation: np.ndarray | None,
     ) -> None:
-        """Write geometric model data for a black-hole mass in kilograms."""
-        raise NotImplementedError
+        """Write geometric model data; default: one double per parameter."""
+        factors, powers = self._conversions
+        storage[: factors.size] = values * factors * mass ** (-powers)
