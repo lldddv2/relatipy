@@ -1,0 +1,32 @@
+pygro engine compile (rkf78): 12.14 s
+pygro engine compile (dp45): 11.63 s
+warm-up done
+relatipy projection_radau 1e-06: 2.3 s
+relatipy projection_radau 1e-08: 9.5 s
+relatipy projection_radau 1e-10: 31.5 s
+relatipy projection_radau 1e-12: 59.8 s
+relatipy projection_radau 1e-13: 82.7 s
+relatipy radau 1e-06: 13.6 s
+relatipy radau 1e-08: 20.2 s
+relatipy radau 1e-10: 34.4 s
+relatipy radau 1e-12: 58.6 s
+relatipy radau 1e-13: 80.4 s
+relatipy dop853 1e-06: 0.7 s
+relatipy dop853 1e-08: 1.0 s
+relatipy dop853 1e-10: 1.5 s
+relatipy dop853 1e-12: 2.0 s
+relatipy dop853 1e-13: 2.4 s
+relatipy dp45 1e-06: 0.8 s
+relatipy dp45 1e-08: 1.3 s
+relatipy dp45 1e-10: 2.6 s
+relatipy dp45 1e-12: 6.3 s
+relatipy dp45 1e-13: 9.7 s
+pygro rkf78 6: 82.5 s
+pygro rkf78 8: 148.7 s
+pygro rkf78 10: 199.0 s
+pygro rkf78 12: 304.3 s
+pygro dp45 6: 24.0 s
+pygro dp45 8: 97.0 s
+pygro dp45 10: 195.3 s
+pygro dp45 12: 391.8 s
+total: 1894.1 s
