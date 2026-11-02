@@ -1,9 +1,9 @@
-"""Built-in tabulated thin disk (Piran et al. 2026).
+"""Tabulated thin disks: the power law of Piran et al. (2026) and any ``Sigma(R)``.
 
 The model evaluates an axisymmetric, plane-symmetric field from a table of
 the unit-mass distribution with unit outer radius, built once in native code
 and interpolated with C2 bicubic splines. The table depends only on the
-shape (slope, inner-to-outer radius ratio and softening); the
+shape (surface density, inner-to-outer radius ratio and softening); the
 mass, the outer radius and the symmetry axis are written into a small
 native model at bind time and can change between MCMC proposals without a
 rebuild. Built tables are cached per shape in each process.
@@ -11,9 +11,12 @@ rebuild. Built tables are cached per shape in each process.
 
 from __future__ import annotations
 
+import functools
+import importlib
 import math
 import threading
 from collections import OrderedDict
+from collections.abc import Mapping
 
 import numpy as np
 from astropy import units as u
@@ -37,8 +40,18 @@ def _table(shape: tuple) -> object:
             return table
     from .. import _force_core
 
-    _kind, *arguments = shape
-    table = _force_core.AxisymmetricTable.thin_disk(*arguments)
+    kind, *arguments = shape
+    if kind == "thin_mass":
+        source, name, values, ratio, eps, beta, inner_exponent = arguments
+        from .compiled import _compile
+
+        address, function = _compile(source, name)
+        # The density is called only while the table is built.
+        table = _force_core.AxisymmetricTable.thin_mass(
+            address, np.array(values, dtype=np.float64), ratio, eps, beta, inner_exponent)
+        del function
+    else:
+        table = _force_core.AxisymmetricTable.thin_disk(*arguments)
     with _TABLES_LOCK:
         table = _TABLES.setdefault(shape, table)
         _TABLES.move_to_end(shape)
@@ -307,6 +320,149 @@ class ThinDisk(_TabulatedForce):
         super().__init__(
             mass, outer, ("thin_disk", alpha, ratio, eps),
             {"r_in": inner, "slope": alpha, "softening": eps}, normal, _angles,
+        )
+
+
+_SYMBOLIC_HINT = (
+    "surface densities need SymPy; install it with `pip install relatipy[symbolic]`"
+)
+
+
+@functools.lru_cache(maxsize=32)
+def _density_source(text: str, names: tuple[str, ...], values: tuple[float, ...]) -> tuple:
+    """Generated C source, function name and SymPy expression of ``Sigma``."""
+    try:
+        importlib.import_module("sympy")
+    except ImportError as exc:
+        raise ImportError(_SYMBOLIC_HINT) from exc
+    density = importlib.import_module("relatipy._codegen.density")
+    generated = density.build_surface_density_source(
+        text, parameters=names, values=dict(zip(names, values)))
+    slope = density.central_slope(generated.expression, dict(zip(names, values)))
+    return generated.source, generated.function_name, generated.expression, slope
+
+
+def _check_density(expression, names: tuple[str, ...], values: tuple[float, ...], ratio: float) -> None:
+    """Reject a density that is negative or not finite on ``[r_in, r_out]``."""
+    import sympy as sp
+
+    radius = sp.Symbol("R", positive=True)
+    numeric = sp.lambdify(
+        radius, expression.xreplace({sp.Symbol(k, real=True): v for k, v in zip(names, values)}),
+        "numpy")
+    lower = ratio if ratio > 0 else 1e-6
+    samples = np.concatenate([np.geomspace(lower, 1.0, 200), [1.0]])
+    with np.errstate(all="ignore"):
+        sigma = np.broadcast_to(np.asarray(numeric(samples), dtype=np.float64), samples.shape)
+    if not np.all(np.isfinite(sigma)) or np.any(sigma < 0):
+        raise ValueError("surface density must be finite and non-negative on [r_in, r_out]")
+    if not np.any(sigma > 0):
+        raise ValueError("surface density must not vanish on the whole disk")
+
+
+class SurfaceDensityDisk(_TabulatedForce):
+    """Razor-thin axisymmetric disk of any surface density ``Sigma(R)``.
+
+    Parameters
+    ----------
+    surface_density : str
+        ``Sigma`` as an expression of ``R`` (cylindrical radius in units of
+        ``r_out``; ``r`` is the same radius in the plane) or of ``x, y``,
+        ``phi``, provided it does not depend on the azimuth; any
+        normalization. It may use the names in ``parameters``, numbers,
+        ``pi`` and the functions of :class:`~relatipy.forces.Potential`.
+    mass : astropy.units.Quantity
+        Finite disk mass, zero or positive.
+    r_out : astropy.units.Quantity
+        Finite, positive outer radius ``R_out``.
+    r_in : astropy.units.Quantity, optional
+        Inner radius ``R_in`` in ``[0, R_out)``, default zero.
+    softening : float, optional
+        Ring softening ``eps`` in ``(0, 1)``, ``H = eps R'``. Default ``0.01``.
+    parameters : mapping, optional
+        Dimensionless shape parameters of ``surface_density``. They fix the
+        table, so they are not run-time parameters.
+    normal : array-like, optional
+        Disk normal, as in :class:`ThinDisk`.
+
+    Raises
+    ------
+    ImportError
+        If SymPy is not installed.
+    TypeError
+        If a quantity or number has the wrong type.
+    ValueError
+        If ``surface_density`` depends on the azimuth or on undeclared names,
+        is negative or not finite on the disk, or has a mass that diverges at
+        the centre (``Sigma ~ R^s`` with ``s <= -2`` and ``r_in = 0``).
+
+    Notes
+    -----
+    ``Sigma`` is compiled to C (SymPy and a C11 compiler, as for
+    :class:`~relatipy.forces.Potential`) and summed over softened rings once,
+    in native code, into the same kind of table as :class:`ThinDisk`; the
+    run-time parameters are ``disk_mass``, ``normal_theta`` and
+    ``normal_phi``. ``surface_density="R**gamma"`` with
+    ``parameters={"gamma": a}`` is the disk ``ThinDisk(slope=a)``.
+    """
+
+    __slots__ = ()
+    _mass_name = "disk_mass"
+    _outer_name = "r_out"
+
+    def __init__(
+        self,
+        surface_density: str,
+        *,
+        mass: u.Quantity,
+        r_out: u.Quantity,
+        r_in: u.Quantity | None = None,
+        softening: float = 0.01,
+        parameters: Mapping[str, object] | None = None,
+        normal: object = (0.0, 0.0, 1.0),
+        _angles: tuple[float, float] | None = None,
+    ) -> None:
+        """Validate the density, shape, mass, outer radius and normal."""
+        if not isinstance(surface_density, str):
+            raise TypeError("surface_density must be a string expression")
+        outer = _length(r_out, "r_out")
+        inner = _length(0 * outer.unit if r_in is None else r_in, "r_in")
+        if not outer.value > 0:
+            raise ValueError("r_out must be positive")
+        ratio = float((inner / outer).to_value(u.one))
+        if not 0 <= ratio < 1:
+            raise ValueError("r_in must be in [0, r_out)")
+        eps = _real(softening, "softening")
+        if not 0 < eps < 1:
+            raise ValueError("softening must be in (0, 1)")
+        if parameters is None:
+            parameters = {}
+        if not isinstance(parameters, Mapping):
+            raise TypeError("parameters must be a mapping from name to value")
+        names = tuple(parameters)
+        values = tuple(_real(parameters[name], name) for name in names)
+        source, function_name, expression, slope = _density_source(surface_density, names, values)
+        _check_density(expression, names, values, ratio)
+        if ratio > 0:
+            beta, inner_exponent = 1.0, 3.0
+        else:
+            if not slope > -2:
+                raise ValueError(
+                    "the disk mass diverges at the centre (Sigma ~ R^s with s <= -2); "
+                    "give r_in > 0")
+            # A smooth density wants u = R; a cusp R^s wants u = R^(s + 2).
+            smooth = math.isinf(slope) or (slope >= 0 and abs(slope - round(slope)) < 1e-9)
+            beta = 1.0 if smooth else slope + 2.0
+            # Steeper than R^1 at the centre, the outer disk dominates: a ~ r.
+            inner_exponent = 3.0 if math.isinf(slope) else min(slope + 2.0, 3.0)
+        super().__init__(
+            mass, outer,
+            ("thin_mass", source, function_name, values, ratio, eps, beta, inner_exponent),
+            {
+                "surface_density": surface_density, "r_in": inner, "softening": eps,
+                "parameters": dict(zip(names, values)),
+            },
+            normal, _angles,
         )
 
 

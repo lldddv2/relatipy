@@ -1,4 +1,4 @@
-#include "force/models/axisymmetric_table.h"
+#include "utils/integrators/axisymmetric/table.h"
 
 #include <math.h>
 #include <stdlib.h>

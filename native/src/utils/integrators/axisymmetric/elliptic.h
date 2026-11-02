@@ -7,8 +7,8 @@
  * routine is pure: no allocation, no retained pointer and no global state.
  */
 
-#ifndef RELATIPY_FORCE_MODELS_ELLIPTIC_H
-#define RELATIPY_FORCE_MODELS_ELLIPTIC_H
+#ifndef RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_ELLIPTIC_H
+#define RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_ELLIPTIC_H
 
 typedef enum {
     RP_ELLIPTIC_STATUS_OK = 0,
@@ -54,4 +54,4 @@ rp_elliptic_status rp_elliptic_ke_complementary(double m1, double *k, double *e)
  */
 void rp_elliptic_agm(double m, double m1, double *k, double *k_minus_e);
 
-#endif /* RELATIPY_FORCE_MODELS_ELLIPTIC_H */
+#endif /* RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_ELLIPTIC_H */

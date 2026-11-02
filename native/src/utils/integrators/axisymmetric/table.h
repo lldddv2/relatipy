@@ -1,5 +1,5 @@
 /**
- * @file axisymmetric_table.h
+ * @file table.h
  * @brief Tabulated Newtonian field of an axisymmetric, plane-symmetric mass.
  *
  * Private to the native force models.  A model (such as the thin disk)
@@ -32,8 +32,8 @@
  * A built table is immutable and may be shared between threads.
  */
 
-#ifndef RELATIPY_FORCE_MODELS_AXISYMMETRIC_TABLE_H
-#define RELATIPY_FORCE_MODELS_AXISYMMETRIC_TABLE_H
+#ifndef RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_TABLE_H
+#define RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_TABLE_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -199,4 +199,4 @@ int rp_axisymmetric_potential(
     const double position[3], const void *model, double *potential
 );
 
-#endif /* RELATIPY_FORCE_MODELS_AXISYMMETRIC_TABLE_H */
+#endif /* RELATIPY_UTILS_INTEGRATORS_AXISYMMETRIC_TABLE_H */

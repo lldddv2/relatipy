@@ -2,26 +2,15 @@
  * @file thin_disk.h
  * @brief Razor-thin power-law disk (Piran et al. 2026) as an external force.
  *
- * Surface density `Sigma(R) = Sigma_0 (R / R_out)^alpha` for
- * `R_in <= R <= R_out` (default `alpha = -1`, `R_in = 0`).  Each ring of
- * radius `R'` is softened as `|x - x'|^2 -> |x - x'|^2 + H^2` with
- * `H = eps R'` (default `eps = 0.01`), i.e. `z^2 -> z^2 + H^2` in the closed
- * ring field; the acceleration is the exact gradient of the softened
- * potential.  With `p^2 = (d + R')^2 + zeta^2`, `q^2 = (d - R')^2 + zeta^2`,
- * `zeta^2 = z^2 + H^2` and `m = 4 R' d / p^2`, a ring of mass `dM` gives
+ * The model only describes its mass: surface density
+ * `Sigma(R) = Sigma_0 (R / R_out)^alpha` for `R_in <= R <= R_out` (default
+ * `alpha = -1`, `R_in = 0`) and ring softening `H = eps R'` (default
+ * `eps = 0.01`).  The ring sum, its normalization and far multipoles are
+ * computed by `utils/integrators/axisymmetric/ring_sum.h`, and the field is
+ * tabulated and interpolated by `utils/integrators/axisymmetric/table.h`.
  *
- *     Phi = -2 dM K(m) / (pi p),
- *     a_z = -2 dM E(m) z / (pi p q^2),
- *     a_d = -dM d [16 R'^2 S(m) / p^4 + 2 E(m) / q^2] / (pi p),
- *
- * where `S(m) = [K - E - m E / (2 (1 - m))] / m^2` is the standard
- * `a_d = -(dM / (pi p d)) [K + E (d^2 - R'^2 - zeta^2) / q^2]` rewritten
- * without the cancellations at `d -> 0` (axis) and `R' -> 0`; `S` uses its
- * Taylor series for `m < 0.1`.
- *
- * Tables are built per unit disk mass with `R_out = 1` by the generic
- * axisymmetric machinery (`axisymmetric_table.h`).  `R_out` (any length in
- * `G M / c^2`), the disk mass and the disk normal are model parameters, so
+ * Tables are built per unit disk mass with `R_out = 1`.  `R_out` (any length
+ * in `G M / c^2`), the disk mass and the disk normal are model parameters, so
  * they can change between MCMC proposals without rebuilding the table; only
  * `alpha`, `R_in / R_out` and `eps` fix a table.
  *
@@ -38,7 +27,7 @@
 #ifndef RELATIPY_FORCE_MODELS_THIN_DISK_H
 #define RELATIPY_FORCE_MODELS_THIN_DISK_H
 
-#include "force/models/axisymmetric_table.h"
+#include "utils/integrators/axisymmetric/table.h"
 
 #include <stddef.h>
 
@@ -66,22 +55,10 @@ typedef rp_axisymmetric_model rp_thin_disk_model;
 void rp_thin_disk_default_params(rp_thin_disk_params *params);
 
 /**
- * Field of a unit-mass ring of radius `ring_radius >= 0` in `z = 0`,
- * softened by `softening_length >= 0`, at `d >= 0`, `z`.  Writes
- * `field = {a_d / d, a_z / z, Phi}` (finite on the axis and in the plane).
- * Returns nonzero, leaving `field` unchanged, on the unsoftened ring itself
- * or for invalid input.
- */
-int rp_thin_disk_ring_field(
-    double ring_radius, double softening_length, double d, double z,
-    double field[3]
-);
-
-/**
  * Direct ring sum of the unit-mass disk with `R_out = 1` at `(d >= 0, z)`:
  * piecewise Gauss-Legendre in the enclosed-mass coordinate with panels
  * refined geometrically around `R' = d` down to a quarter of
- * `sqrt(z^2 + (eps d)^2)`.  Writes `field` as rp_thin_disk_ring_field().
+ * `sqrt(z^2 + (eps d)^2)`.  Writes `field` as rp_ring_field() (`ring_sum.h`).
  * This is the reference behind the table; it costs about 0.1 ms.
  */
 rp_axisymmetric_status rp_thin_disk_direct_field(

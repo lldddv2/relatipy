@@ -1,5 +1,6 @@
 /* Ring field and direct disk sum of the thin-disk model. */
 #include "force/models/thin_disk.h"
+#include "utils/integrators/axisymmetric/ring_sum.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -50,7 +51,7 @@ static void ring_versus_brute_force(void)
     for (size_t k = 0; k < sizeof cases / sizeof cases[0]; ++k) {
         const double *c = cases[k];
         double f[3], b[3];
-        if (rp_thin_disk_ring_field(c[0], c[1], c[2], c[3], f) != 0) {
+        if (rp_ring_field(c[0], c[1], c[2], c[3], f) != 0) {
             printf("FAIL ring status\n");
             ++failures;
             continue;
@@ -76,31 +77,31 @@ static void ring_limits(void)
     const double radius = 0.6, h = 0.006, z = 0.2;
     const double zeta2 = z * z + h * h;
     const double s = sqrt(radius * radius + zeta2);
-    rp_thin_disk_ring_field(radius, h, 0.0, z, f);
+    rp_ring_field(radius, h, 0.0, z, f);
     check("axis a_d/d", fabs(f[0] - (radius * radius - 2.0 * zeta2) / (2.0 * pow(s, 5))) * pow(s, 3), 1.0e-15);
     check("axis a_z/z", fabs(f[1] + 1.0 / (s * s * s)) * pow(s, 3), 1.0e-15);
     check("axis Phi", fabs(f[2] + 1.0 / s) * s, 1.0e-15);
     /* Smooth approach to the axis (no 0/0 at small d). */
-    rp_thin_disk_ring_field(radius, h, 1.0e-9, z, g);
+    rp_ring_field(radius, h, 1.0e-9, z, g);
     check("axis continuity", fabs(g[0] - f[0]) / fabs(f[0]), 1.0e-14);
     /* R -> 0: a softened point mass at the origin. */
     const double d = 0.3, zz = 0.4, hh = 1.0e-3;
     const double s2 = d * d + zz * zz + hh * hh;
-    rp_thin_disk_ring_field(0.0, hh, d, zz, f);
+    rp_ring_field(0.0, hh, d, zz, f);
     check("point a_d/d", fabs(f[0] * pow(s2, 1.5) + 1.0), 1.0e-15);
     check("point a_z/z", fabs(f[1] * pow(s2, 1.5) + 1.0), 1.0e-15);
-    rp_thin_disk_ring_field(1.0e-9, hh, d, zz, g);
+    rp_ring_field(1.0e-9, hh, d, zz, g);
     check("small-ring continuity", fabs(g[0] - f[0]) / fabs(f[0]), 1.0e-14);
     /* Far field: monopole with an O(R^2 / r^2) quadrupole. */
     const double far = 1.0e4;
-    rp_thin_disk_ring_field(1.0, 0.01, far * 0.6, far * 0.8, f);
+    rp_ring_field(1.0, 0.01, far * 0.6, far * 0.8, f);
     const double ad = f[0] * far * 0.6, az = f[1] * far * 0.8;
     const double mono = 1.0 / (far * far);
     check("ring monopole", hypot(ad + 0.6 * mono, az + 0.8 * mono) / mono, 2.0e-8);
     /* Invalid input. */
-    if (rp_thin_disk_ring_field(0.5, 0.0, 0.5, 0.0, f) == 0
-        || rp_thin_disk_ring_field(-1.0, 0.0, 0.5, 0.0, f) == 0
-        || rp_thin_disk_ring_field(0.5, 0.0, NAN, 0.0, f) == 0) {
+    if (rp_ring_field(0.5, 0.0, 0.5, 0.0, f) == 0
+        || rp_ring_field(-1.0, 0.0, 0.5, 0.0, f) == 0
+        || rp_ring_field(0.5, 0.0, NAN, 0.0, f) == 0) {
         printf("FAIL ring invalid input accepted\n");
         ++failures;
     }
@@ -116,12 +117,12 @@ static void ring_gradient(void)
         const double d = points[k][0], z = points[k][1];
         const double step = 1.0e-5 * fmax(fabs(d - radius), 0.01);
         double f[3], p[3], m[3];
-        rp_thin_disk_ring_field(radius, h, d, z, f);
-        rp_thin_disk_ring_field(radius, h, d + step, z, p);
-        rp_thin_disk_ring_field(radius, h, d - step, z, m);
+        rp_ring_field(radius, h, d, z, f);
+        rp_ring_field(radius, h, d + step, z, p);
+        rp_ring_field(radius, h, d - step, z, m);
         const double ad = -(p[2] - m[2]) / (2.0 * step);
-        rp_thin_disk_ring_field(radius, h, d, z + step, p);
-        rp_thin_disk_ring_field(radius, h, d, z - step, m);
+        rp_ring_field(radius, h, d, z + step, p);
+        rp_ring_field(radius, h, d, z - step, m);
         const double az = -(p[2] - m[2]) / (2.0 * step);
         const double norm = hypot(f[0] * d, f[1] * z);
         worst = fmax(worst, hypot(ad - f[0] * d, az - f[1] * z) / norm);

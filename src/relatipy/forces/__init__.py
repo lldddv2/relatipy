@@ -8,10 +8,18 @@ integrator. Use a force with the perturbed observable models of
 
 - :class:`ThinDisk` is the tabulated power-law thin disk of Piran et al.
   (2026).
+- :class:`SurfaceDensityDisk` tabulates a thin disk of any axisymmetric
+  surface density.
+- :func:`get_force` builds a force from a potential, a force or a surface
+  density given as text.
 """
 
-from .axisymmetric import ThinDisk
+from .axisymmetric import SurfaceDensityDisk, ThinDisk
 from .compiled import Force, Potential, elliptic_e, elliptic_k, integral
 from .core import ExternalForce
+from .factory import get_force
 
-__all__ = ["ExternalForce", "Force", "Potential", "ThinDisk", "elliptic_e", "elliptic_k", "integral"]
+__all__ = [
+    "ExternalForce", "Force", "Potential", "SurfaceDensityDisk", "ThinDisk",
+    "elliptic_e", "elliptic_k", "get_force", "integral",
+]

@@ -1,4 +1,4 @@
-#include "force/models/quadrature.h"
+#include "utils/integrators/quadrature.h"
 
 #include <math.h>
 #include <stdlib.h>

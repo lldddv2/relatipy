@@ -1,12 +1,12 @@
 /**
  * @file quadrature.h
- * @brief Gauss-Legendre panels for the reference fields of the force models.
+ * @brief Gauss-Legendre panels and integration coordinates.
  *
- * Private to the native force models: no allocation, no retained pointer.
+ * Private to the native core: no allocation, no retained pointer.
  */
 
-#ifndef RELATIPY_FORCE_MODELS_QUADRATURE_H
-#define RELATIPY_FORCE_MODELS_QUADRATURE_H
+#ifndef RELATIPY_UTILS_INTEGRATORS_QUADRATURE_H
+#define RELATIPY_UTILS_INTEGRATORS_QUADRATURE_H
 
 #include <stddef.h>
 
@@ -62,4 +62,4 @@ double rp_power_coordinate(double x, double beta);
 /** Inverse of rp_power_coordinate(). */
 double rp_power_coordinate_inverse(double u, double beta);
 
-#endif /* RELATIPY_FORCE_MODELS_QUADRATURE_H */
+#endif /* RELATIPY_UTILS_INTEGRATORS_QUADRATURE_H */

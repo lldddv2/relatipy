@@ -69,9 +69,10 @@ FORCE_SOURCES = [
     NATIVE / "force" / "external.c",
     NATIVE / "force" / "kerr_forced.c",
     NATIVE / "force" / "kerr_mcmc.c",
-    NATIVE / "force" / "models" / "elliptic.c",
-    NATIVE / "force" / "models" / "quadrature.c",
-    NATIVE / "force" / "models" / "axisymmetric_table.c",
+    NATIVE / "utils" / "integrators" / "quadrature.c",
+    NATIVE / "utils" / "integrators" / "axisymmetric" / "elliptic.c",
+    NATIVE / "utils" / "integrators" / "axisymmetric" / "ring_sum.c",
+    NATIVE / "utils" / "integrators" / "axisymmetric" / "table.c",
     NATIVE / "force" / "models" / "thin_disk.c",
 ]
 

@@ -401,10 +401,12 @@ def evaluate_general(
     return output
 
 
-cdef extern from "force/models/axisymmetric_table.h":
+cdef extern from "utils/integrators/axisymmetric/table.h":
     ctypedef enum rp_axisymmetric_status:
         RP_AXISYMMETRIC_STATUS_OK
+        RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT
         RP_AXISYMMETRIC_STATUS_ALLOCATION_FAILURE
+        RP_AXISYMMETRIC_STATUS_FIELD_FAILURE
     ctypedef struct rp_axisymmetric_table:
         size_t bytes
     ctypedef struct rp_axisymmetric_model:
@@ -418,11 +420,42 @@ cdef extern from "force/models/axisymmetric_table.h":
         double mass, double length_scale, const double normal[3]
     ) nogil
 
+cdef extern from "utils/integrators/axisymmetric/ring_sum.h":
+    ctypedef double (*rp_surface_density_fn)(double radius, const void *context) noexcept nogil
+    ctypedef struct rp_thin_mass:
+        rp_surface_density_fn sigma
+        const void *context
+        double inner_ratio
+        double softening
+        double beta
+        double inner_exponent
+        size_t quadrature_points
+    ctypedef struct rp_axisymmetric_grid:
+        double radial_min
+        double radial_match
+        double radial_far
+        double radial_step
+        double angular_step
+        double floor_step
+        size_t far_order
+    rp_axisymmetric_status rp_thin_ring_sum_table_build(
+        const rp_thin_mass *mass, const rp_axisymmetric_grid *grid,
+        rp_axisymmetric_table **table
+    ) nogil
+
 cdef extern from "force/models/thin_disk.h":
     ctypedef struct rp_thin_disk_params:
         double alpha
         double inner_ratio
         double softening
+        size_t quadrature_points
+        double radial_min
+        double radial_match
+        double radial_far
+        double radial_step
+        double angular_step
+        double floor_step
+        size_t far_order
     void rp_thin_disk_default_params(rp_thin_disk_params *params) nogil
     rp_axisymmetric_status rp_thin_disk_table_build(
         const rp_thin_disk_params *params, rp_axisymmetric_table **table
@@ -435,9 +468,9 @@ cdef extern from "force/models/thin_disk.h":
 
 
 cdef class AxisymmetricTable:
-    """Owner of one built thin-disk table (read-only, shareable).
+    """Owner of one built axisymmetric table (read-only, shareable).
 
-    Build with :meth:`thin_disk`; the GIL is released
+    Build with :meth:`thin_disk` or :meth:`thin_mass`; the GIL is released
     while the table is built. The table is freed when this object is
     collected, so every placed model keeps a reference to it.
     """
@@ -470,6 +503,55 @@ cdef class AxisymmetricTable:
         _check_table(status, owner.table)
         return owner
 
+    @staticmethod
+    def thin_mass(
+        uintptr_t sigma,
+        parameters,
+        double inner_ratio,
+        double softening,
+        double beta,
+        double inner_exponent,
+    ):
+        """Build the unit table of a thin disk with surface density ``sigma``.
+
+        ``sigma`` is the address of an ``rp_surface_density_fn`` reading
+        ``parameters`` (float64, copied here) as its context; it is called
+        only while the table is built. The grid is that of :meth:`thin_disk`.
+        """
+        cdef AxisymmetricTable owner = AxisymmetricTable()
+        cdef cnp.ndarray[cnp.float64_t, ndim=1, mode="c"] values = np.ascontiguousarray(
+            parameters, dtype=np.float64).reshape(-1)
+        cdef rp_thin_disk_params defaults
+        cdef rp_thin_mass mass
+        cdef rp_axisymmetric_grid grid
+        cdef rp_axisymmetric_status status
+        if sigma == 0:
+            raise ValueError("surface density callback must not be NULL")
+        rp_thin_disk_default_params(&defaults)
+        mass.sigma = <rp_surface_density_fn><void *>sigma
+        mass.context = <const void *>&values[0] if values.shape[0] > 0 else NULL
+        mass.inner_ratio = inner_ratio
+        mass.softening = softening
+        mass.beta = beta
+        mass.inner_exponent = inner_exponent
+        mass.quadrature_points = defaults.quadrature_points
+        grid.radial_min = defaults.radial_min
+        grid.radial_match = defaults.radial_match
+        grid.radial_far = defaults.radial_far
+        grid.radial_step = defaults.radial_step
+        grid.angular_step = defaults.angular_step
+        grid.floor_step = defaults.floor_step
+        grid.far_order = defaults.far_order
+        with nogil:
+            status = rp_thin_ring_sum_table_build(&mass, &grid, &owner.table)
+        owner.kind = "thin_mass"
+        if status == RP_AXISYMMETRIC_STATUS_INVALID_ARGUMENT:
+            raise ValueError("invalid thin-disk mass (shape, softening or total mass)")
+        if status == RP_AXISYMMETRIC_STATUS_FIELD_FAILURE:
+            raise ValueError("surface density is not finite on the disk")
+        _check_table(status, owner.table)
+        return owner
+
     @property
     def nbytes(self):
         """Heap bytes owned by the table."""
@@ -477,7 +559,7 @@ cdef class AxisymmetricTable:
 
     @property
     def callback(self):
-        """Address of the thin-disk acceleration callback."""
+        """Address of the axisymmetric acceleration callback."""
         return <uintptr_t><void *>rp_thin_disk_acceleration
 
 
