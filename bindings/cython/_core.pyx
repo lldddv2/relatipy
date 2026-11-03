@@ -212,6 +212,8 @@ cdef extern from "geodesic/integrators/integrator.h":
         RP_INTEGRATOR_METHOD_RADAU
         RP_INTEGRATOR_METHOD_DP45
         RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+        RP_INTEGRATOR_METHOD_PROJECTION_DOP853
+        RP_INTEGRATOR_METHOD_PROJECTION_DP45
     ctypedef struct rp_integrator_stats:
         size_t accepted_steps
         size_t rejected_steps
@@ -461,8 +463,15 @@ def integrate_kerr(
         selected_method = RP_INTEGRATOR_METHOD_DP45
     elif method == "projection_radau":
         selected_method = RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+    elif method == "projection_dop853":
+        selected_method = RP_INTEGRATOR_METHOD_PROJECTION_DOP853
+    elif method == "projection_dp45":
+        selected_method = RP_INTEGRATOR_METHOD_PROJECTION_DP45
     else:
-        raise ValueError("method must be one of radau, dop853, dp45, projection_radau")
+        raise ValueError(
+            "method must be one of radau, dop853, dp45, projection_radau, "
+            "projection_dop853, projection_dp45"
+        )
     if not np.isfinite(spin) or spin < 0.0 or spin > 1.0:
         raise ValueError("spin must be finite and in [0, 1]")
     initial = np.ascontiguousarray(y0, dtype=np.float64)

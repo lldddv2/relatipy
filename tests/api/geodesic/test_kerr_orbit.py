@@ -110,7 +110,10 @@ def test_requested_endpoint_is_retained_at_small_physical_times() -> None:
     np.testing.assert_array_equal(sol.tau.to_value(u.s), times.to_value(u.s))
 
 
-@pytest.mark.parametrize("method", ["radau", "dop853", "dp45", "projection_radau"])
+@pytest.mark.parametrize(
+    "method",
+    ["radau", "dop853", "dp45", "projection_radau", "projection_dop853", "projection_dp45"],
+)
 def test_public_method_dispatch_reaches_requested_time(method: str) -> None:
     orb = _orbit()
     end = 0.01 * orb._metric._time_scale

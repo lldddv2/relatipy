@@ -1,4 +1,4 @@
-"""Public projected Radau checks using independent Kerr invariants."""
+"""Public projected-method checks using independent Kerr invariants."""
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -22,6 +22,9 @@ from .timelike_invariants import (
 )
 
 
+PROJECTION_METHODS = ("projection_radau", "projection_dop853", "projection_dp45")
+
+
 def solve_case(case: dict, method: str, rtol: float, atol: float):
     """Integrate one fixed Kerr state without interpolated output samples."""
     metric = Kerr(mass=1 * u.Msun, spin=case["spin"])
@@ -34,13 +37,14 @@ def solve_case(case: dict, method: str, rtol: float, atol: float):
     return solution, public_canonical_state(solution, metric.mass)
 
 
+@pytest.mark.parametrize("method", PROJECTION_METHODS)
 @pytest.mark.parametrize("case", drift_cases(), ids=lambda case: case["id"])
-def test_projected_steps_preserve_invariants_and_match_tight_reference(case):
+def test_projected_steps_preserve_invariants_and_match_tight_reference(case, method):
     """Check saved steps and phase against tighter explicit integration."""
-    solution, states = solve_case(case, "projection_radau", 1e-10, 1e-12)
+    solution, states = solve_case(case, method, 1e-10, 1e-12)
     reference, reference_states = solve_case(case, "dop853", 1e-13, 1e-15)
     assert solution.success and reference.success
-    assert solution.integration.method == "projection_radau"
+    assert solution.integration.method == method
     assert len(states) == solution.integration.n_steps + 1
     invariants = timelike_invariants(case["spin"], states)
     assert np.max(np.abs(invariants["norm"] + 1.0)) < 2e-12
@@ -57,19 +61,21 @@ def test_projected_steps_preserve_invariants_and_match_tight_reference(case):
         assert turns == case["radial_periods"]
 
 
-def test_projected_method_preserves_domain_and_horizon_failure_contract():
+@pytest.mark.parametrize("method", PROJECTION_METHODS)
+def test_projected_method_preserves_domain_and_horizon_failure_contract(method):
     """Exercise near-axis and near-horizon cases plus partial failure output."""
-    assert near_polar_case(1.0, "north", 1e-8, "projection_radau")["status"] == 0
-    assert near_horizon_case(1.0, "projection_radau")["status"] == 0
-    horizon_failure_case("projection_radau")
+    assert near_polar_case(1.0, "north", 1e-8, method)["status"] == 0
+    assert near_horizon_case(1.0, method)["status"] == 0
+    horizon_failure_case(method)
 
 
-def test_projected_calls_keep_contexts_independent():
+@pytest.mark.parametrize("method", PROJECTION_METHODS)
+def test_projected_calls_keep_contexts_independent(method):
     """Parallel Kerr contexts reproduce their serial accepted trajectories."""
     cases = drift_cases()
 
     def solve(case):
-        return solve_case(case, "projection_radau", 1e-9, 1e-12)[1]
+        return solve_case(case, method, 1e-9, 1e-12)[1]
 
     serial = [solve(case) for case in cases]
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -78,8 +84,9 @@ def test_projected_calls_keep_contexts_independent():
         np.testing.assert_array_equal(actual, expected)
 
 
+@pytest.mark.parametrize("method", PROJECTION_METHODS)
 @pytest.mark.parametrize("sense", (1.0, -1.0), ids=("prograde", "retrograde"))
-def test_projection_keeps_circular_orbit_on_its_radius(sense):
+def test_projection_keeps_circular_orbit_on_its_radius(sense, method):
     """Projection must not inject a radial velocity on a circular orbit.
 
     The angular velocity of a circular equatorial orbit is
@@ -99,7 +106,7 @@ def test_projection_keeps_circular_orbit_on_its_radius(sense):
     period = 2 * np.pi / abs(omega)
     solution = orbit.solve(
         tau_span=(0 * u.s, 20 * period / float(orbit.ut.value) * time),
-        method="projection_radau", rtol=1e-12, max_step=period / 100 * time,
+        method=method, rtol=1e-12, max_step=period / 100 * time,
     )
     assert solution.success
     drift = np.abs((solution.R / metric.r_g).to_value(u.one) / radius - 1)

@@ -566,17 +566,12 @@ rp_integrator_status rp_radau_integrate(
         );
 
         if (error_norm <= 1.0) {
-            if (config->method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU) {
-                if (config->projector(
-                        independent_variable + step,
-                        second_half_state,
-                        context
-                    ) != 0
-                    || !vector_is_finite(
-                        second_half_state, config->dimension
-                    )) {
-                    return RP_INTEGRATOR_STATUS_PROJECTION_FAILURE;
-                }
+            status = rp_integrator_project_candidate(
+                config, context, independent_variable + step,
+                second_half_state
+            );
+            if (status != RP_INTEGRATOR_STATUS_OK) {
+                return status;
             }
             independent_variable += step;
             for (component = 0U; component < config->dimension; ++component) {

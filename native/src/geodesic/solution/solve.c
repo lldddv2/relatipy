@@ -104,7 +104,7 @@ rp_integrator_status rp_kerr_trajectory_solve(
     memset(&kerr_context, 0, sizeof(kerr_context));
     kerr_context.mass = 1.0;
     kerr_context.spin = spin;
-    if (method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+    if (rp_integrator_method_projects(method)
         && rp_kerr_integrator_prepare_projection(&kerr_context, current) != 0) {
         trajectory->integrator_status = RP_INTEGRATOR_STATUS_PROJECTION_FAILURE;
         return RP_INTEGRATOR_STATUS_PROJECTION_FAILURE;
@@ -130,7 +130,7 @@ rp_integrator_status rp_kerr_trajectory_solve(
     collection.store_steps = store_steps != 0;
     config.step_observer_context = &collection;
     config.jacobian = rp_kerr_integrator_jacobian;
-    config.projector = method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+    config.projector = rp_integrator_method_projects(method)
         ? rp_kerr_integrator_project : NULL;
     result = rp_integrator_integrate(
         &config, rp_kerr_integrator_rhs, &kerr_context,

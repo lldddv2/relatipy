@@ -66,7 +66,7 @@ static rp_integrator_config make_config(rp_integrator_method method)
     config.initial_step = 0.05;
     config.maximum_step = 0.05;
     config.maximum_steps = 100000U;
-    if (method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU) {
+    if (rp_integrator_method_projects(method)) {
         config.projector = identity_projector;
     }
     return config;

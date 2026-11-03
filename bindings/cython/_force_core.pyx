@@ -199,8 +199,11 @@ cdef void _solver(
 
 
 cdef int _check_mcmc_method(int method) except -1:
-    if method == 3:
-        raise ValueError("projection_radau is not available with an external force")
+    if method in (3, 4, 5):
+        raise ValueError(
+            "projection_radau, projection_dop853 and projection_dp45 are not "
+            "available with an external force"
+        )
     if method not in (0, 1, 2):
         raise ValueError("method must be 0 (dop853), 1 (radau) or 2 (dp45)")
     return 0

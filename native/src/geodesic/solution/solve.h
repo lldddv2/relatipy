@@ -49,7 +49,7 @@ typedef struct {
  * status: INVALID_ARGUMENT for a spin outside [0, 1], non-finite or
  * decreasing times, or an initial radius at or inside r_+;
  * NONFINITE_VALUE for a non-finite initial state; PROJECTION_FAILURE when
- * projection_radau cannot be prepared; OBSERVER_FAILURE when storage cannot
+ * a projection_* method cannot be prepared; OBSERVER_FAILURE when storage cannot
  * be allocated. A `trajectory` must not be shared between concurrent calls.
  */
 rp_integrator_status rp_kerr_trajectory_solve(

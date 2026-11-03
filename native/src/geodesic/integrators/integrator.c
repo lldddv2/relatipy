@@ -30,7 +30,9 @@ static const rp_integrator_registry_entry RP_INTEGRATOR_REGISTRY[] = {
     {"dop853", rp_dop853_integrate},
     {"radau", rp_radau_integrate},
     {"dp45", rp_dp45_integrate},
-    {"projection_radau", rp_radau_integrate}
+    {"projection_radau", rp_radau_integrate},
+    {"projection_dop853", rp_dop853_integrate},
+    {"projection_dp45", rp_dp45_integrate}
 };
 
 static int state_is_finite(const double state[], size_t dimension)
@@ -81,6 +83,23 @@ rp_integrator_status rp_integrator_report_step(
     return RP_INTEGRATOR_STATUS_OK;
 }
 
+rp_integrator_status rp_integrator_project_candidate(
+    const rp_integrator_config *config,
+    void *context,
+    double independent_variable,
+    double candidate[]
+)
+{
+    if (!rp_integrator_method_projects(config->method)) {
+        return RP_INTEGRATOR_STATUS_OK;
+    }
+    if (config->projector(independent_variable, candidate, context) != 0
+        || !state_is_finite(candidate, config->dimension)) {
+        return RP_INTEGRATOR_STATUS_PROJECTION_FAILURE;
+    }
+    return RP_INTEGRATOR_STATUS_OK;
+}
+
 const char *rp_integrator_method_name(rp_integrator_method method)
 {
     if ((int)method < 0 || method >= RP_INTEGRATOR_METHOD_COUNT) {
@@ -109,7 +128,7 @@ rp_integrator_status rp_integrator_integrate(
         || config->dimension == 0U
         || config->dimension > RP_INTEGRATOR_MAX_DIMENSION
         || config->maximum_steps == 0U
-        || (config->method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+        || (rp_integrator_method_projects(config->method)
             && config->projector == NULL)) {
         return RP_INTEGRATOR_STATUS_INVALID_ARGUMENT;
     }

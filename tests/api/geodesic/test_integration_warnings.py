@@ -73,7 +73,10 @@ def test_omitted_tolerances_are_chosen_from_the_state() -> None:
     np.testing.assert_allclose(info.atol, expected)
 
 
-@pytest.mark.parametrize("method", ["radau", "dop853", "dp45", "projection_radau"])
+@pytest.mark.parametrize(
+    "method",
+    ["radau", "dop853", "dp45", "projection_radau", "projection_dop853", "projection_dp45"],
+)
 def test_automatic_tolerances_keep_weak_field_orbit_nearly_circular(method) -> None:
     # Regression: rtol=1e-3, atol=1e-6 turned this 1 au, 30 km/s orbit
     # (Newtonian e ~ 0.015) into a radius range of 0.015-2.4 au.

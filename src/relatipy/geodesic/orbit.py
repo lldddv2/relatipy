@@ -30,7 +30,9 @@ _FAMILIES = {
     "spherical": ("r", "theta", "phi", "vr", "vtheta", "vphi"),
     "bl": ("R", "Theta", "Phi", "vR", "vTheta", "vPhi"),
 }
-_METHODS = ("radau", "dop853", "dp45", "projection_radau")
+_METHODS = (
+    "radau", "dop853", "dp45", "projection_radau", "projection_dop853", "projection_dp45"
+)
 _BOUND_KEYS = ("p", "e", "x", "q_r0", "q_theta0", "q_phi0")
 # Automatic relative tolerance used when ``rtol`` is omitted.
 _AUTO_RTOL = 1e-10
@@ -316,7 +318,7 @@ def _integration_options(
         method=method, rtol=rtol, atol=atol, first_step=first_step, max_step=max_step
     )
     if options.method not in _METHODS:
-        raise ValueError("method must be one of radau, dop853, dp45, projection_radau")
+        raise ValueError("method must be one of " + ", ".join(_METHODS))
     if isinstance(options.atol, np.ndarray) and options.atol.shape != (8,):
         raise ValueError("atol array must have shape (8,)")
     return options
@@ -622,8 +624,12 @@ class Orbit:
         ----------
         tau : astropy.units.Quantity
             Scalar absolute proper time at or after the saved initial time.
-        method : {"radau", "dop853", "dp45", "projection_radau"}, optional
-            Native integration method, default ``"radau"``.
+        method : str, optional
+            Native integration method: ``"radau"`` (default), ``"dop853"``,
+            ``"dp45"``, ``"projection_radau"``, ``"projection_dop853"`` or
+            ``"projection_dp45"``. The ``projection_*`` methods project each
+            accepted step onto the initial ``E``, ``L_z``, ``Q`` and
+            four-velocity norm.
         rtol : float or None, optional
             Relative local-error tolerance for the normalized native state.
             The default ``None`` selects ``1e-10``.
@@ -735,8 +741,12 @@ class Orbit:
         tau_eval : astropy.units.Quantity, optional
             Nonempty, finite, strictly increasing one-dimensional sample
             times within the span. Either this or ``tau_span`` is required.
-        method : {"radau", "dop853", "dp45", "projection_radau"}, optional
-            Native integration method, default ``"radau"``.
+        method : str, optional
+            Native integration method: ``"radau"`` (default), ``"dop853"``,
+            ``"dp45"``, ``"projection_radau"``, ``"projection_dop853"`` or
+            ``"projection_dp45"``. The ``projection_*`` methods project each
+            accepted step onto the initial ``E``, ``L_z``, ``Q`` and
+            four-velocity norm.
         rtol : float or None, optional
             Relative local-error tolerance for the normalized native state.
             The default ``None`` selects ``1e-10``.

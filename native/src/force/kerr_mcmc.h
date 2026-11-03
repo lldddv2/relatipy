@@ -26,8 +26,8 @@
  * Every argument except `force` has the meaning and validation of
  * `rp_kerr_mcmc_evaluate`.  `force` is caller owned, read only and may be
  * NULL; it and its model must stay valid and unchanged for the call.
- * `solver->method` must be `dop853`, `dp45` or `radau`; `projection_radau`
- * returns `RP_KERR_MCMC_INVALID_INPUT`.  `solver->jacobian` and
+ * `solver->method` must be `dop853`, `dp45` or `radau`; the projection_*
+ * methods return `RP_KERR_MCMC_INVALID_INPUT`.  `solver->jacobian` and
  * `solver->projector` are ignored (Radau uses finite differences) because
  * the RHS context differs from the homogeneous one.  With an inactive force
  * and a NULL solver Jacobian, the output and statistics are bitwise those of

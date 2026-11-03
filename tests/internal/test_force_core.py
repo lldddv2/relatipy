@@ -66,8 +66,9 @@ def test_failing_callback_maps_to_the_existing_errors() -> None:
 
 
 def test_methods_and_arguments_are_validated() -> None:
-    with pytest.raises(ValueError, match="projection_radau"):
-        _force_core.evaluate_general(SPIN, 0, 0, *_general(method=3))
+    for projection in (3, 4, 5):
+        with pytest.raises(ValueError, match="projection_dop853"):
+            _force_core.evaluate_general(SPIN, 0, 0, *_general(method=projection))
     with pytest.raises(ValueError, match="method"):
         _force_core.evaluate_general(SPIN, 0, 0, *_general(method=7))
     with pytest.raises(ValueError, match="projection_radau"):

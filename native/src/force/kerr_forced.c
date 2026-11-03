@@ -191,6 +191,8 @@ rp_integrator_status rp_kerr_forced_check_method(rp_integrator_method method)
     case RP_INTEGRATOR_METHOD_RADAU:
         return RP_INTEGRATOR_STATUS_OK;
     case RP_INTEGRATOR_METHOD_PROJECTION_RADAU:
+    case RP_INTEGRATOR_METHOD_PROJECTION_DOP853:
+    case RP_INTEGRATOR_METHOD_PROJECTION_DP45:
     case RP_INTEGRATOR_METHOD_COUNT:
     default:
         return RP_INTEGRATOR_STATUS_INVALID_ARGUMENT;

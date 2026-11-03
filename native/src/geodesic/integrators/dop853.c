@@ -368,6 +368,21 @@ rp_integrator_status rp_dop853_integrate(
             if (previous_step_rejected) {
                 factor = fmin(1.0, factor);
             }
+            if (rp_integrator_method_projects(config->method)) {
+                /* The next first stage needs f at the projected state. */
+                status = rp_integrator_project_candidate(
+                    config, context, independent_variable + step, candidate
+                );
+                if (status == RP_INTEGRATOR_STATUS_OK) {
+                    status = evaluate_rhs(
+                        rhs, context, independent_variable + step, candidate,
+                        candidate_derivative, config->dimension, stats
+                    );
+                }
+                if (status != RP_INTEGRATOR_STATUS_OK) {
+                    return status;
+                }
+            }
             independent_variable += step;
             for (component = 0U; component < config->dimension; ++component) {
                 state[component] = candidate[component];

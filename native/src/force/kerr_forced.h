@@ -85,8 +85,8 @@ int rp_kerr_forced_coordinate_time_rhs(
  * Report whether the forced layer accepts an integration method.
  *
  * `dop853`, `dp45` and `radau` return `RP_INTEGRATOR_STATUS_OK`.
- * `projection_radau` and unknown methods return
- * `RP_INTEGRATOR_STATUS_INVALID_ARGUMENT`: its projector restores Carter's
+ * The projection_* methods and unknown methods return
+ * `RP_INTEGRATOR_STATUS_INVALID_ARGUMENT`: their projector restores Carter's
  * constant, which an external force does not conserve.
  */
 rp_integrator_status rp_kerr_forced_check_method(rp_integrator_method method);

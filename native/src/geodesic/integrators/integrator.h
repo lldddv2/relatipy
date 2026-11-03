@@ -35,6 +35,8 @@ typedef enum {
     RP_INTEGRATOR_METHOD_RADAU = 1,
     RP_INTEGRATOR_METHOD_DP45 = 2,
     RP_INTEGRATOR_METHOD_PROJECTION_RADAU = 3,
+    RP_INTEGRATOR_METHOD_PROJECTION_DOP853 = 4,
+    RP_INTEGRATOR_METHOD_PROJECTION_DP45 = 5,
     RP_INTEGRATOR_METHOD_COUNT
 } rp_integrator_method;
 
@@ -85,7 +87,8 @@ typedef int (*rp_integrator_step_observer)(
  * Project a candidate accepted state before it replaces the current state.
  * The callback receives the same caller-owned context as the RHS. Return zero
  * on success. A nonzero return leaves the last accepted state intact and is
- * reported as PROJECTION_FAILURE. Only projection_radau invokes this callback.
+ * reported as PROJECTION_FAILURE. Only the projection_* methods invoke this
+ * callback.
  */
 typedef int (*rp_integrator_projector)(
     double independent_variable,
@@ -107,7 +110,7 @@ typedef struct {
     void *step_observer_context;
     /** NULL selects finite differences; used only by Radau. */
     rp_integrator_jacobian jacobian;
-    /** Required by projection_radau; ignored by the other methods. */
+    /** Required by the projection_* methods; ignored by the others. */
     rp_integrator_projector projector;
 } rp_integrator_config;
 
@@ -132,8 +135,10 @@ typedef struct {
  * after state/stats are updated.  On a positive observer return, this function
  * returns OBSERVER_STOPPED with that accepted state as the endpoint; on a
  * negative return it returns OBSERVER_FAILURE, also with that last accepted
- * state. projection_radau invokes projector before committing and observing
- * each accepted candidate; projection failure keeps the prior accepted state.
+ * state. The projection_* methods invoke projector before committing and
+ * observing each accepted candidate; the explicit ones then evaluate the RHS
+ * at the projected state for their next first stage.  Projection failure
+ * keeps the prior accepted state.
  * The caller owns and retains all pointers.
  */
 rp_integrator_status rp_integrator_integrate(
@@ -148,6 +153,14 @@ rp_integrator_status rp_integrator_integrate(
 
 /** Return the stable internal spelling of a valid method, or NULL. */
 const char *rp_integrator_method_name(rp_integrator_method method);
+
+/** Nonzero for the methods that project each accepted step. */
+static inline int rp_integrator_method_projects(rp_integrator_method method)
+{
+    return method == RP_INTEGRATOR_METHOD_PROJECTION_RADAU
+        || method == RP_INTEGRATOR_METHOD_PROJECTION_DOP853
+        || method == RP_INTEGRATOR_METHOD_PROJECTION_DP45;
+}
 
 /** Internal helpers used by the registered method implementations. */
 static inline double rp_integrator_atol(
@@ -173,6 +186,13 @@ rp_integrator_status rp_integrator_report_step(
     const rp_integrator_config *config,
     double independent_variable,
     const double state[]
+);
+/** Project an accepted candidate in place when the method projects. */
+rp_integrator_status rp_integrator_project_candidate(
+    const rp_integrator_config *config,
+    void *context,
+    double independent_variable,
+    double candidate[]
 );
 
 #endif /* RELATIPY_GEODESIC_INTEGRATORS_INTEGRATOR_H */
