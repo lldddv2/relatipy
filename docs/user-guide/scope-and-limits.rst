@@ -31,7 +31,7 @@ The general methods are:
 - ``"radau"`` (default);
 - ``"dop853"``;
 - ``"dp45"``;
-- ``"projection_radau"``.
+- ``"projection_radau"``, ``"projection_dop853"`` and ``"projection_dp45"``.
 
 These method names are case-sensitive. The common
 controls are ``method``, ``rtol``, ``atol``,
@@ -55,8 +55,9 @@ elements specify the initial orbit; they do not constitute an additional
 immediate output family. Exact ``Solution.at`` queries select saved states;
 intermediate queries use Cartesian interpolation before native reconstruction.
 
-``"projection_radau"`` shares the Radau stepper. Before storing an accepted
-exterior step, it fixes the position and projects the four-velocity toward
+The ``projection_*`` methods share the stepper of ``"radau"``,
+``"dop853"`` or ``"dp45"``. Before storing an accepted
+exterior step, they fix the position and projects the four-velocity toward
 the initial timelike norm ``-1``, energy, axial angular momentum, and Carter
 constant. Projection failure is reported as numerical failure and preserves
 the last valid point. Projection does not apply to intermediate stages or

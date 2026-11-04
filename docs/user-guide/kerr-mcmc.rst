@@ -45,7 +45,9 @@ The ``sol`` mapping requires exactly one nonempty one-dimensional quantity:
 Input times may be unordered. The returned arrays retain that order. The
 mapping can also set:
 
-- ``method`` (``"dop853"`` or ``"radau"``);
+- ``method`` (``"dop853"``, ``"dp45"``, ``"radau"``,
+  ``"projection_dop853"``, ``"projection_dp45"`` or ``"projection_radau"``;
+  see :meth:`~relatipy.geodesic.Orbit.solve`);
 - positive scalar ``rtol`` and ``atol``;
 - positive integer ``max_steps``.
 

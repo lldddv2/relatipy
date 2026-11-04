@@ -29,7 +29,10 @@ use the spin-aligned frame.
 
 ``sol`` contains exactly one nonempty one-dimensional quantity named
 ``t_eval``, ``tau_eval``, or ``t_obs``. The input sequence may be unordered;
-results retain its order. ``distance`` is a positive physical length. The
+results retain its order. ``sol`` may also set ``method``, ``rtol``, ``atol``
+and ``max_steps``; the methods are those of :meth:`KerrMcmcModel.set_solver`:
+``"dop853"``, ``"dp45"``, ``"radau"`` and their projected variants
+``"projection_dop853"``, ``"projection_dp45"`` and ``"projection_radau"``. ``distance`` is a positive physical length. The
 method returns read-only ``alpha`` and ``delta`` arrays in arcsec plus a
 read-only ``v_los`` array in km/s. Each output has shape ``(n,)`` for the
 ``n`` supplied epochs.
@@ -104,7 +107,10 @@ Perturbed models
 the counterparts of :class:`KerrMcmcModel` and :class:`KerrMcmcMultiModel`
 with one :class:`~relatipy.forces.ExternalForce`. They share initial
 states, light model, units, solver settings and errors; the orbit adds the
-force. :meth:`PerturbedKerrMcmcModel.get_ra_dec_vr` takes an optional
+force. Their solvers accept ``"dop853"``, ``"dp45"`` and ``"radau"``
+only: the ``projection_*`` methods raise :class:`ValueError`, because their
+projector restores Carter's constant, which a force does not conserve.
+:meth:`PerturbedKerrMcmcModel.get_ra_dec_vr` takes an optional
 ``force``; the legacy call appends the force block to the 13 values. The
 multi-star vector appends one final block ``force.<name>`` for each of the
 force's :attr:`~relatipy.forces.ExternalForce.parameter_names`, in its

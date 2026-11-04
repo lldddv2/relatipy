@@ -31,8 +31,11 @@ def _parameter_quantity(value: object, name: str) -> u.Quantity:
 class ExternalForce:
     """Immutable external force with named run-time parameters.
 
-    This base class is not instantiated directly; use the built-in
-    :class:`~relatipy.forces.ThinDisk`.
+    This base class is not instantiated directly; use
+    :class:`~relatipy.forces.ThinDisk`,
+    :class:`~relatipy.forces.SurfaceDensityDisk`,
+    :class:`~relatipy.forces.Force`, :class:`~relatipy.forces.Potential` or
+    :func:`~relatipy.forces.get_force`.
 
     Notes
     -----
@@ -47,8 +50,8 @@ class ExternalForce:
 
     Forces are immutable values: two forces are equal, and hash alike, when
     they have the same type, definition and parameters in the same units.
-    Native resources (a table) are created on first use and shared by every
-    binding of the same object.
+    Native resources (a table or a compiled library) are created on first
+    use and shared by every binding of the same object.
     """
 
     __slots__ = ("_parameters", "_conversions", "_native")

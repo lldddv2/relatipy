@@ -50,7 +50,12 @@ redirects = {
 
 root_doc = "index"
 language = "en"
-exclude_patterns = ["tutorials/00-resumen.ipynb", "_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
+# ``validation/`` holds working notebooks, notes and data that are not part of
+# the published site.
+exclude_patterns = [
+    "tutorials/00-resumen.ipynb", "validation/**", "_build", "Thumbs.db",
+    ".DS_Store", "**/.ipynb_checkpoints",
+]
 
 # Every Python cross-reference must resolve; the strict build uses ``-n``.
 nitpicky = True
@@ -65,6 +70,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable", None),
     "astropy": ("https://docs.astropy.org/en/stable", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
+    "sympy": ("https://docs.sympy.org/latest", None),
 }
 
 autosummary_generate = True
@@ -96,6 +102,8 @@ napoleon_type_aliases = {
     "sequence": "~collections.abc.Sequence",
     "Figure": "~matplotlib.figure.Figure",
     "Axes": "~matplotlib.axes.Axes",
+    "callable": ":term:`callable <python:callable>`",
+    "sympy.Expr": "~sympy.core.expr.Expr",
     # Short names used in type fields of public docstrings.
     "Orbit": "~relatipy.geodesic.Orbit",
     "State": "~relatipy.geodesic.State",

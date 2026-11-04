@@ -21,8 +21,7 @@ native layout are described in :doc:`/development/external-forces`.
 The thin disk
 -------------
 
-The library ships one force, the razor-thin power-law disk of Piran et al.
-(2026):
+The built-in force is the razor-thin power-law disk of Piran et al. (2026):
 
 .. code-block:: python
 
@@ -42,6 +41,75 @@ are written into a small native model, so they change without a rebuild.
 The ``normal`` argument is a vector; it is stored as the angles
 ``normal_theta`` (from the third axis) and ``normal_phi`` (from the first
 axis towards the second).
+
+Forces written as text
+----------------------
+
+:func:`~relatipy.forces.get_force` builds a force from exactly one of a
+potential, a force or a surface density written as text. Coordinates use
+fixed names in the black-hole frame: ``x, y, z`` (Cartesian), ``R, phi, z``
+(cylindrical) or ``r, theta, phi`` (spherical); a force may also use the
+velocity components ``vx, vy, vz``, ``v_R, v_phi, v_z`` or
+``v_r, v_theta, v_phi``. Every other name is a parameter and must be a key
+of ``params``. The coordinate system is inferred from the names when
+``coords`` is omitted.
+
+.. code-block:: python
+
+   from astropy import units as u
+   import relatipy as rp
+
+   # Plummer sphere; Phi is in units of c^2, so k = G m / c^2 is a length.
+   plummer = rp.get_force(
+       potential="-k / sqrt(r**2 + b**2)",
+       params={"k": 1e-6 * u.au, "b": 1e3 * u.au},
+   )
+   plummer.parameter_names     # ('k', 'b')
+
+   # Linear drag, one tuple of three components.
+   drag = rp.get_force(force="(-k*vx, -k*vy, -k*vz)", params={"k": 1e-3})
+
+   # Exponential thin disk; R is in units of r_out.
+   disk = rp.get_force(
+       surface_density="exp(-R/h)", params={"h": 0.25},
+       mass=1e3 * u.M_sun, r_out=1362.5 * u.au,
+   )
+   disk.parameter_names        # ('disk_mass', 'normal_theta', 'normal_phi')
+
+A potential or a force becomes a :class:`~relatipy.forces.Potential` or a
+:class:`~relatipy.forces.Force`, whose ``params`` are run-time parameters:
+they form the force block of the perturbed MCMC models and change without
+recompiling. Expressions are evaluated in geometric units of the black hole
+(``G = c = M = 1``); each parameter is converted by its unit when the force
+is bound, and plain numbers are used as given. A surface density becomes a
+:class:`~relatipy.forces.SurfaceDensityDisk`: ``Sigma(R)`` must be
+axisymmetric, its ``params`` fix the shape of its table, and ``mass``,
+``r_out`` and the optional ``r_in``, ``softening`` and ``normal`` are those
+of the thin disk above, with the same run-time parameters.
+
+Expressions may use numbers, ``pi`` and the functions ``sqrt exp log sin cos
+tan asin acos atan atan2 sinh cosh tanh abs erf``. The classes also accept
+Python callables that build SymPy expressions; there
+:func:`~relatipy.forces.elliptic_k`, :func:`~relatipy.forces.elliptic_e` and
+:func:`~relatipy.forces.integral` add complete elliptic integrals and
+run-time quadrature.
+
+These forces need two optional tools:
+
+- SymPy (``pip install sympy``), to turn the text into C. A surface density
+  is converted when it is constructed, a potential or a force when it is
+  first used.
+- A C11 compiler, ``$CC`` or ``cc``, to compile that C into a shared
+  library the first time the force is bound, that is at the first prediction
+  of a perturbed model that uses it.
+
+A missing one raises :class:`ImportError` or :class:`RuntimeError`.
+Libraries are cached in ``$RELATIPY_CACHE_DIR`` or, when it is unset,
+``~/.cache/relatipy/jit``, so a later process with the same compiler loads
+them without compiling. :class:`~relatipy.forces.Force` and
+:class:`~relatipy.forces.Potential` pickle their generated C source, so
+multiprocessing workers need no SymPy; a surface-density disk is rebuilt
+from its text in each worker, which needs SymPy there.
 
 Multi-star MCMC
 ---------------
@@ -95,9 +163,10 @@ Accuracy notes
 - A disk of zero mass evaluates the same Kerr right-hand side as the Kerr
   models and adds a zero four-acceleration, so ``dop853`` predictions are
   identical.
-- ``projection_radau`` is not available: its projector restores Carter's
-  constant, which a force does not conserve. Radau uses a finite-difference
-  Jacobian.
+- The perturbed models accept ``dop853``, ``dp45`` and ``radau``. The
+  ``projection_*`` methods of :class:`~relatipy.observables.KerrMcmcModel`
+  are not available: their projector restores Carter's constant, which a
+  force does not conserve. Radau uses a finite-difference Jacobian.
 - The disk's potential and acceleration are separate interpolants that agree
   to about ``1e-5`` in the softened plane; the acceleration matches the
   direct ring sum to about ``1e-7``.

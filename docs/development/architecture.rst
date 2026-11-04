@@ -49,8 +49,8 @@ geometry and geodesic right-hand sides. ``native/src/`` separates:
   (``force/models/``); its generated Kerr kernel lives in
   ``geodesic/physic/kerr_rhs_generated.{c,h}``.
 
-The native integrator names are ``dop853``, ``dp45``, ``radau``, and
-``projection_radau``. None of these headers is installed with the package.
+The native integrator names are ``dop853``, ``dp45``, ``radau``,
+``projection_radau``, ``projection_dop853``, and ``projection_dp45``. None of these headers is installed with the package.
 
 ``bindings/cython/_core.pyx``, ``bindings/cython/_mcmc_core.pyx`` and
 ``bindings/cython/_force_core.pyx``:

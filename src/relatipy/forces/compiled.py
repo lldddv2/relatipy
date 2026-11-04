@@ -71,17 +71,107 @@ def _special():
 
 
 def elliptic_k(m, complement=None):
-    """Complete elliptic integral ``K(m)``; ``complement`` is ``1 - m`` without cancellation."""
+    """Complete elliptic integral of the first kind ``K(m)``, for definitions.
+
+    A symbolic building block for the callable definitions of
+    :class:`Force` and :class:`Potential`; the generated C evaluates it by
+    the arithmetic-geometric mean. It is not available in string
+    definitions.
+
+    Parameters
+    ----------
+    m : sympy.Expr or float
+        Parameter ``m = k**2`` (DLMF 19.2.8).
+    complement : sympy.Expr or float, optional
+        ``1 - m`` written without cancellation, for example ``q**2 / p**2``
+        for a ring; by default ``1 - m`` simplified.
+
+    Returns
+    -------
+    sympy.Expr
+        Expression understood by the force code generator.
+
+    Raises
+    ------
+    ImportError
+        If SymPy is not installed.
+    """
     return _special().elliptic_k(m, complement)
 
 
 def elliptic_e(m, complement=None):
-    """Complete elliptic integral ``E(m)``; ``complement`` is ``1 - m`` without cancellation."""
+    """Complete elliptic integral of the second kind ``E(m)``, for definitions.
+
+    As :func:`elliptic_k`, for ``E(m)`` (DLMF 19.2.8).
+
+    Parameters
+    ----------
+    m : sympy.Expr or float
+        Parameter ``m = k**2``.
+    complement : sympy.Expr or float, optional
+        ``1 - m`` written without cancellation; by default ``1 - m``
+        simplified.
+
+    Returns
+    -------
+    sympy.Expr
+        Expression understood by the force code generator.
+
+    Raises
+    ------
+    ImportError
+        If SymPy is not installed.
+    """
     return _special().elliptic_e(m, complement)
 
 
 def integral(integrand, lower, upper, *, singular=None, log=False):
-    """Definite integral evaluated at run time; see ``relatipy._codegen.special.integral``."""
+    """Definite integral evaluated at run time, for definitions.
+
+    A symbolic building block for the callable definitions of
+    :class:`Force` and :class:`Potential`: the generated C computes the
+    integral by quadrature each time the force is evaluated. It is not
+    available in string definitions, and integrals cannot be nested.
+
+    Parameters
+    ----------
+    integrand : callable
+        Called once with the integration variable (a positive SymPy symbol);
+        returns the integrand as an expression of it, the coordinates and
+        the parameters.
+    lower, upper : sympy.Expr or float
+        Limits; expressions of parameters and numbers only, not of the
+        coordinates.
+    singular : sympy.Expr, optional
+        Point where the integrand may be singular, for example the
+        cylindrical radius of the field point for a sum of rings. The
+        interval is split there.
+    log : bool, optional
+        Integrate in ``log s``; requires ``0 < lower < upper``. Default
+        ``False``.
+
+    Returns
+    -------
+    sympy.Expr
+        Symbolic integral understood by the force code generator.
+
+    Raises
+    ------
+    ImportError
+        If SymPy is not installed.
+
+    Examples
+    --------
+    A potential with a run-time integral over ``s`` from 0 to ``b``
+    (``s`` is the variable passed to the inner callable):
+
+    >>> import sympy as sp  # doctest: +SKIP
+    >>> from relatipy.forces import Potential, integral
+    >>> potential = Potential(  # doctest: +SKIP
+    ...     lambda R, phi, z, k, b: -k * integral(
+    ...         lambda s: s / sp.sqrt(R**2 + z**2 + s**2), 0, b),
+    ...     coords="cylindrical", parameters={"k": 1e-6, "b": 10.0})
+    """
     return _special().integral(integrand, lower, upper, singular=singular, log=log)
 
 
@@ -243,17 +333,35 @@ class Force(_CompiledForce):
     -----
     The definition is evaluated in geometric units of the black hole with
     ``G = c = M = 1``: lengths in ``G M / c^2``, velocities in ``c`` and the
-    acceleration in ``c^4 / (G M)``. Code is generated and compiled when the
-    force is first bound, for example by the first
-    :meth:`~relatipy.metrics.PerturbedKerr.orbit` integration; SymPy
-    (``pip install sympy``) and a C11 compiler (``$CC`` or ``cc``) are
-    required then, and a missing one raises :class:`ImportError` or
-    :class:`RuntimeError`. Compiled libraries are cached on disk under a hash
-    of the source, so a later process reuses them.
+    acceleration in ``c^4 / (G M)``. Code is generated when first needed (binding,
+    :attr:`~Force.source`, comparison or pickling) and compiled on first binding:
+    the first prediction of a
+    :class:`~relatipy.observables.PerturbedKerrMcmcModel` or
+    :class:`~relatipy.observables.PerturbedKerrMcmcMultiModel` that uses the
+    force (:meth:`~relatipy.observables.PerturbedKerrMcmcModel.get_ra_dec_vr`
+    or a legacy call). SymPy (``pip install sympy``) is needed to generate
+    the code and a C11 compiler (``$CC`` or ``cc``) to compile it; a missing
+    one raises :class:`ImportError` or :class:`RuntimeError`. Compiled
+    libraries are cached in ``$RELATIPY_CACHE_DIR`` or
+    ``~/.cache/relatipy/jit`` under a hash of the source, the compiler
+    identity, the flags, the RelatiPy version and the platform, so a later
+    process with the same compiler reuses them. The compiler is looked up
+    before the cache, so a process without a compiler cannot load a cached
+    library.
 
     Pickling stores the generated C source and the parameters, not the
     Python definition, so forces defined with lambdas can be sent to
-    multiprocessing pools; a worker loads the cached library without SymPy.
+    multiprocessing pools; a worker needs no SymPy and loads the library
+    from the cache when it has the same compiler.
+
+    Examples
+    --------
+    A linear drag, written in Cartesian coordinates (no code is generated
+    until the force is used):
+
+    >>> from relatipy.forces import Force
+    >>> Force("(-k*vx, -k*vy, -k*vz)", parameters={"k": 1e-3})
+    Force('(-k*vx, -k*vy, -k*vz)', coords='cartesian', parameters={'k': <Quantity 0.001>})
     """
 
     __slots__ = ()

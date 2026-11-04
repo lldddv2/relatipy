@@ -2,10 +2,14 @@ External forces and the thin-disk MCMC
 ======================================
 
 This page fixes the contract of the external-force layer used by the
-thin-disk MCMC models: a perturbed Kerr geodesic integrated beside, not
-inside, the homogeneous Kerr path. Existing Kerr modules, integrators and the
-``_core`` and ``_mcmc_core`` extensions are not modified; the new layer only
-calls them. The user-facing description is :doc:`/user-guide/forces`.
+perturbed MCMC models: a Kerr geodesic plus a Newtonian force. The forced
+observable evaluator (``native/src/force/kerr_mcmc.c``) is also the
+homogeneous one: ``rp_kerr_mcmc_evaluate`` in
+``native/src/geodesic/kerr_mcmc.c``, behind ``_mcmc_core``, calls it with no
+force, so both paths share the initial states, the Rømer arrival solve, the
+observation terms and one generated Kerr kernel. The orbit integration of
+``_core`` does not use the force layer. The user-facing description is
+:doc:`/user-guide/forces`.
 
 Equation of motion
 ------------------
@@ -51,9 +55,12 @@ spheroidal coordinates, so the coupling reduces exactly to Newtonian motion.
 For a static potential that is axisymmetric about the spin axis,
 ``E' = -u_t exp(Phi)`` and ``L' = u_phi exp(Phi)`` are exact invariants of
 this equation; the native tests use them to validate the projection.
-Carter's constant is not conserved, so the forced layer always rejects
-``projection_radau`` (``rp_kerr_forced_check_method``). Radau uses
-finite differences for its Jacobian.
+Carter's constant is not conserved, so the forced evaluator rejects the
+``projection_*`` methods when the force is active; it accepts them only with
+an inactive force, which is how the homogeneous evaluator offers them
+(``rp_kerr_forced_check_method`` lists the methods without projection). The
+perturbed Python models reject the ``projection_*`` names for every force.
+Radau uses finite differences for its Jacobian in this evaluator.
 
 The observable evaluator integrates in coordinate time for arrival and
 coordinate samples, every proper-time derivative (force term included) being
@@ -104,8 +111,15 @@ Layout
   extension (see :doc:`/development/architecture`): the two forced
   observable evaluators, mirroring ``_mcmc_core``, the owners of thin-disk
   tables and their placed models, and a callback evaluator for tests.
-- ``relatipy.forces``: the public ``ExternalForce`` base, ``ThinDisk`` and
+- ``relatipy.forces``: the public ``ExternalForce`` base, ``ThinDisk``,
+  ``SurfaceDensityDisk``, ``Force``, ``Potential``, ``get_force`` and the
+  definition helpers ``elliptic_k``, ``elliptic_e`` and ``integral``, and
   the private bound-force handle.
+- ``relatipy._codegen`` (private): the SymPy code generator that turns a
+  force, a potential or a surface density into C.
+- ``relatipy._jit`` (private): compiles that C with ``$CC`` or ``cc`` into a
+  shared library cached in ``$RELATIPY_CACHE_DIR`` or
+  ``~/.cache/relatipy/jit`` and loads it with ``ctypes``.
 - ``relatipy.observables``: ``KerrMcmcMultiModel`` and
   ``KerrMcmcGaussianLikelihood``, and the perturbed models
   ``PerturbedKerrMcmcModel`` and ``PerturbedKerrMcmcMultiModel``, parallel to
@@ -123,8 +137,11 @@ of length dimension ``L``, time ``T`` and mass ``M`` is divided by
 sampler updates the mass, the disk mass or the normal between proposals
 without rebuilding a table. Directions are given in observer axes
 ``(Dec, RA, away)`` and mapped through the proposal's spin frame. Handles
-are never pickled with their addresses: forces pickle by their constructor
-arguments, and tables are recreated on first use in each process.
+are never pickled with their addresses: tabulated forces pickle by their
+constructor arguments, and tables are recreated on first use in each
+process; ``Force`` and ``Potential`` pickle their generated C source and
+parameters, and a process loads the compiled library from the cache or
+compiles it on first use.
 
 Thin disk
 ---------
@@ -146,3 +163,23 @@ computed from the tabulated potential are conserved.
 
 The Python layer caches built tables per shape in each process (a few
 shapes), and every placed model keeps its table referenced.
+
+Known limitations
+-----------------
+
+- The observation model uses the straight-line Rømer delay. Shapiro delay
+  and gravitational lensing are not modelled.
+- The forced equation of motion has not been compared with a second
+  post-Newtonian (2PN) integration. ``test_newtonian_limit``
+  (``native/tests/force/test_newtonian_limit.c``) only bounds the residual
+  against Newtonian motion by its first post-Newtonian (1PN) size.
+- The observable evaluators, with or without a force, give Radau a
+  finite-difference Jacobian, one extra right-hand-side evaluation per state
+  component; the analytic Kerr Jacobian is not used there.
+- ``relatipy._jit`` resolves the compiler and puts its identity in the cache
+  key before it looks in the cache. A process without a C compiler therefore
+  cannot reuse a library that is already cached.
+- Proper-time samples requested with ``tau_eval`` can differ between
+  integration methods by up to about ``1e-4``, with or without projection;
+  ``tests/api/observables/test_kerr_mcmc_model.py`` notes this and compares
+  the methods only for ``t_obs`` and ``t_eval`` samples.

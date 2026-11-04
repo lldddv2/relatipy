@@ -283,7 +283,7 @@ class KerrMcmcModel:
         Parameters
         ----------
         method : str
-            Native integration method, as in :meth:`Orbit.solve`:
+            Native integration method, as in :meth:`~relatipy.geodesic.Orbit.solve`:
             ``'radau'``, ``'dop853'``, ``'dp45'``, ``'projection_radau'``,
             ``'projection_dop853'`` or ``'projection_dp45'``.
         rtol, atol : float

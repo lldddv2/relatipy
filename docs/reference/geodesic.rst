@@ -40,8 +40,9 @@ state to an absolute proper time and returns ``None``.
 returns a read-only :class:`~relatipy.geodesic.Solution`.
 Both accept the following controls:
 
-- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``, and
-  ``"projection_radau"`` are supported alternatives.
+- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``,
+  ``"projection_radau"``, ``"projection_dop853"``, and ``"projection_dp45"``
+  are supported alternatives.
 - ``rtol``: the default is ``None``, which selects ``1e-10``.
 - ``atol``: the default is ``None``, which selects ``rtol`` times a
   characteristic scale of each native component at the starting state

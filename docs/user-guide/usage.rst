@@ -98,8 +98,9 @@ Numerical controls and outcomes
 
 ``integrate`` and ``solve`` share five controls:
 
-- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``, and
-  ``"projection_radau"`` are explicit alternatives. Method names are
+- ``method``: the default is ``"radau"``; ``"dop853"``, ``"dp45"``,
+  ``"projection_radau"``, ``"projection_dop853"``, and ``"projection_dp45"``
+  are explicit alternatives. Method names are
   case-sensitive.
 - ``rtol``: the default ``rtol=None`` selects the tolerance automatically
   (see :ref:`integration-tolerances`).
@@ -187,9 +188,10 @@ not guarantee the global trajectory error, for example on unbound
 trajectories that travel far from their starting radius or near the
 horizon.
 
-``"projection_radau"`` uses the Radau integrator and projects each accepted
+The ``projection_*`` methods use the Radau, DOP853 or DP45 integrator named
+in the suffix and project each accepted
 native step outside the horizon toward the initial timelike norm
-``-1``, energy, axial angular momentum, and Carter constant. It keeps the
+``-1``, energy, axial angular momentum, and Carter constant. They keep the
 step position fixed while correcting the four-velocity. A failed projection
 is a numerical failure; ``solve`` reports a partial result when possible,
 and ``integrate`` raises ``IntegrationError``. Both retain the last valid
