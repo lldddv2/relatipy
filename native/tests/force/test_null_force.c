@@ -2,7 +2,8 @@
  * An inactive force (NULL, or a NULL callback) reproduces the homogeneous
  * Kerr path bit for bit: the RHS and its statuses, every accepted step of
  * dop853, dp45 and radau (finite-difference Jacobian) integrations, and both
- * observable evaluators.  The forced layer rejects projection_radau.
+ * observable evaluators.  The forced layer accepts every registered method
+ * without projection, and the projection_* ones only without a force.
  */
 
 #include "force/kerr_forced.h"
@@ -243,18 +244,24 @@ static void check_plunge_and_rejections(const rp_external_force *force)
         NULL, NULL, NULL, NULL, NULL
     };
     double initial[8];
+    rp_integrator_method method;
 
     assert(rp_initial_from_bl(0.6, bl, initial) == RP_KERR_STATUS_OK);
     compare_integrations(force, config, 0.6, initial, 500.0);
     assert(forced_steps.states[8U * (forced_steps.count - 1U) + 1U]
         < 1.01 * forced_steps.horizon);
 
-    assert(rp_kerr_forced_check_method(RP_INTEGRATOR_METHOD_PROJECTION_RADAU)
-        == RP_INTEGRATOR_STATUS_INVALID_ARGUMENT);
+    /* Every registered method without projection, and only those. */
+    for (method = RP_INTEGRATOR_METHOD_DOP853;
+         method < RP_INTEGRATOR_METHOD_COUNT;
+         method = (rp_integrator_method)(method + 1)) {
+        assert(rp_kerr_forced_check_method(method)
+            == (rp_integrator_method_projects(method)
+                ? RP_INTEGRATOR_STATUS_INVALID_ARGUMENT
+                : RP_INTEGRATOR_STATUS_OK));
+    }
     assert(rp_kerr_forced_check_method((rp_integrator_method)17)
         == RP_INTEGRATOR_STATUS_INVALID_ARGUMENT);
-    assert(rp_kerr_forced_check_method(RP_INTEGRATOR_METHOD_RADAU)
-        == RP_INTEGRATOR_STATUS_OK);
 }
 
 static void check_mcmc(const rp_external_force *force, rp_integrator_method method)
@@ -340,13 +347,17 @@ static void check_mcmc_rejections(void)
         RP_INTEGRATOR_METHOD_PROJECTION_RADAU, 8U, 1e-10, 1e-12, 0.0, 0.0,
         100000U, NULL, NULL, NULL, NULL, NULL
     };
+    const test_miyamoto_nagai disk = {0.05, 20.0, 3.0};
+    const rp_external_force active = {test_miyamoto_nagai_acceleration, &disk};
     double out[6] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     double initial[8];
     rp_integrator_stats stats;
     size_t k;
 
+    /* Projection needs conserved E, Lz and Q: rejected with an active force,
+       accepted with an inactive one. */
     assert(rp_kerr_forced_mcmc_evaluate(
-        &solver, 0.5, NULL, IDENTITY, 60.0, 0.3, 0.8, 0.3, 0.4,
+        &solver, 0.5, &active, IDENTITY, 60.0, 0.3, 0.8, 0.3, 0.4,
         times, 2U, &observation, out, &stats
     ) == RP_KERR_MCMC_INVALID_INPUT);
     for (k = 0U; k < 6U; ++k) {
@@ -355,9 +366,17 @@ static void check_mcmc_rejections(void)
     assert(rp_initial_from_elements(0.5, elements, initial)
         == RP_KERR_STATUS_OK);
     assert(rp_kerr_forced_mcmc_evaluate_state(
-        &solver, 0.5, NULL, IDENTITY, initial, 0.0,
+        &solver, 0.5, &active, IDENTITY, initial, 0.0,
         RP_KERR_MCMC_TIME_PROPER, times, 2U, 0.01, out, &stats
     ) == RP_KERR_MCMC_INVALID_INPUT);
+    assert(rp_kerr_forced_mcmc_evaluate(
+        &solver, 0.5, NULL, IDENTITY, 60.0, 0.3, 0.8, 0.3, 0.4,
+        times, 2U, &observation, out, &stats
+    ) == RP_KERR_MCMC_OK);
+    assert(rp_kerr_forced_mcmc_evaluate_state(
+        &solver, 0.5, NULL, IDENTITY, initial, 0.0,
+        RP_KERR_MCMC_TIME_PROPER, times, 2U, 0.01, out, &stats
+    ) == RP_KERR_MCMC_OK);
     solver.method = RP_INTEGRATOR_METHOD_DOP853;
     assert(rp_kerr_forced_mcmc_evaluate(
         NULL, 0.5, NULL, IDENTITY, 60.0, 0.3, 0.8, 0.3, 0.4,

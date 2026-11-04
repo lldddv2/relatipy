@@ -127,7 +127,7 @@ class PerturbedKerrMcmcMultiModel(_MultiStarBase):
 
         Parameters
         ----------
-        method : {'dop853', 'radau'}
+        method : {'dop853', 'radau', 'dp45'}
             Native integration method.
         rtol, atol : float
             Positive scalar relative and absolute tolerances.

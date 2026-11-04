@@ -43,8 +43,34 @@ _ORBIT_KEYS = frozenset(
         key for keys in _FAMILIES.values() for key in keys
     ))
 )
-_SOLVER_METHODS = {"dop853": 0, "radau": 1}
 _TIME_KINDS = {"t_eval": 0, "tau_eval": 1, "t_obs": 2}
+
+
+def _solver_methods() -> dict[str, int]:
+    """Method names and native codes of every registered method."""
+    try:
+        from .. import _mcmc_core
+    except ImportError as exc:
+        raise ImportError(
+            "native Kerr MCMC extension is unavailable; build relatipy first"
+        ) from exc
+    return _mcmc_core.SOLVER_METHODS
+
+
+def _solver_method(method: object, methods: dict[str, int] | None = None) -> int:
+    """Native code of a solver method among ``methods``, by default every registered one."""
+    if methods is None:
+        methods = _solver_methods()
+    if method not in methods:
+        raise ValueError(
+            "method must be one of " + ", ".join(repr(name) for name in methods)
+        )
+    return methods[method]
+
+
+def _solver_method_name(code: int) -> str:
+    """Name of a native solver method code."""
+    return next(name for name, value in _solver_methods().items() if value == code)
 
 
 def _epochs(value: object, name: str) -> np.ndarray:
@@ -252,12 +278,14 @@ class KerrMcmcModel:
         atol: float,
         max_steps: int = 100000,
     ) -> None:
-        """Set the native dop853 or radau solver and scalar tolerances.
+        """Set the native solver and scalar tolerances.
 
         Parameters
         ----------
-        method : {'dop853', 'radau'}
-            Native integration method.
+        method : str
+            Native integration method, as in :meth:`Orbit.solve`:
+            ``'radau'``, ``'dop853'``, ``'dp45'``, ``'projection_radau'``,
+            ``'projection_dop853'`` or ``'projection_dp45'``.
         rtol, atol : float
             Positive scalar relative and absolute tolerances in the internal
             geometric state. Their observational error must be checked for a
@@ -274,14 +302,13 @@ class KerrMcmcModel:
         ValueError
             If ``method`` is unsupported or a value is not positive and finite.
         """
-        if method not in _SOLVER_METHODS:
-            raise ValueError("method must be 'dop853' or 'radau'")
+        method_code = _solver_method(method)
         rtol_value = _positive(non_negative_real(rtol, "rtol"), "rtol")
         atol_value = _positive(non_negative_real(atol, "atol"), "atol")
         steps = non_negative_integer(max_steps, "max_steps")
         if steps == 0:
             raise ValueError("max_steps must be a positive integer")
-        self._solver = (_SOLVER_METHODS[method], rtol_value, atol_value, steps)
+        self._solver = (method_code, rtol_value, atol_value, steps)
 
     def get_ra_dec_vr(
         self,
@@ -308,9 +335,9 @@ class KerrMcmcModel:
         sol : mapping
             Exactly one nonempty one-dimensional quantity: ``t_eval``,
             ``tau_eval`` or ``t_obs``. Times are absolute physical epochs and
-            may be unordered. Optional ``method`` (``'dop853'`` or
-            ``'radau'``), ``rtol``, ``atol`` and ``max_steps`` configure the
-            native integrator.
+            may be unordered. Optional ``method`` (any method of
+            :meth:`set_solver`), ``rtol``, ``atol`` and ``max_steps``
+            configure the native integrator.
         distance : astropy.units.Quantity
             Positive observer distance from the central body.
 
@@ -390,12 +417,8 @@ class KerrMcmcModel:
             )
         else:
             default_method, default_rtol, default_atol, default_steps = self._solver
-        default_name = next(
-            name for name, code in _SOLVER_METHODS.items() if code == default_method
-        )
-        method_name = supplied_sol.get("method", default_name)
-        if method_name not in _SOLVER_METHODS:
-            raise ValueError("method must be 'dop853' or 'radau'")
+        method_name = supplied_sol.get("method", _solver_method_name(default_method))
+        method_code = _solver_method(method_name)
         rtol = _positive(
             non_negative_real(supplied_sol.get("rtol", default_rtol), "rtol"), "rtol"
         )
@@ -419,7 +442,7 @@ class KerrMcmcModel:
                 spin, rotation, family, components, sorted_times, 0.0,
                 _TIME_KINDS[time_name],
                 float((length_scale / observer_distance).to_value(u.one)),
-                _SOLVER_METHODS[method_name], rtol, atol, max_steps,
+                method_code, rtol, atol, max_steps,
             )
         except RuntimeError as exc:
             raise IntegrationError(str(exc)) from exc

@@ -135,6 +135,26 @@ static void check_elements_and_effect(double spin, const rp_external_force *forc
     }
     assert(largest > 1e-3);
 
+    /* The projection_* methods need conserved E, Lz and Q: no active force. */
+    {
+        rp_integrator_config projecting = solver;
+        projecting.method = RP_INTEGRATOR_METHOD_PROJECTION_DOP853;
+        assert(rp_kerr_forced_mcmc_evaluate(
+            &projecting, spin, force, rotation, ELEMENTS[1], ELEMENTS[2],
+            ELEMENTS[3], ELEMENTS[4], ELEMENTS[5], times, SAMPLES,
+            &observation, elements_out, &stats
+        ) == RP_KERR_MCMC_INVALID_INPUT);
+        assert(rp_kerr_forced_mcmc_evaluate_state(
+            &projecting, spin, force, rotation, initial, 0.0,
+            RP_KERR_MCMC_TIME_ARRIVAL, times, SAMPLES, 0.01, state_out, &stats
+        ) == RP_KERR_MCMC_INVALID_INPUT);
+        assert(rp_kerr_forced_mcmc_evaluate(
+            &projecting, spin, NULL, rotation, ELEMENTS[1], ELEMENTS[2],
+            ELEMENTS[3], ELEMENTS[4], ELEMENTS[5], times, SAMPLES,
+            &observation, elements_out, &stats
+        ) == RP_KERR_MCMC_OK);
+    }
+
     elements_out[0] = 1.0;
     assert(rp_kerr_forced_mcmc_evaluate(
         &solver, spin, &failing, rotation, ELEMENTS[1], ELEMENTS[2],

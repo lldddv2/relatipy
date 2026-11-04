@@ -22,6 +22,11 @@ MCMC_SOURCES = [
     NATIVE / "geodesic" / "initial" / "bound.c",
     NATIVE / "geodesic" / "kerr.c",
     NATIVE / "geodesic" / "kerr_mcmc.c",
+    # The homogeneous evaluator calls the forced one with no force.
+    NATIVE / "geodesic" / "integrators" / "kerr.c",
+    NATIVE / "force" / "external.c",
+    NATIVE / "force" / "kerr_forced.c",
+    NATIVE / "force" / "kerr_mcmc.c",
     NATIVE / "geodesic" / "integrators" / "integrator.c",
     NATIVE / "geodesic" / "integrators" / "dop853.c",
     NATIVE / "geodesic" / "integrators" / "dp45.c",
@@ -66,6 +71,9 @@ FORCE_SOURCES = [
     NATIVE / "geodesic" / "integrators" / "dop853.c",
     NATIVE / "geodesic" / "integrators" / "dp45.c",
     NATIVE / "geodesic" / "integrators" / "radau.c",
+    # The projector of the evaluators without a force.
+    NATIVE / "geodesic" / "integrators" / "kerr.c",
+    NATIVE / "geodesic" / "kerr.c",
     NATIVE / "force" / "external.c",
     NATIVE / "force" / "kerr_forced.c",
     NATIVE / "force" / "kerr_mcmc.c",

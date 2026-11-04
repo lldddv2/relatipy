@@ -2,7 +2,8 @@
  * @file kerr_mcmc.h
  * @brief Forced one-call Kerr orbit to geometric observables evaluator.
  *
- * Parallel to `geodesic/kerr_mcmc.h`, with the same status codes, time
+ * The single implementation of the observable evaluators: the homogeneous
+ * `geodesic/kerr_mcmc.h` calls it with no force.  Same status codes, time
  * kinds and observation terms: orbital elements give the osculating state
  * at true anomaly zero, rotated from the observer frame into the
  * spin-aligned Kerr frame; light follows the same straight-line Rømer
@@ -26,12 +27,15 @@
  * Every argument except `force` has the meaning and validation of
  * `rp_kerr_mcmc_evaluate`.  `force` is caller owned, read only and may be
  * NULL; it and its model must stay valid and unchanged for the call.
- * `solver->method` must be `dop853`, `dp45` or `radau`; the projection_*
- * methods return `RP_KERR_MCMC_INVALID_INPUT`.  `solver->jacobian` and
- * `solver->projector` are ignored (Radau uses finite differences) because
- * the RHS context differs from the homogeneous one.  With an inactive force
- * and a NULL solver Jacobian, the output and statistics are bitwise those of
- * `rp_kerr_mcmc_evaluate`.  A failing force callback is reported as
+ * With an active force, `solver->method` must be accepted by
+ * `rp_kerr_forced_check_method` (`dop853`, `dp45` or `radau`); the
+ * projection_* methods, which restore E, Lz and Q, are accepted only with an
+ * inactive force and otherwise return `RP_KERR_MCMC_INVALID_INPUT`.  Their
+ * invariants are those of the initial state, in either clock.
+ * `solver->jacobian` and `solver->projector` are ignored (Radau uses finite
+ * differences; the projector is `rp_kerr_integrator_project`) because the
+ * RHS context differs from the homogeneous one.  A failing force callback is
+ * reported as
  * `RP_KERR_MCMC_INTEGRATION_FAILURE`.  The caller owns all buffers; no
  * allocation or pointer retention occurs; any failure zeroes the output.
  */
@@ -57,9 +61,7 @@ rp_kerr_mcmc_status rp_kerr_forced_mcmc_evaluate(
  *
  * Every argument except `force` has the meaning and validation of
  * `rp_kerr_mcmc_evaluate_state`; `force` and the solver rules are those of
- * `rp_kerr_forced_mcmc_evaluate`.  With an inactive force and a NULL solver
- * Jacobian, output and statistics are bitwise those of
- * `rp_kerr_mcmc_evaluate_state`.
+ * `rp_kerr_forced_mcmc_evaluate`.
  */
 rp_kerr_mcmc_status rp_kerr_forced_mcmc_evaluate_state(
     const rp_integrator_config *solver,

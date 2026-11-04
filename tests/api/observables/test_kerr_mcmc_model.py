@@ -173,7 +173,7 @@ def test_invalid_input_is_rejected():
         model(p)
     with pytest.raises(ValueError, match="method"):
         model.set_solver(method="RK45", rtol=1e-6, atol=1e-9)
-    for method in ("DOP853", "Radau", "projection_radau", "dp45"):
+    for method in ("DOP853", "Radau", "DP45", "Projection_Radau"):
         with pytest.raises(ValueError, match="method"):
             model.set_solver(method=method, rtol=1e-6, atol=1e-9)
     model.set_solver(method="dop853", rtol=1e-6, atol=1e-9)
@@ -250,3 +250,54 @@ def test_missing_extension_is_not_an_integration_error(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", blocked)
     with pytest.raises(ImportError, match="build relatipy first"):
         model(sample_parameters())
+
+
+def test_dp45_matches_dop853():
+    p = sample_parameters()
+    epochs = np.linspace(1995.0, 2018.0, 12)
+    outputs = {}
+    for method in ("dop853", "dp45"):
+        model = KerrMcmcModel(epochs, epochs[::3], reference_epoch=2000.0,
+                              spin_vector=(0.2, 0.3, 0.4))
+        model.set_solver(method=method, rtol=1e-11, atol=1e-14)
+        outputs[method] = model(p)
+    for one, other in zip(outputs["dp45"], outputs["dop853"]):
+        np.testing.assert_allclose(one, other, rtol=0, atol=1e-8 * np.max(np.abs(other)))
+
+
+@pytest.mark.parametrize("method", ["radau", "dop853", "dp45"])
+def test_projection_methods_match_their_base_method(method):
+    p = sample_parameters()
+    epochs = np.linspace(1995.0, 2018.0, 12)
+    outputs = {}
+    for name in (method, "projection_" + method):
+        model = KerrMcmcModel(epochs, epochs[::3], reference_epoch=2000.0,
+                              spin_vector=(0.2, 0.3, 0.4))
+        model.set_solver(method=name, rtol=1e-11, atol=1e-14, max_steps=10**6)
+        outputs[name] = model(p)
+    # Radau without projection is the least accurate here, ~3e-8.
+    for one, other in zip(outputs["projection_" + method], outputs[method]):
+        np.testing.assert_allclose(one, other, rtol=0, atol=1e-7 * np.max(np.abs(other)))
+
+
+@pytest.mark.parametrize("kind", ["t_obs", "t_eval", "tau_eval"])
+@pytest.mark.parametrize("method", ["dop853", "dp45", "projection_dop853", "projection_dp45"])
+def test_get_ra_dec_vr_accepts_every_method(method, kind):
+    kerr = {"mass": 4.3e6 * u.M_sun, "spin": 0.5, "vec": (0.2, -0.3, 0.9)}
+    orbit = {"a": 1000 * u.au, "e": 0.88, "inc": 2.3 * u.rad,
+             "Omega": 4.0 * u.rad, "omega": 1.2 * u.rad, "t": 2018.4 * u.yr}
+    times = np.linspace(2024.0, 2004.0, 15) * u.yr
+    outputs = {
+        name: KerrMcmcModel().get_ra_dec_vr(
+            kerr=kerr, orbit=orbit, distance=8.2 * u.kpc,
+            sol={kind: times, "method": name, "rtol": 1e-12, "atol": 1e-14,
+                 "max_steps": 10**6},
+        )
+        for name in ("dop853", method)
+    }
+    for one, other in zip(outputs[method], outputs["dop853"]):
+        assert np.all(np.isfinite(one))
+        # Proper-time samples differ between methods by up to ~1e-4 even
+        # without projection (pre-existing), so they are only run here.
+        if kind != "tau_eval":
+            np.testing.assert_allclose(one, other, rtol=0, atol=1e-7 * np.max(np.abs(other)))

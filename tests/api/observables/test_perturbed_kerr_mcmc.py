@@ -43,7 +43,7 @@ def _assert_close(first, second, rtol=1e-10):
         np.testing.assert_allclose(one, other, rtol=0, atol=rtol * scale)
 
 
-@pytest.mark.parametrize("method", ["dop853", "radau"])
+@pytest.mark.parametrize("method", ["dop853", "radau", "dp45"])
 @pytest.mark.parametrize(
     ("kind", "rtol"),
     # Proper-time sampling amplifies the roundoff of the two right-hand
@@ -51,7 +51,9 @@ def _assert_close(first, second, rtol=1e-10):
     [("t_obs", 1e-10), ("t_eval", 1e-10), ("tau_eval", 1e-6)],
 )
 def test_zero_force_reproduces_the_general_kerr_evaluator(method, kind, rtol) -> None:
-    sol = {kind: TIMES["t_obs"], "method": method, "rtol": 1e-12, "atol": 1e-14}
+    # dp45 needs more than the default 100000 steps at this tolerance.
+    sol = {kind: TIMES["t_obs"], "method": method, "rtol": 1e-12, "atol": 1e-14,
+           "max_steps": 10**6}
     reference = KerrMcmcModel().get_ra_dec_vr(
         kerr=KERR, orbit=ORBIT, sol=sol, distance=DISTANCE
     )
@@ -114,9 +116,11 @@ def test_inputs_are_validated_like_the_kerr_model() -> None:
     with pytest.raises(ValueError, match="kerr requires"):
         model.get_ra_dec_vr(kerr={"mass": MASS}, orbit=ORBIT, sol=TIMES,
                             distance=DISTANCE)
-    with pytest.raises(ValueError, match="method"):
-        model.get_ra_dec_vr(kerr=KERR, orbit=ORBIT, sol=TIMES | {"method": "dp45"},
+    with pytest.raises(ValueError, match="external force"):
+        model.get_ra_dec_vr(kerr=KERR, orbit=ORBIT, sol=TIMES | {"method": "projection_dp45"},
                             distance=DISTANCE)
+    with pytest.raises(ValueError, match="external force"):
+        model.set_solver(method="projection_radau", rtol=1e-10, atol=1e-12)
 
 
 def test_integration_failure_raises_integration_error() -> None:
@@ -134,3 +138,14 @@ def test_model_pickles_without_its_native_handle() -> None:
     assert restored.force == DISK
     for one, other in zip(restored(vector), expected):
         np.testing.assert_array_equal(one, other)
+
+
+def test_dp45_matches_dop853_with_a_disk() -> None:
+    outputs = {
+        method: PerturbedKerrMcmcModel(force=DISK).get_ra_dec_vr(
+            kerr=KERR, orbit=ORBIT, distance=DISTANCE,
+            sol={**TIMES, "method": method, "rtol": 1e-12, "atol": 1e-14},
+        )
+        for method in ("dop853", "dp45")
+    }
+    _assert_close(outputs["dp45"], outputs["dop853"], rtol=1e-7)

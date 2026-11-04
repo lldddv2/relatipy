@@ -170,7 +170,6 @@ int rp_kerr_forced_coordinate_time_rhs(
     if (status != 0) {
         return status;
     }
-    /* Same operation order as coordinate_time_rhs in geodesic/kerr_mcmc.c. */
     inverse_ut = 1.0 / state[4];
     for (index = 0U; index < RP_KERR_DIM; ++index) {
         derivative[index] = dx[index] * inverse_ut;
@@ -185,16 +184,10 @@ int rp_kerr_forced_coordinate_time_rhs(
 
 rp_integrator_status rp_kerr_forced_check_method(rp_integrator_method method)
 {
-    switch (method) {
-    case RP_INTEGRATOR_METHOD_DOP853:
-    case RP_INTEGRATOR_METHOD_DP45:
-    case RP_INTEGRATOR_METHOD_RADAU:
-        return RP_INTEGRATOR_STATUS_OK;
-    case RP_INTEGRATOR_METHOD_PROJECTION_RADAU:
-    case RP_INTEGRATOR_METHOD_PROJECTION_DOP853:
-    case RP_INTEGRATOR_METHOD_PROJECTION_DP45:
-    case RP_INTEGRATOR_METHOD_COUNT:
-    default:
+    /* Every registered method that does not project. */
+    if ((int)method < 0 || method >= RP_INTEGRATOR_METHOD_COUNT
+        || rp_integrator_method_projects(method)) {
         return RP_INTEGRATOR_STATUS_INVALID_ARGUMENT;
     }
+    return RP_INTEGRATOR_STATUS_OK;
 }

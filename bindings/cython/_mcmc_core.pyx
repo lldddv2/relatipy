@@ -24,6 +24,9 @@ cdef extern from "geodesic/integrators/integrator.h":
     ctypedef enum rp_integrator_method:
         RP_INTEGRATOR_METHOD_DOP853
         RP_INTEGRATOR_METHOD_RADAU
+        RP_INTEGRATOR_METHOD_COUNT
+
+    const char *rp_integrator_method_name(rp_integrator_method method)
 
     ctypedef struct rp_integrator_config:
         rp_integrator_method method
@@ -124,6 +127,24 @@ cdef extern from "geodesic/initial/bound.h":
     ) nogil
 
 
+cdef dict _native_solver_methods():
+    cdef int code
+    codes = {}
+    for code in range(<int>RP_INTEGRATOR_METHOD_COUNT):
+        codes[rp_integrator_method_name(<rp_integrator_method>code).decode("ascii")] = code
+    return codes
+
+
+# Method names and native codes, every registered method, from the native registry.
+SOLVER_METHODS = _native_solver_methods()
+
+
+cdef int _check_method(int method) except -1:
+    if method < 0 or method >= <int>RP_INTEGRATOR_METHOD_COUNT:
+        raise ValueError("method must be a registered native integrator code")
+    return 0
+
+
 def evaluate(
     double spin,
     cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] rotation,
@@ -155,8 +176,7 @@ def evaluate(
 
     if rotation.shape[0] != 3 or rotation.shape[1] != 3:
         raise ValueError("rotation must have shape (3, 3)")
-    if method not in (0, 1):
-        raise ValueError("method must be 0 (dop853) or 1 (radau)")
+    _check_method(method)
     if maximum_steps == 0:
         raise ValueError("maximum_steps must be positive")
 
@@ -245,8 +265,7 @@ def evaluate_general(
         raise ValueError("components must contain seven finite values")
     if count == 0:
         raise ValueError("at least one evaluation time is required")
-    if method not in (0, 1):
-        raise ValueError("method must be 0 (dop853) or 1 (radau)")
+    _check_method(method)
     if time_kind not in (0, 1, 2):
         raise ValueError("time_kind must be coordinate, proper, or arrival")
     if maximum_steps == 0:

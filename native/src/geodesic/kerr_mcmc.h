@@ -6,6 +6,11 @@
  * at true anomaly zero. Its observer-frame position and coordinate velocity
  * are rotated into the spin-aligned Kerr frame before evolution. Light
  * follows a straight-line Rømer model.
+ *
+ * Both evaluators run the forced evaluator of `force/kerr_mcmc.h` with no
+ * force, so `solver` follows its rules: `solver->method` is any registered
+ * method, the projection_* ones included, and `solver->jacobian` and
+ * `solver->projector` are ignored.
  */
 
 #ifndef RELATIPY_NATIVE_GEODESIC_KERR_MCMC_H

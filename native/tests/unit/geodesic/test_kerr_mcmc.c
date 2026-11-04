@@ -266,6 +266,77 @@ static void check_state_arrival_matches_elements(void)
     }
 }
 
+static void check_projection_methods(double spin)
+{
+    /* Each projection_* method agrees with its method without projection, in
+       both evaluators and every clock. */
+    const double identity[3][3] = {
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}
+    };
+    const double elements[7] = {0.0, 100.0, 0.6, 0.8, 0.3, 0.4, 0.0};
+    const double times[5] = {-3000.0, -500.0, 0.0, 700.0, 4000.0};
+    const rp_kerr_mcmc_observation observation = {
+        0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    };
+    const rp_integrator_method pairs[3][2] = {
+        {RP_INTEGRATOR_METHOD_RADAU, RP_INTEGRATOR_METHOD_PROJECTION_RADAU},
+        {RP_INTEGRATOR_METHOD_DOP853, RP_INTEGRATOR_METHOD_PROJECTION_DOP853},
+        {RP_INTEGRATOR_METHOD_DP45, RP_INTEGRATOR_METHOD_PROJECTION_DP45}
+    };
+    const rp_kerr_mcmc_time_kind kinds[3] = {
+        RP_KERR_MCMC_TIME_COORDINATE, RP_KERR_MCMC_TIME_PROPER,
+        RP_KERR_MCMC_TIME_ARRIVAL
+    };
+    rp_integrator_config solver = {
+        RP_INTEGRATOR_METHOD_DOP853, 8U, 1e-11, 1e-13, 0.0, 0.0, 1000000U,
+        NULL, NULL, NULL, NULL, NULL
+    };
+    rp_integrator_stats statistics;
+    double initial[8];
+    double plain[15];
+    double projected[15];
+    size_t pair;
+    size_t kind;
+    size_t index;
+
+    assert(rp_initial_from_elements(spin, elements, initial)
+        == RP_KERR_STATUS_OK);
+    for (pair = 0U; pair < 3U; ++pair) {
+        solver.method = pairs[pair][0];
+        assert(rp_kerr_mcmc_evaluate(
+            &solver, spin, identity, elements[1], elements[2], elements[3],
+            elements[4], elements[5], times, 5U, &observation, plain,
+            &statistics
+        ) == RP_KERR_MCMC_OK);
+        solver.method = pairs[pair][1];
+        assert(rp_kerr_mcmc_evaluate(
+            &solver, spin, identity, elements[1], elements[2], elements[3],
+            elements[4], elements[5], times, 5U, &observation, projected,
+            &statistics
+        ) == RP_KERR_MCMC_OK);
+        for (index = 0U; index < 15U; ++index) {
+            assert(fabs(projected[index] - plain[index]) < 1e-8);
+        }
+        for (kind = 0U; kind < 3U; ++kind) {
+            solver.method = pairs[pair][0];
+            assert(rp_kerr_mcmc_evaluate_state(
+                &solver, spin, identity, initial, 0.0, kinds[kind], times,
+                5U, 0.01, plain, &statistics
+            ) == RP_KERR_MCMC_OK);
+            solver.method = pairs[pair][1];
+            assert(rp_kerr_mcmc_evaluate_state(
+                &solver, spin, identity, initial, 0.0, kinds[kind], times,
+                5U, 0.01, projected, &statistics
+            ) == RP_KERR_MCMC_OK);
+            for (index = 0U; index < 15U; ++index) {
+                assert(fabs(projected[index] - plain[index]) < 1e-8);
+            }
+        }
+    }
+}
+
 int main(void)
 {
     check_orbit(0.0);
@@ -276,5 +347,7 @@ int main(void)
     check_general_state_clocks();
     check_general_state_failures();
     check_state_arrival_matches_elements();
+    check_projection_methods(0.0);
+    check_projection_methods(0.9);
     return 0;
 }

@@ -69,8 +69,8 @@ int rp_kerr_forced_integrator_rhs(
 
 /**
  * `rp_integrator_rhs` adapter in coordinate time for the same packed state:
- * every proper-time derivative, force term included, is divided by `u^t`,
- * exactly as the coordinate-time RHS of `geodesic/kerr_mcmc.c`.  Requires a
+ * every proper-time derivative, force term included, is divided by `u^t`.
+ * Requires a
  * finite `u^t > 0`, otherwise returns `RP_KERR_STATUS_NON_TIMELIKE_VELOCITY`;
  * non-finite results return `RP_KERR_STATUS_NUMERICAL_RANGE`.
  */
@@ -84,8 +84,9 @@ int rp_kerr_forced_coordinate_time_rhs(
 /**
  * Report whether the forced layer accepts an integration method.
  *
- * `dop853`, `dp45` and `radau` return `RP_INTEGRATOR_STATUS_OK`.
- * The projection_* methods and unknown methods return
+ * Every registered method that does not project (`dop853`, `dp45` and
+ * `radau`) returns `RP_INTEGRATOR_STATUS_OK`, so a new integrator is accepted
+ * once registered.  The projection_* methods and unknown methods return
  * `RP_INTEGRATOR_STATUS_INVALID_ARGUMENT`: their projector restores Carter's
  * constant, which an external force does not conserve.
  */

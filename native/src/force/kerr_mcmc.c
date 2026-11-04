@@ -2,11 +2,8 @@
  * @file kerr_mcmc.c
  * @brief Evaluate a forced osculating Kerr orbit at observed arrival times.
  *
- * Parallel to geodesic/kerr_mcmc.c.  Its static helpers (initial state,
- * Rømer arrival solve, observation terms, endpoint evaluation, state check)
- * are duplicated here with the same operations in the same order; only the
- * RHS context and callbacks change, so an inactive force reproduces the
- * homogeneous evaluator bit for bit.
+ * Also the homogeneous evaluator: geodesic/kerr_mcmc.c calls it with no
+ * force, which reproduces the homogeneous RHS bit for bit.
  *
  * The orbit is integrated in coordinate time for arrival and coordinate
  * samples: with t as independent variable and state (x^mu, u^mu),
@@ -19,6 +16,7 @@
 
 #include "force/kerr_forced.h"
 #include "geodesic/initial/convert.h"
+#include "geodesic/integrators/kerr.h"
 #include "geodesic/physic/kerr_observables.h"
 #include "relatipy/kerr_geometry.h"
 
@@ -31,9 +29,12 @@
 #define GEOMETRIC_DIM 4U
 #define ARRIVAL_ITERATIONS 12U
 
+/* `rhs` comes first: the integrator receives `&problem->rhs` as the context
+   of both the RHS and the projector, which recovers the problem from it. */
 typedef struct {
     rp_kerr_forced_context rhs;
     rp_integrator_config solver;
+    rp_kerr_integrator_context projection;
 } forced_problem;
 
 static void zero_output(double *output, size_t sample_count)
@@ -56,7 +57,7 @@ static void clear_statistics(rp_integrator_stats *statistics)
     }
 }
 
-/* Proper-time RHS; mirrors proper_time_rhs in geodesic/kerr_mcmc.c. */
+/* Proper-time RHS, rejecting a non-timelike u^t like the coordinate-time one. */
 static int proper_time_rhs(
     double proper_time,
     const double state[],
@@ -72,7 +73,18 @@ static int proper_time_rhs(
     );
 }
 
-/* Solver copy: the homogeneous Jacobian and projector do not apply. */
+/* Projector of the projection_* methods, with no force only. */
+static int project(double independent_variable, double state[], void *context)
+{
+    forced_problem *problem = (forced_problem *)context;
+    return rp_kerr_integrator_project(
+        independent_variable, state, &problem->projection
+    );
+}
+
+/* Solver copy: the homogeneous Jacobian does not apply.  The projection_*
+   methods need conserved E, Lz and Q, so they are accepted only without an
+   active force. */
 static int prepare_problem(
     const rp_integrator_config *solver,
     double spin,
@@ -80,19 +92,36 @@ static int prepare_problem(
     forced_problem *problem
 )
 {
-    if (rp_kerr_forced_check_method(solver->method)
-        != RP_INTEGRATOR_STATUS_OK) {
+    const int projects = rp_integrator_method_projects(solver->method);
+
+    if (projects ? rp_force_is_active(force)
+            : rp_kerr_forced_check_method(solver->method)
+                != RP_INTEGRATOR_STATUS_OK) {
         return 0;
     }
     problem->solver = *solver;
     problem->solver.jacobian = NULL;
-    problem->solver.projector = NULL;
+    problem->solver.projector = projects ? project : NULL;
     problem->rhs.spin = spin;
     problem->rhs.force = force;
+    problem->projection.mass = 1.0;
+    problem->projection.spin = spin;
+    problem->projection.projection_ready = 0;
     return 1;
 }
 
-/* Copy of transpose_multiply in geodesic/kerr_mcmc.c. */
+/* Capture the invariants of the initial state for the projector, if any. */
+static int prepare_projection(
+    forced_problem *problem,
+    const double initial[STATE_DIM]
+)
+{
+    return problem->solver.projector == NULL
+        || rp_kerr_integrator_prepare_projection(
+            &problem->projection, initial
+        ) == 0;
+}
+
 static void transpose_multiply(
     const double rotation[3][3],
     const double observer_vector[3],
@@ -110,7 +139,6 @@ static void transpose_multiply(
     }
 }
 
-/* Copy of initial_state in geodesic/kerr_mcmc.c. */
 static rp_kerr_mcmc_status initial_state(
     double spin,
     const double rotation[3][3],
@@ -159,7 +187,7 @@ static void add_statistics(
     total->final_independent_variable = step->final_independent_variable;
 }
 
-/* Copy of solve_arrival in geodesic/kerr_mcmc.c (Newton on t + Z). */
+/* Newton iteration on the arrival time t + Z. */
 static rp_kerr_mcmc_status solve_arrival(
     forced_problem *problem,
     const double rotation[3][3],
@@ -224,7 +252,6 @@ static rp_kerr_mcmc_status solve_arrival(
     return RP_KERR_MCMC_ARRIVAL_FAILURE;
 }
 
-/* Copy of write_observation in geodesic/kerr_mcmc.c. */
 static int write_observation(
     const double geometric[GEOMETRIC_DIM],
     double arrival_time,
@@ -308,6 +335,9 @@ rp_kerr_mcmc_status rp_kerr_forced_mcmc_evaluate(
     if (status != RP_KERR_MCMC_OK) {
         return status;
     }
+    if (!prepare_projection(&problem, initial)) {
+        return RP_KERR_MCMC_INITIAL_STATE_FAILURE;
+    }
     projection_status = rp_kerr_observables_project(
         initial, spin, rotation, 1.0, initial_observable
     );
@@ -364,7 +394,6 @@ rp_kerr_mcmc_status rp_kerr_forced_mcmc_evaluate(
     return RP_KERR_MCMC_OK;
 }
 
-/* Copy of valid_initial_state in geodesic/kerr_mcmc.c. */
 static int valid_initial_state(double spin, const double initial[STATE_DIM])
 {
     double metric[RP_KERR_DIM][RP_KERR_DIM];
@@ -395,7 +424,6 @@ static int valid_initial_state(double spin, const double initial[STATE_DIM])
     return isfinite(norm) && fabs(norm + 1.0) <= 1e-8;
 }
 
-/* Copy of evaluate_state_endpoint in geodesic/kerr_mcmc.c. */
 static rp_kerr_mcmc_status evaluate_state_endpoint(
     forced_problem *problem,
     const double rotation[3][3],
@@ -507,6 +535,9 @@ rp_kerr_mcmc_status rp_kerr_forced_mcmc_evaluate_state(
         initial, spin, rotation, angular_scale, initial_observable
     ) != RP_KERR_STATUS_OK) {
         return RP_KERR_MCMC_INVALID_INPUT;
+    }
+    if (!prepare_projection(&problem, initial)) {
+        return RP_KERR_MCMC_INITIAL_STATE_FAILURE;
     }
     initial_time = time_kind == RP_KERR_MCMC_TIME_COORDINATE
         ? initial[0]

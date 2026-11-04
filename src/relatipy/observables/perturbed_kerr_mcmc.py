@@ -31,13 +31,14 @@ from .kerr_mcmc import (
     _ORBIT_KEYS,
     _RAD_TO_ARCSEC,
     _RG_AU_PER_MILLION_SOLAR_MASS,
-    _SOLVER_METHODS,
     _TIME_KINDS,
     KerrMcmcModel,
     _general_spin,
     _mapping,
     _positive,
     _scalar_physical,
+    _solver_method,
+    _solver_method_name,
     _spin_frame,
 )
 
@@ -54,6 +55,16 @@ def _force_core():
             "native forced Kerr extension is unavailable; build relatipy first"
         ) from exc
     return _force_core
+
+
+def _forced_solver_method(method: object) -> int:
+    """Native code of a method accepted with a force: one without projection."""
+    methods = _force_core().SOLVER_METHODS
+    if isinstance(method, str) and method.startswith("projection_"):
+        raise ValueError(
+            "the projection_* methods are not available with an external force"
+        )
+    return _solver_method(method, methods)
 
 
 def _require_force(force: object) -> ExternalForce:
@@ -158,8 +169,8 @@ class PerturbedKerrMcmcModel:
 
         Parameters
         ----------
-        method : {'dop853', 'radau'}
-            Native integration method; Radau uses a finite-difference
+        method : {'dop853', 'radau', 'dp45'}
+            Native integration method, without projection; Radau uses a finite-difference
             Jacobian, as in ``KerrMcmcModel``.
         rtol, atol : float
             Positive scalar relative and absolute tolerances.
@@ -171,6 +182,7 @@ class PerturbedKerrMcmcModel:
         TypeError, ValueError
             As :meth:`KerrMcmcModel.set_solver`.
         """
+        _forced_solver_method(method)
         self._base.set_solver(method=method, rtol=rtol, atol=atol, max_steps=max_steps)
 
     def _binding(self, force: ExternalForce) -> BoundForce:
@@ -283,12 +295,8 @@ class PerturbedKerrMcmcModel:
             )
         else:
             default_method, default_rtol, default_atol, default_steps = solver
-        default_name = next(
-            name for name, code in _SOLVER_METHODS.items() if code == default_method
-        )
-        method_name = supplied_sol.get("method", default_name)
-        if method_name not in _SOLVER_METHODS:
-            raise ValueError("method must be 'dop853' or 'radau'")
+        method_name = supplied_sol.get("method", _solver_method_name(default_method))
+        method_code = _forced_solver_method(method_name)
         rtol = _positive(
             non_negative_real(supplied_sol.get("rtol", default_rtol), "rtol"), "rtol"
         )
@@ -311,7 +319,7 @@ class PerturbedKerrMcmcModel:
                 spin, bound.callback, bound.model, rotation, family, components,
                 sorted_times, 0.0, _TIME_KINDS[time_name],
                 float((length_scale / observer_distance).to_value(u.one)),
-                _SOLVER_METHODS[method_name], rtol, atol, max_steps,
+                method_code, rtol, atol, max_steps,
             )
         except RuntimeError as exc:
             raise IntegrationError(str(exc)) from exc

@@ -50,6 +50,8 @@ cdef extern from "geodesic/integrators/integrator.h":
         RP_INTEGRATOR_METHOD_DOP853
         RP_INTEGRATOR_METHOD_RADAU
         RP_INTEGRATOR_METHOD_DP45
+        RP_INTEGRATOR_METHOD_COUNT
+    const char *rp_integrator_method_name(rp_integrator_method method)
     ctypedef struct rp_integrator_config:
         rp_integrator_method method
         size_t dimension
@@ -70,6 +72,11 @@ cdef extern from "geodesic/integrators/integrator.h":
         size_t jacobian_evaluations
         size_t linear_solves
         double final_independent_variable
+
+cdef extern from "force/kerr_forced.h":
+    # Accepts every registered method that does not project.
+    int rp_kerr_forced_check_method(rp_integrator_method method)
+
 
 cdef extern from "geodesic/kerr_mcmc.h":
     ctypedef enum rp_kerr_mcmc_status:
@@ -198,14 +205,29 @@ cdef void _solver(
     solver.projector = NULL
 
 
+cdef dict _native_solver_methods():
+    cdef int code
+    codes = {}
+    for code in range(<int>RP_INTEGRATOR_METHOD_COUNT):
+        if rp_kerr_forced_check_method(<rp_integrator_method>code) == 0:
+            codes[rp_integrator_method_name(<rp_integrator_method>code).decode("ascii")] = code
+    return codes
+
+
+# Method names and native codes accepted with a force: no projection.
+SOLVER_METHODS = _native_solver_methods()
+
+
 cdef int _check_mcmc_method(int method) except -1:
     if method in (3, 4, 5):
         raise ValueError(
             "projection_radau, projection_dop853 and projection_dp45 are not "
             "available with an external force"
         )
-    if method not in (0, 1, 2):
-        raise ValueError("method must be 0 (dop853), 1 (radau) or 2 (dp45)")
+    if rp_kerr_forced_check_method(<rp_integrator_method>method) != 0:
+        raise ValueError(
+            "method must be a native integrator code without projection"
+        )
     return 0
 
 

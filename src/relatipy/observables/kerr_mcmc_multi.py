@@ -422,8 +422,8 @@ class KerrMcmcMultiModel(_MultiStarBase):
 
         Parameters
         ----------
-        method : {'dop853', 'radau'}
-            Native integration method.
+        method : str
+            Native integration method, as in :meth:`KerrMcmcModel.set_solver`.
         rtol, atol : float
             Positive scalar relative and absolute tolerances.
         max_steps : int, optional
