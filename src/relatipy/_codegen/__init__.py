@@ -1,6 +1,6 @@
 """Private symbolic optimizer that turns SymPy expressions into C99.
 
-SymPy is an optional dependency (``relatipy[symbolic]``).  Importing this
+SymPy is an optional dependency (``pip install sympy``).  Importing this
 package does not import SymPy; the first access to one of the names below
 does, and raises an :class:`ImportError` naming the extra when SymPy is
 missing.

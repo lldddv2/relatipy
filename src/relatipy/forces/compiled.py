@@ -19,7 +19,7 @@ from .core import ExternalForce
 
 _COORDINATES = ("cartesian", "cylindrical", "spherical")
 _SYMBOLIC_HINT = (
-    "run-time forces need SymPy; install it with `pip install relatipy[symbolic]`"
+    "run-time forces need SymPy; install it with `pip install sympy`"
 )
 
 
@@ -246,7 +246,7 @@ class Force(_CompiledForce):
     acceleration in ``c^4 / (G M)``. Code is generated and compiled when the
     force is first bound, for example by the first
     :meth:`~relatipy.metrics.PerturbedKerr.orbit` integration; SymPy
-    (``relatipy[symbolic]``) and a C11 compiler (``$CC`` or ``cc``) are
+    (``pip install sympy``) and a C11 compiler (``$CC`` or ``cc``) are
     required then, and a missing one raises :class:`ImportError` or
     :class:`RuntimeError`. Compiled libraries are cached on disk under a hash
     of the source, so a later process reuses them.

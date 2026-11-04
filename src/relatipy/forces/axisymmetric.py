@@ -324,7 +324,7 @@ class ThinDisk(_TabulatedForce):
 
 
 _SYMBOLIC_HINT = (
-    "surface densities need SymPy; install it with `pip install relatipy[symbolic]`"
+    "surface densities need SymPy; install it with `pip install sympy`"
 )
 
 
