@@ -30,9 +30,6 @@ _FAMILIES = {
     "spherical": ("r", "theta", "phi", "vr", "vtheta", "vphi"),
     "bl": ("R", "Theta", "Phi", "vR", "vTheta", "vPhi"),
 }
-_METHODS = (
-    "radau", "dop853", "dp45", "projection_radau", "projection_dop853", "projection_dp45"
-)
 _BOUND_KEYS = ("p", "e", "x", "q_r0", "q_theta0", "q_phi0")
 # Automatic relative tolerance used when ``rtol`` is omitted.
 _AUTO_RTOL = 1e-10
@@ -317,8 +314,11 @@ def _integration_options(
     options = integration_options(
         method=method, rtol=rtol, atol=atol, first_step=first_step, max_step=max_step
     )
-    if options.method not in _METHODS:
-        raise ValueError("method must be one of " + ", ".join(_METHODS))
+    from .. import _core
+
+    # Method names come from the native registry.
+    if options.method not in _core.METHOD_CODES:
+        raise ValueError("method must be one of " + ", ".join(_core.METHOD_CODES))
     if isinstance(options.atol, np.ndarray) and options.atol.shape != (8,):
         raise ValueError("atol array must have shape (8,)")
     return options

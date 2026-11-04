@@ -214,6 +214,7 @@ cdef extern from "geodesic/integrators/integrator.h":
         RP_INTEGRATOR_METHOD_PROJECTION_RADAU
         RP_INTEGRATOR_METHOD_PROJECTION_DOP853
         RP_INTEGRATOR_METHOD_PROJECTION_DP45
+        RP_INTEGRATOR_METHOD_COUNT
     ctypedef struct rp_integrator_stats:
         size_t accepted_steps
         size_t rejected_steps
@@ -221,6 +222,22 @@ cdef extern from "geodesic/integrators/integrator.h":
         size_t jacobian_evaluations
         size_t linear_solves
         double final_independent_variable
+
+cdef extern from "geodesic/integrators/integrator.h":
+    const char *rp_integrator_method_name(rp_integrator_method method)
+
+
+cdef dict _native_method_codes():
+    cdef int code
+    codes = {}
+    for code in range(<int>RP_INTEGRATOR_METHOD_COUNT):
+        codes[rp_integrator_method_name(<rp_integrator_method>code).decode("ascii")] = code
+    return codes
+
+
+# Public method names and native codes, read once from the native registry.
+METHOD_CODES = _native_method_codes()
+
 
 cdef extern from "geodesic/solution/solve.h":
     ctypedef struct rp_kerr_trajectory:
@@ -455,23 +472,9 @@ def integrate_kerr(
     cdef double maximum_step = 0.0
     cdef Py_ssize_t i, j, count
     cdef int status
-    if method == "radau":
-        selected_method = RP_INTEGRATOR_METHOD_RADAU
-    elif method == "dop853":
-        selected_method = RP_INTEGRATOR_METHOD_DOP853
-    elif method == "dp45":
-        selected_method = RP_INTEGRATOR_METHOD_DP45
-    elif method == "projection_radau":
-        selected_method = RP_INTEGRATOR_METHOD_PROJECTION_RADAU
-    elif method == "projection_dop853":
-        selected_method = RP_INTEGRATOR_METHOD_PROJECTION_DOP853
-    elif method == "projection_dp45":
-        selected_method = RP_INTEGRATOR_METHOD_PROJECTION_DP45
-    else:
-        raise ValueError(
-            "method must be one of radau, dop853, dp45, projection_radau, "
-            "projection_dop853, projection_dp45"
-        )
+    if method not in METHOD_CODES:
+        raise ValueError("method must be one of " + ", ".join(METHOD_CODES))
+    selected_method = <rp_integrator_method>METHOD_CODES[method]
     if not np.isfinite(spin) or spin < 0.0 or spin > 1.0:
         raise ValueError("spin must be finite and in [0, 1]")
     initial = np.ascontiguousarray(y0, dtype=np.float64)
