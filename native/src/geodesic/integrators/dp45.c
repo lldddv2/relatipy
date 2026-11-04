@@ -50,40 +50,6 @@ static const double RP_DP45_E[RP_DP45_STAGES + 1U] = {
     -17253.0 / 339200.0, 22.0 / 525.0, -1.0 / 40.0
 };
 
-static int vector_is_finite(const double values[], size_t dimension)
-{
-    size_t component;
-
-    for (component = 0U; component < dimension; ++component) {
-        if (!isfinite(values[component])) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-static rp_integrator_status evaluate_rhs(
-    rp_integrator_rhs rhs,
-    void *context,
-    double independent_variable,
-    const double state[],
-    double derivative[],
-    size_t dimension,
-    rp_integrator_stats *stats
-)
-{
-    if (stats->rhs_evaluations == SIZE_MAX) {
-        return RP_INTEGRATOR_STATUS_MAXIMUM_STEPS;
-    }
-    ++stats->rhs_evaluations;
-    if (rhs(independent_variable, state, derivative, context) != 0) {
-        return RP_INTEGRATOR_STATUS_RHS_FAILURE;
-    }
-    return vector_is_finite(derivative, dimension)
-        ? RP_INTEGRATOR_STATUS_OK
-        : RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
-}
-
 static double scaled_root_mean_square(
     const double values[],
     const double scales[],
@@ -156,10 +122,10 @@ static rp_integrator_status select_initial_step(
         trial_state[component] = state[component]
             + direction * trial_step * derivative[component];
     }
-    if (!vector_is_finite(trial_state, config->dimension)) {
+    if (!rp_integrator_is_finite(trial_state, config->dimension)) {
         return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
     }
-    status = evaluate_rhs(
+    status = rp_integrator_evaluate_rhs(
         rhs, context, initial_value + direction * trial_step,
         trial_state, trial_derivative, config->dimension, stats
     );
@@ -224,10 +190,10 @@ static rp_integrator_status dp45_step(
             }
             stage_state[component] = state[component] + step * increment;
         }
-        if (!vector_is_finite(stage_state, config->dimension)) {
+        if (!rp_integrator_is_finite(stage_state, config->dimension)) {
             return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
         }
-        status = evaluate_rhs(
+        status = rp_integrator_evaluate_rhs(
             rhs, context, independent_variable + RP_DP45_C[stage] * step,
             stage_state, stages[stage], config->dimension, stats
         );
@@ -243,10 +209,10 @@ static rp_integrator_status dp45_step(
         }
         candidate[component] = state[component] + step * increment;
     }
-    if (!vector_is_finite(candidate, config->dimension)) {
+    if (!rp_integrator_is_finite(candidate, config->dimension)) {
         return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
     }
-    status = evaluate_rhs(
+    status = rp_integrator_evaluate_rhs(
         rhs, context, independent_variable + step, candidate,
         candidate_derivative, config->dimension, stats
     );
@@ -298,7 +264,7 @@ rp_integrator_status rp_dp45_integrate(
     if (stats == NULL) {
         stats = &local_stats;
     }
-    status = evaluate_rhs(
+    status = rp_integrator_evaluate_rhs(
         rhs, context, independent_variable, state, derivative,
         config->dimension, stats
     );
@@ -358,20 +324,12 @@ rp_integrator_status rp_dp45_integrate(
             if (previous_step_rejected) {
                 factor = fmin(1.0, factor);
             }
-            if (rp_integrator_method_projects(config->method)) {
-                /* The next first stage needs f at the projected state. */
-                status = rp_integrator_project_candidate(
-                    config, context, independent_variable + step, candidate
-                );
-                if (status == RP_INTEGRATOR_STATUS_OK) {
-                    status = evaluate_rhs(
-                        rhs, context, independent_variable + step, candidate,
-                        candidate_derivative, config->dimension, stats
-                    );
-                }
-                if (status != RP_INTEGRATOR_STATUS_OK) {
-                    return status;
-                }
+            status = rp_integrator_project_accepted(
+                config, rhs, context, independent_variable + step,
+                candidate, candidate_derivative, stats
+            );
+            if (status != RP_INTEGRATOR_STATUS_OK) {
+                return status;
             }
             independent_variable += step;
             for (component = 0U; component < config->dimension; ++component) {

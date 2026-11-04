@@ -35,38 +35,6 @@ static const double RP_RADAU_A[RP_RADAU_STAGES][RP_RADAU_STAGES] = {
     {0.37640306270046728, 0.51248582618842161, 0.11111111111111111}
 };
 
-static int vector_is_finite(const double values[], size_t dimension)
-{
-    size_t index;
-
-    for (index = 0U; index < dimension; ++index) {
-        if (!isfinite(values[index])) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-static rp_integrator_status evaluate_rhs(
-    rp_integrator_rhs rhs,
-    void *context,
-    double independent_variable,
-    const double state[],
-    double derivative[],
-    size_t dimension,
-    rp_integrator_stats *stats
-)
-{
-    ++stats->rhs_evaluations;
-    if (rhs(independent_variable, state, derivative, context) != 0) {
-        return RP_INTEGRATOR_STATUS_RHS_FAILURE;
-    }
-    if (!vector_is_finite(derivative, dimension)) {
-        return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
-    }
-    return RP_INTEGRATOR_STATUS_OK;
-}
-
 static int lu_decompose(
     double matrix[RP_RADAU_SYSTEM_DIMENSION][RP_RADAU_SYSTEM_DIMENSION],
     size_t pivots[RP_RADAU_SYSTEM_DIMENSION],
@@ -171,7 +139,7 @@ static rp_integrator_status finite_difference_jacobian(
         rp_integrator_status status;
 
         perturbed_state[column] += perturbation;
-        status = evaluate_rhs(
+        status = rp_integrator_evaluate_rhs(
             rhs,
             context,
             independent_variable,
@@ -228,7 +196,7 @@ static rp_integrator_status evaluate_jacobian(
         return RP_INTEGRATOR_STATUS_RHS_FAILURE;
     }
     for (row = 0U; row < config->dimension; ++row) {
-        if (!vector_is_finite(jacobian[row], config->dimension)) {
+        if (!rp_integrator_is_finite(jacobian[row], config->dimension)) {
             return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
         }
     }
@@ -266,7 +234,7 @@ static rp_integrator_status radau_collocation_step(
     size_t iteration;
     rp_integrator_status status;
 
-    status = evaluate_rhs(
+    status = rp_integrator_evaluate_rhs(
         rhs,
         context,
         independent_variable,
@@ -327,7 +295,7 @@ static rp_integrator_status radau_collocation_step(
         double correction_norm_squared = 0.0;
 
         for (stage = 0U; stage < RP_RADAU_STAGES; ++stage) {
-            status = evaluate_rhs(
+            status = rp_integrator_evaluate_rhs(
                 rhs,
                 context,
                 independent_variable + RP_RADAU_C[stage] * step,
@@ -376,7 +344,7 @@ static rp_integrator_status radau_collocation_step(
             for (component = 0U; component < config->dimension; ++component) {
                 candidate[component] = stages[RP_RADAU_STAGES - 1U][component];
             }
-            return vector_is_finite(candidate, config->dimension)
+            return rp_integrator_is_finite(candidate, config->dimension)
                 ? RP_INTEGRATOR_STATUS_OK
                 : RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
         }
@@ -448,7 +416,7 @@ rp_integrator_status rp_radau_integrate(
     if (stats == NULL) {
         stats = &local_stats;
     }
-    status = evaluate_rhs(
+    status = rp_integrator_evaluate_rhs(
         rhs,
         context,
         independent_variable,

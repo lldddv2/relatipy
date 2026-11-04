@@ -35,18 +35,6 @@ static const rp_integrator_registry_entry RP_INTEGRATOR_REGISTRY[] = {
     {"projection_dp45", rp_dp45_integrate}
 };
 
-static int state_is_finite(const double state[], size_t dimension)
-{
-    size_t index;
-
-    for (index = 0U; index < dimension; ++index) {
-        if (!isfinite(state[index])) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 static void clear_stats(rp_integrator_stats *stats, double initial_value)
 {
     if (stats == NULL) {
@@ -94,10 +82,37 @@ rp_integrator_status rp_integrator_project_candidate(
         return RP_INTEGRATOR_STATUS_OK;
     }
     if (config->projector(independent_variable, candidate, context) != 0
-        || !state_is_finite(candidate, config->dimension)) {
+        || !rp_integrator_is_finite(candidate, config->dimension)) {
         return RP_INTEGRATOR_STATUS_PROJECTION_FAILURE;
     }
     return RP_INTEGRATOR_STATUS_OK;
+}
+
+rp_integrator_status rp_integrator_project_accepted(
+    const rp_integrator_config *config,
+    rp_integrator_rhs rhs,
+    void *context,
+    double independent_variable,
+    double candidate[],
+    double candidate_derivative[],
+    rp_integrator_stats *stats
+)
+{
+    rp_integrator_status status;
+
+    if (!rp_integrator_method_projects(config->method)) {
+        return RP_INTEGRATOR_STATUS_OK;
+    }
+    status = rp_integrator_project_candidate(
+        config, context, independent_variable, candidate
+    );
+    if (status != RP_INTEGRATOR_STATUS_OK) {
+        return status;
+    }
+    return rp_integrator_evaluate_rhs(
+        rhs, context, independent_variable, candidate,
+        candidate_derivative, config->dimension, stats
+    );
 }
 
 const char *rp_integrator_method_name(rp_integrator_method method)
@@ -137,7 +152,7 @@ rp_integrator_status rp_integrator_integrate(
         || !isfinite(config->relative_tolerance)
         || !isfinite(config->initial_step)
         || !isfinite(config->maximum_step)
-        || !state_is_finite(state, config->dimension)) {
+        || !rp_integrator_is_finite(state, config->dimension)) {
         return RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
     }
     if (!(config->relative_tolerance > 0.0)

@@ -11,6 +11,7 @@
 #define RELATIPY_GEODESIC_INTEGRATORS_INTEGRATOR_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <float.h>
 #include <math.h>
 
@@ -151,7 +152,10 @@ rp_integrator_status rp_integrator_integrate(
     rp_integrator_stats *stats
 );
 
-/** Return the stable internal spelling of a valid method, or NULL. */
+/**
+ * Return the name of a valid method, or NULL.  The bindings read the public
+ * method names from these strings.
+ */
 const char *rp_integrator_method_name(rp_integrator_method method);
 
 /** Nonzero for the methods that project each accepted step. */
@@ -182,6 +186,40 @@ static inline double rp_integrator_scale(
         + config->relative_tolerance * magnitude;
     return fmax(scale, DBL_MIN);
 }
+/** Nonzero when every component is finite. */
+static inline int rp_integrator_is_finite(const double values[], size_t dimension)
+{
+    size_t component;
+
+    for (component = 0U; component < dimension; ++component) {
+        if (!isfinite(values[component])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+/** Count and evaluate the RHS once; reject failure and non-finite output. */
+static inline rp_integrator_status rp_integrator_evaluate_rhs(
+    rp_integrator_rhs rhs,
+    void *context,
+    double independent_variable,
+    const double state[],
+    double derivative[],
+    size_t dimension,
+    rp_integrator_stats *stats
+)
+{
+    if (stats->rhs_evaluations == SIZE_MAX) {
+        return RP_INTEGRATOR_STATUS_MAXIMUM_STEPS;
+    }
+    ++stats->rhs_evaluations;
+    if (rhs(independent_variable, state, derivative, context) != 0) {
+        return RP_INTEGRATOR_STATUS_RHS_FAILURE;
+    }
+    return rp_integrator_is_finite(derivative, dimension)
+        ? RP_INTEGRATOR_STATUS_OK
+        : RP_INTEGRATOR_STATUS_NONFINITE_VALUE;
+}
 rp_integrator_status rp_integrator_report_step(
     const rp_integrator_config *config,
     double independent_variable,
@@ -193,6 +231,20 @@ rp_integrator_status rp_integrator_project_candidate(
     void *context,
     double independent_variable,
     double candidate[]
+);
+/**
+ * Project an accepted candidate of a first-same-as-last method and refresh
+ * its derivative, which the next first stage reuses.  No-op when the method
+ * does not project.
+ */
+rp_integrator_status rp_integrator_project_accepted(
+    const rp_integrator_config *config,
+    rp_integrator_rhs rhs,
+    void *context,
+    double independent_variable,
+    double candidate[],
+    double candidate_derivative[],
+    rp_integrator_stats *stats
 );
 
 #endif /* RELATIPY_GEODESIC_INTEGRATORS_INTEGRATOR_H */
