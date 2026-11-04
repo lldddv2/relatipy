@@ -91,3 +91,24 @@ notebook excludes it from the medians and draws that setting with an open marker
 - KerrGeoPy 0.9.3; same protocol: one untimed warm-up, best of 3 repeats per orbit,
   `taskset -c 3 $PY work_precision_kerrgeopy.py` (2 s). Median 3.3 ms, range 3.0-4.9 ms per orbit.
 - Notebook cell 61 draws it as a band (minimum to maximum) with a line at the median.
+
+## Relatipy rerun with six methods (added 2026-11-02)
+- `work-precision-relatipy.csv`  3000 rows = 100 orbits x 30 settings (library = relatipy)
+- `run-relatipy.log`              per-setting elapsed times
+- Methods: the four above plus `projection_dop853` and `projection_dp45` (the projection of
+  `projection_radau` applied after each accepted DOP853 / DP45 step, with one extra RHS
+  evaluation per accepted step). Same sample, tolerances, timing and eps recipe.
+- Versions: relatipy editable from `src/` (HEAD at `feat: add thin disks with arbitrary surface density` + uncommitted working tree with the two
+  new methods).
+- Command:
+```
+taskset -c 3 $PY work_precision.py --n 100 --pygro --out work-precision-relatipy.csv > run-relatipy.log 2>&1
+```
+- Total wall time: 515.1 s. Non-ok rows: `projection_radau` rtol=1e-6 (7 orbits) and
+  `projection_dp45` rtol=1e-6 (2 orbits), `solver_status_-1` ("invariant projection failed").
+- The notebook (cell 61) takes the Relatipy rows from this file and the PyGRO rows from
+  `work-precision.csv`. `radau`, `dop853` and `dp45` reproduce the first run's eps; median wall
+  times within 2% (`dop853`, `dp45`) and 3-7% (`radau`). `projection_radau` fails on fewer
+  orbits than in the first run (rtol=1e-6: 7 against 86; 1e-8: 0 against 61), after commit
+  `fix: condition the kerr invariant projection far from the hole`, so its medians at rtol <= 1e-8 cover
+  other orbits; at rtol <= 1e-12 (all ok in both runs) eps agrees and wall time is within 10%.

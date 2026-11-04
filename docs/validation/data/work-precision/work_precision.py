@@ -177,7 +177,7 @@ def eps_pygro(geo, exact):
     return abs(measured / exact - 1)
 
 
-RELATIPY_METHODS = ("projection_radau", "radau", "dop853", "dp45")
+RELATIPY_METHODS = ("projection_radau", "radau", "dop853", "dp45", "projection_dop853", "projection_dp45")
 RELATIPY_RTOLS = (1e-6, 1e-8, 1e-10, 1e-12, 1e-13)
 PYGRO_INTEGRATORS = ("rkf78", "dp853", "rkf45", "dp45", "ck45")
 PYGRO_GOALS = (6, 8, 10, 12)
