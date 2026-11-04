@@ -323,7 +323,9 @@ cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   native/src/geodesic/integrators/dop853.c \
   native/src/geodesic/integrators/dp45.c \
   native/src/geodesic/integrators/radau.c \
-  native/src/geodesic/kerr_mcmc.c \
+  native/src/geodesic/integrators/kerr.c native/src/geodesic/kerr_mcmc.c \
+  native/src/force/external.c native/src/force/kerr_forced.c \
+  native/src/force/kerr_mcmc.c \
   native/tests/unit/geodesic/test_kerr_mcmc.c -lm \
   -o /tmp/relatipy-native-tests/test-kerr-mcmc-c11
 /tmp/relatipy-native-tests/test-kerr-mcmc-c11
@@ -348,8 +350,12 @@ The external-force layer under `src/force/` (see
 and adds the frame map and projection (`external.c`), the forced right-hand
 sides (`kerr_forced.c`, which uses the generated kernel
 `geodesic/physic/kerr_rhs_generated.c` when a force is active) and the
-forced observable model (`kerr_mcmc.c`). The tabulated thin disk of Piran et al. (2026) lives
-under `src/force/models/`. The tests under `tests/force/` share one source
+forced observable model (`kerr_mcmc.c`). Models under `src/force/models/` only
+describe their mass; the tabulated thin disk of Piran et al. (2026) is one.
+The generic integrals live under `src/utils/integrators/`: Gauss-Legendre
+panels (`quadrature.c`) and, for axisymmetric models, the elliptic integrals,
+the ring sum of any surface density and the field table
+(`axisymmetric/elliptic.c`, `ring_sum.c`, `table.c`). The tests under `tests/force/` share one source
 list; their analytic models, such as a Plummer sphere and a Miyamoto--Nagai
 disk, are test-only and live in `tests/force/force_test_models.h`:
 
@@ -367,12 +373,15 @@ FORCE_SOURCES="native/src/utils/numeric.c native/src/utils/tensor.c \
   native/src/geodesic/integrators/kerr.c native/src/geodesic/kerr_mcmc.c \
   native/src/force/external.c native/src/force/kerr_forced.c \
   native/src/force/kerr_mcmc.c \
-  native/src/force/models/elliptic.c native/src/force/models/quadrature.c \
-  native/src/force/models/axisymmetric_table.c \
+  native/src/utils/integrators/quadrature.c \
+  native/src/utils/integrators/axisymmetric/elliptic.c \
+  native/src/utils/integrators/axisymmetric/ring_sum.c \
+  native/src/utils/integrators/axisymmetric/table.c \
   native/src/force/models/thin_disk.c"
 for test in test_external test_null_force test_active_zero_force \
     test_forced_invariants test_newtonian_limit test_forced_mcmc \
-    test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table; do
+    test_thin_disk_elliptic test_thin_disk_ring test_thin_disk_table \
+    test_ring_sum_density; do
   cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
     -Inative/include -Inative/src $FORCE_SOURCES \
     native/tests/force/$test.c -lm -o /tmp/relatipy-native-tests/$test
@@ -380,7 +389,8 @@ for test in test_external test_null_force test_active_zero_force \
 done
 ```
 
-The thin-disk tests need only the four `src/force/models/` sources;
+The thin-disk tests need only the four `src/utils/integrators/` sources and
+`src/force/models/thin_disk.c` (`test_ring_sum_density` only the former);
 `test_thin_disk_table` builds several tables and takes a few seconds.
 
 On compilers that provide AddressSanitizer and UndefinedBehaviorSanitizer:
